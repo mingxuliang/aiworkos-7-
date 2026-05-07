@@ -579,13 +579,14 @@ class AuthMiddleware(BaseHTTPMiddleware):
         auth_mode = EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy").lower()
         if auth_mode == "jwt":
             from .auth_jwt.middleware import JWTAuthMiddleware
-            return await JWTAuthMiddleware().dispatch(request, call_next)
+            return await JWTAuthMiddleware.dispatch_static(request, call_next)
 
         if self._should_skip_auth(request):
             return await call_next(request)
 
         token = self._extract_token(request)
         if not token:
+            print("Not authenticated, 无token")
             return Response(
                 content=json.dumps({"detail": "Not authenticated"}),
                 status_code=401,

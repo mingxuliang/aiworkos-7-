@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import get_db
-from .jwt_utils import create_access_token, decode_token, revoke_token
+from .jwt_utils import create_access_token, revoke_token
 from .user_service import (
     authenticate_user,
     check_permission,
@@ -58,8 +58,8 @@ class JWTRegisterRequest(BaseModel):
 
 
 class JWTChangePasswordRequest(BaseModel):
-    old_password: str
     new_password: str = Field(..., min_length=6)
+    new_password_repeat: str = Field(..., min_length=6)
 
 
 class JWTAssignRolesRequest(BaseModel):
@@ -115,6 +115,7 @@ def _get_current_user(request: Request) -> dict:
     """Extract current user info from request state (set by middleware)."""
     user = getattr(request.state, "user", None)
     if not user:
+        print("Not authenticated, 用户不存在")
         raise HTTPException(status_code=401, detail="Not authenticated")
     return {
         "username": user,
@@ -148,11 +149,18 @@ async def jwt_login(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     role_names = [ur.role.name for ur in user.user_roles]
-    token = await create_access_token(
-        user_id=user.id,
-        username=user.username,
-        roles=role_names,
-    )
+    try:
+        token = await create_access_token(
+            user_id=user.id,
+            username=user.username,
+            roles=role_names,
+        )
+    except Exception as exc:
+        logger.error("Failed to create access token for %s: %s", user.username, exc)
+        raise HTTPException(
+            status_code=503,
+            detail="Session service unavailable. Please try again later.",
+        ) from exc
     return JWTLoginResponse(token=token, username=user.username, roles=role_names)
 
 
@@ -162,19 +170,25 @@ async def jwt_register(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """Register a new user (admin only, unless no users exist yet).
+    """Register a new user.
 
-    If no users exist in the database, anyone can register the first
-    user (who automatically gets the admin role).
+    The register endpoint does **not** require authentication.
+    - If no users exist yet, the first user automatically gets admin role.
+    - If users already exist, unauthenticated callers can only create
+      users with the "user" role; authenticated admins may assign any role.
     """
     # Check if any users exist — first user gets admin automatically
     existing_users = await list_users(db)
     if existing_users:
-        # Subsequent registrations require admin
-        _require_admin(request)
-        # Override requested roles: non-admins can only create "user" role
-        info = _get_current_user(request)
-        if "admin" not in info["roles"]:
+        # Check if the caller is authenticated
+        caller = getattr(request.state, "user", None)
+        if caller:
+            # Authenticated: only admins may assign arbitrary roles
+            info = _get_current_user(request)
+            if "admin" not in info["roles"]:
+                req.role_names = ["user"]
+        else:
+            # Unauthenticated: restrict to "user" role only
             req.role_names = ["user"]
     else:
         # First user is always admin
@@ -186,11 +200,18 @@ async def jwt_register(
         raise HTTPException(status_code=409, detail=str(exc))
 
     role_names = [ur.role.name for ur in user.user_roles]
-    token = await create_access_token(
-        user_id=user.id,
-        username=user.username,
-        roles=role_names,
-    )
+    try:
+        token = await create_access_token(
+            user_id=user.id,
+            username=user.username,
+            roles=role_names,
+        )
+    except Exception as exc:
+        logger.error("Failed to create access token for %s: %s", user.username, exc)
+        raise HTTPException(
+            status_code=503,
+            detail="User created but session service unavailable. Please login again.",
+        ) from exc
     return JWTLoginResponse(token=token, username=user.username, roles=role_names)
 
 
@@ -216,19 +237,11 @@ async def jwt_logout(request: Request):
 @router.post("/verify", response_model=JWTVerifyResponse)
 async def jwt_verify(request: Request):
     """Verify the current Bearer token is still valid."""
-    auth_header = request.headers.get("Authorization", "")
-    token = auth_header[7:] if auth_header.startswith("Bearer ") else ""
-    if not token:
-        raise HTTPException(status_code=401, detail="No token provided")
-
-    payload = await decode_token(token)
-    if payload is None:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
+    info = _get_current_user(request)
     return JWTVerifyResponse(
         valid=True,
-        username=payload.get("username", ""),
-        roles=payload.get("roles", []),
+        username=info["username"],
+        roles=info["roles"],
     )
 
 
@@ -241,9 +254,9 @@ async def jwt_change_password(
     """Change the current user's password."""
     info = _get_current_user(request)
     user_id = int(info["user_id"])
-    success = await update_user_password(db, user_id, req.old_password, req.new_password)
+    success, message = await update_user_password(db, user_id, req.new_password, req.new_password_repeat)
     if not success:
-        raise HTTPException(status_code=401, detail="Current password is incorrect")
+        raise HTTPException(status_code=401, detail=message)
     return {"message": "Password changed successfully"}
 
 

@@ -2,14 +2,14 @@
 """User CRUD service layer for JWT authentication.
 
 All database operations are async and use SQLAlchemy sessions.
-Password hashing uses passlib bcrypt.
+Password hashing uses bcrypt directly.
 """
 from __future__ import annotations
 
 import logging
 from typing import Optional
 
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -18,23 +18,18 @@ from .models import User, Role, Permission, UserRole, RolePermission
 
 logger = logging.getLogger(__name__)
 
-# Passlib context for bcrypt hashing
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-# ---------------------------------------------------------------------------
-# Password helpers
-# ---------------------------------------------------------------------------
-
-
+# bcrypt for password hashing
 def hash_password(password: str) -> str:
     """Hash a plaintext password using bcrypt."""
-    return _pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plaintext password against a bcrypt hash."""
-    return _pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        hashed_password.encode("utf-8"),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +86,15 @@ async def create_user(
         session.add(UserRole(user_id=user.id, role_id=role.id))
 
     await session.commit()
-    await session.refresh(user)
+
+    # Re-query with eager loading so that user.user_roles (and nested
+    # role) are available in async context without triggering lazy-load.
+    result = await session.execute(
+        select(User)
+        .where(User.id == user.id)
+        .options(selectinload(User.user_roles).selectinload(UserRole.role)),
+    )
+    user = result.scalar_one()
     logger.info("User created: %s (roles=%s)", username, role_names)
     return user
 
@@ -174,23 +177,25 @@ async def delete_user(session: AsyncSession, user_id: int) -> bool:
 async def update_user_password(
     session: AsyncSession,
     user_id: int,
-    old_password: str,
     new_password: str,
-) -> bool:
-    """Update a user's password after verifying the old one.
+    new_password_repeat: str,
+) -> tuple[bool, str]:
+    """Update a user's password after verifying new passwords match.
 
     Returns:
-        True on success, False if old password is incorrect.
+        True on success, False if new passwords do not match.
     """
     user = await get_user_by_id(session, user_id)
     if user is None:
-        return False
-    if not verify_password(old_password, user.password_hash):
-        return False
+        return False, "User not found"
+    if new_password != new_password_repeat:
+        return False, "New passwords do not match"
+    if verify_password(new_password, user.password_hash):
+        return False, "New password is the same as the old password"
     user.password_hash = hash_password(new_password)
     await session.commit()
     logger.info("Password updated for user id=%d", user_id)
-    return True
+    return True, "Password updated successfully"
 
 
 # ---------------------------------------------------------------------------
