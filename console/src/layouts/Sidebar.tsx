@@ -40,8 +40,8 @@ import {
   SparkDebugLine,
   SparkSaveLine,
 } from "@agentscope-ai/icons";
-import { clearAuthToken } from "../api/config";
-import { authApi } from "../api/modules/auth";
+import { clearAuthToken, getAuthMode } from "../api/config";
+import { authApi, jwtAuthApi } from "../api/modules/auth";
 import { usePlugins } from "../plugins/PluginContext";
 import styles from "./index.module.less";
 import { useTheme } from "../contexts/ThemeContext";
@@ -66,6 +66,7 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
   const { isDark } = useTheme();
   const { pluginRoutes } = usePlugins();
   const [authEnabled, setAuthEnabled] = useState(false);
+  const [authMode, setLocalAuthMode] = useState<"legacy" | "jwt">("legacy");
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountForm] = Form.useForm();
@@ -74,10 +75,30 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
   // ── Effects ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    authApi
+    // Detect auth mode first
+    jwtAuthApi
       .getStatus()
-      .then((res) => setAuthEnabled(res.enabled))
-      .catch(() => {});
+      .then((res) => {
+        if (res.enabled) {
+          setLocalAuthMode("jwt");
+          setAuthEnabled(true);
+        } else {
+          setLocalAuthMode("legacy");
+          return authApi.getStatus();
+        }
+      })
+      .then((res) => {
+        if (res) setAuthEnabled(res.enabled);
+      })
+      .catch(() => {
+        authApi
+          .getStatus()
+          .then((res) => {
+            setLocalAuthMode("legacy");
+            setAuthEnabled(res.enabled);
+          })
+          .catch(() => {});
+      });
   }, []);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -100,6 +121,35 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       return;
     }
 
+    if (authMode === "jwt") {
+      // JWT mode: only password change is supported
+      if (!trimmedPassword) {
+        message.warning(t("account.nothingToUpdate"));
+        return;
+      }
+      setAccountLoading(true);
+      try {
+        await jwtAuthApi.changePassword(values.currentPassword, trimmedPassword);
+        message.success(t("account.updateSuccess"));
+        setAccountModalOpen(false);
+        accountForm.resetFields();
+        // JWT password change doesn't require re-login
+      } catch (err: unknown) {
+        const raw = err instanceof Error ? err.message : "";
+        let msg = t("account.updateFailed");
+        if (raw.includes("password is incorrect") || raw.includes("Current password is incorrect")) {
+          msg = t("account.wrongPassword");
+        } else if (raw) {
+          msg = raw;
+        }
+        message.error(msg);
+      } finally {
+        setAccountLoading(false);
+      }
+      return;
+    }
+
+    // Legacy mode
     if (!trimmedUsername && !trimmedPassword) {
       message.warning(t("account.nothingToUpdate"));
       return;
@@ -513,7 +563,14 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
           <Button
             type="text"
             icon={<SparkExitFullscreenLine size={16} />}
-            onClick={() => {
+            onClick={async () => {
+              if (authMode === "jwt") {
+                try {
+                  await jwtAuthApi.logout();
+                } catch {
+                  // ignore logout API errors
+                }
+              }
               clearAuthToken();
               window.location.href = "/login";
             }}
@@ -564,10 +621,12 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
           >
             <Input.Password />
           </Form.Item>
-          <Form.Item name="newUsername" label={t("account.newUsername")}>
-            <Input placeholder={t("account.newUsernamePlaceholder")} />
-          </Form.Item>
-          <Form.Item name="newPassword" label={t("account.newPassword")}>
+          {authMode !== "jwt" && (
+            <Form.Item name="newUsername" label={t("account.newUsername")}>
+              <Input placeholder={t("account.newUsernamePlaceholder")} />
+            </Form.Item>
+          )}
+          <Form.Item name="newPassword" label={t("account.newPasswordJwt", t("account.newPassword"))}>
             <Input.Password placeholder={t("account.newPasswordPlaceholder")} />
           </Form.Item>
           <Form.Item

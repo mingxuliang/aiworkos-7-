@@ -51,6 +51,14 @@ router.include_router(plugins_router)
 router.include_router(backup_router)
 router.include_router(plan_router)
 
+# Conditionally register JWT auth routes when QWENPAW_AUTH_MODE=jwt
+from ...constant import EnvVarLoader
+
+if EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy").lower() == "jwt":
+    from ..auth_jwt import get_router
+
+    router.include_router(get_router())
+
 
 def create_agent_scoped_router() -> APIRouter:
     """Create agent-scoped router that wraps existing routers.

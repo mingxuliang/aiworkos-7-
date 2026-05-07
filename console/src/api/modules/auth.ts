@@ -1,4 +1,7 @@
 import { getApiUrl } from "../config";
+import { request } from "../request";
+
+// ── Legacy Auth types ──────────────────────────────────────────────
 
 export interface LoginResponse {
   token: string;
@@ -10,6 +13,47 @@ export interface AuthStatusResponse {
   enabled: boolean;
   has_users: boolean;
 }
+
+// ── JWT Auth types ────────────────────────────────────────────────
+
+export interface JWTLoginResponse {
+  token: string;
+  username: string;
+  roles: string[];
+}
+
+export interface JWTStatusResponse {
+  mode: string;
+  enabled: boolean;
+}
+
+export interface JWTVerifyResponse {
+  valid: boolean;
+  username: string;
+  roles: string[];
+}
+
+export interface JWTUserOut {
+  id: number;
+  username: string;
+  is_active: boolean;
+  roles: string[];
+}
+
+export interface JWTRoleOut {
+  id: number;
+  name: string;
+  description: string;
+  permissions: string[];
+}
+
+export interface JWTPermissionOut {
+  id: number;
+  code: string;
+  description: string;
+}
+
+// ── Legacy Auth API ──────────────────────────────────────────────
 
 export const authApi = {
   login: async (username: string, password: string): Promise<LoginResponse> => {
@@ -71,4 +115,53 @@ export const authApi = {
     }
     return res.json();
   },
+};
+
+// ── JWT Auth API ────────────────────────────────────────────────
+
+export const jwtAuthApi = {
+  login: (username: string, password: string) =>
+    request<JWTLoginResponse>("/auth/jwt/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+
+  register: (username: string, password: string) =>
+    request<JWTLoginResponse>("/auth/jwt/register", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+
+  getStatus: () => request<JWTStatusResponse>("/auth/jwt/status"),
+
+  logout: () =>
+    request<{ message: string }>("/auth/jwt/logout", { method: "POST" }),
+
+  verify: () =>
+    request<JWTVerifyResponse>("/auth/jwt/verify", { method: "POST" }),
+
+  changePassword: (old_password: string, new_password: string) =>
+    request<{ message: string }>("/auth/jwt/change-password", {
+      method: "POST",
+      body: JSON.stringify({ old_password, new_password }),
+    }),
+
+  // Admin endpoints
+  listUsers: () => request<JWTUserOut[]>("/auth/jwt/users"),
+
+  deleteUser: (id: number) =>
+    request<{ message: string }>(`/auth/jwt/users/${id}`, {
+      method: "DELETE",
+    }),
+
+  assignRoles: (userId: number, roleIds: number[]) =>
+    request<{ message: string }>(`/auth/jwt/users/${userId}/roles`, {
+      method: "PUT",
+      body: JSON.stringify({ role_ids: roleIds }),
+    }),
+
+  listRoles: () => request<JWTRoleOut[]>("/auth/jwt/roles"),
+
+  listPermissions: () =>
+    request<JWTPermissionOut[]>("/auth/jwt/permissions"),
 };

@@ -1,4 +1,5 @@
 import { Button, Tabs } from "@agentscope-ai/design";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useSecurityPage } from "./useSecurityPage";
 import {
@@ -8,12 +9,23 @@ import {
   SkillScannerSection,
   FileGuardSection,
   AllowNoAuthHostsTab,
+  UserManagementTab,
 } from "./components";
 import { PageHeader } from "@/components/PageHeader";
+import { jwtAuthApi } from "@/api/modules/auth";
 import styles from "./index.module.less";
 
 function SecurityPage() {
   const { t } = useTranslation();
+  const [isJwtMode, setIsJwtMode] = useState(false);
+
+  // Detect JWT mode
+  useEffect(() => {
+    jwtAuthApi
+      .getStatus()
+      .then((res) => setIsJwtMode(res.enabled))
+      .catch(() => {});
+  }, []);
 
   const {
     activeTab,
@@ -161,6 +173,19 @@ function SecurityPage() {
                 <AllowNoAuthHostsTab onSave={onAllowNoAuthHostsHandlersReady} />
               ),
             },
+            ...(isJwtMode
+              ? [
+                  {
+                    key: "userManagement",
+                    label: (
+                      <span className={styles.tabLabel}>
+                        {t("security.userManagement.title")}
+                      </span>
+                    ),
+                    children: <UserManagementTab />,
+                  },
+                ]
+              : []),
           ]}
         />
       </div>

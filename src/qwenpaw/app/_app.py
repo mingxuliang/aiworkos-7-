@@ -27,6 +27,7 @@ from ..constant import (
     CORS_ORIGINS,
     WORKING_DIR,
     PROJECT_NAME,
+    EnvVarLoader,
 )
 from ..__version__ import __version__
 from ..utils.logging import (
@@ -303,6 +304,23 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
 
     async def _background_startup():  # pylint: disable=too-many-statements
         try:
+            # ---- JWT Auth initialization (if enabled) ----
+            auth_mode = EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy").lower()
+            if auth_mode == "jwt":
+                try:
+                    from .auth_jwt.database import init_db
+                    from .auth_jwt.redis_client import init_redis
+
+                    await init_db()
+                    await init_redis()
+                    logger.info("JWT auth initialized (MySQL + Redis)")
+                except Exception as exc:
+                    logger.error(
+                        "JWT auth initialization failed: %s",
+                        exc,
+                        exc_info=True,
+                    )
+
             # Start all configured agents (truly parallel now)
             await multi_agent_manager.start_all_configured_agents()
 
@@ -519,6 +537,18 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
             await token_usage_manager.stop()
         except Exception as e:
             logger.error(f"Error stopping TokenUsageManager: {e}")
+
+        # ---- JWT Auth cleanup ----
+        auth_mode = EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy").lower()
+        if auth_mode == "jwt":
+            try:
+                from .auth_jwt.database import close_db
+                from .auth_jwt.redis_client import close_redis
+
+                await close_db()
+                await close_redis()
+            except Exception as e:
+                logger.error(f"Error closing JWT auth resources: {e}")
 
         logger.info("Application shutdown complete")
 

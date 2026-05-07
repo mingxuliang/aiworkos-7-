@@ -2,6 +2,7 @@ declare const VITE_API_BASE_URL: string;
 declare const TOKEN: string;
 
 const AUTH_TOKEN_KEY = "qwenpaw_auth_token";
+const AUTH_MODE_KEY = "qwenpaw_auth_mode";
 
 /**
  * Get the full API URL with /api prefix
@@ -38,4 +39,27 @@ export function setAuthToken(token: string): void {
  */
 export function clearAuthToken(): void {
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_MODE_KEY);
+}
+
+/**
+ * Get the current auth mode ("jwt" or "legacy").
+ * Defaults to "legacy" if not set.
+ */
+export function getAuthMode(): string {
+  return localStorage.getItem(AUTH_MODE_KEY) || "legacy";
+}
+
+/**
+ * Store the auth mode in localStorage after detection.
+ */
+export function setAuthMode(mode: string): void {
+  localStorage.setItem(AUTH_MODE_KEY, mode);
+}
+
+/**
+ * Remove the auth mode from localStorage.
+ */
+export function clearAuthMode(): void {
+  localStorage.removeItem(AUTH_MODE_KEY);
 }

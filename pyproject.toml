@@ -107,6 +107,13 @@ sip-livekit = [
     "livekit>=1.0.0",
     "livekit-api>=0.6.0",
 ]
+jwt-auth = [
+    "PyJWT>=2.8.0",
+    "redis>=5.0.0",
+    "sqlalchemy[asyncio]>=2.0.0",
+    "aiomysql>=0.2.0",
+    "passlib[bcrypt]>=1.7.4",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

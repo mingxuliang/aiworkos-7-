@@ -353,3 +353,27 @@ TRUNCATION_NOTICE_MARKER = "<<<TRUNCATED>>>"
 MEDIA_UNSUPPORTED_PLACEHOLDER = (
     "[Media content removed - model does not support this media type]"
 )
+
+# ---------------------------------------------------------------------------
+# JWT + Redis + MySQL authentication mode
+# ---------------------------------------------------------------------------
+
+AUTH_MODE = EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy")
+
+JWT_SECRET = EnvVarLoader.get_str("QWENPAW_JWT_SECRET", "")
+
+JWT_DB_URL = EnvVarLoader.get_str(
+    "QWENPAW_JWT_DB_URL",
+    "mysql+aiomysql://root:password@localhost:3306/qwenpaw",
+)
+
+REDIS_URL = EnvVarLoader.get_str(
+    "QWENPAW_REDIS_URL",
+    "redis://localhost:6379/0",
+)
+
+JWT_EXPIRE_MINUTES = EnvVarLoader.get_int(
+    "QWENPAW_JWT_EXPIRE_MINUTES",
+    1440,
+    min_value=1,
+)

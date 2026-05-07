@@ -572,7 +572,15 @@ class AuthMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next,
     ) -> Response:
-        """Check Bearer token on protected API routes; skip public paths."""
+        """Check Bearer token on protected API routes; skip public paths.
+
+        Delegates to JWTAuthMiddleware when ``QWENPAW_AUTH_MODE=jwt``.
+        """
+        auth_mode = EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy").lower()
+        if auth_mode == "jwt":
+            from .auth_jwt.middleware import JWTAuthMiddleware
+            return await JWTAuthMiddleware().dispatch(request, call_next)
+
         if self._should_skip_auth(request):
             return await call_next(request)
 

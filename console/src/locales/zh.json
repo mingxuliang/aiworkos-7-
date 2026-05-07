@@ -1650,6 +1650,25 @@
         "goToWhitelist": "前往白名单",
         "moreFindings": "另有 {{count}} 条未列出（完整列表见 设置 → 安全 → 技能扫描）。"
       }
+    },
+    "userManagement": {
+      "title": "用户管理",
+      "description": "管理 JWT 认证模式下的用户和角色。",
+      "username": "用户名",
+      "roles": "角色",
+      "status": "状态",
+      "actions": "操作",
+      "active": "活跃",
+      "inactive": "停用",
+      "deleteUser": "删除用户",
+      "deleteConfirm": "确定删除用户 {{username}} 吗？此操作不可撤销。",
+      "deleteSuccess": "用户已删除",
+      "deleteFailed": "删除用户失败",
+      "assignRoles": "分配角色",
+      "assignRolesSuccess": "角色已更新",
+      "assignRolesFailed": "更新角色失败",
+      "loadFailed": "加载用户列表失败",
+      "noUsers": "暂无用户"
     }
   },
   "login": {
@@ -1669,7 +1688,10 @@
     "logout": "退出登录",
     "logoutSuccess": "已成功退出",
     "sessionExpired": "会话已过期，请重新登录",
-    "unauthorized": "未授权，请登录"
+    "unauthorized": "未授权，请登录",
+    "jwtFirstUserHint": "第一个注册的用户将自动获得管理员权限",
+    "switchToLogin": "已有账号？登录",
+    "switchToRegister": "没有账号？注册"
   },
   "account": {
     "title": "账户管理",
@@ -1688,7 +1710,8 @@
     "wrongPassword": "当前密码不正确",
     "nothingToUpdate": "请输入新用户名或新密码",
     "passwordEmpty": "密码不能为空白",
-    "usernameEmpty": "用户名不能为空白"
+    "usernameEmpty": "用户名不能为空白",
+    "newPasswordJwt": "新密码"
   },
   "voiceTranscription": {
     "title": "语音转写",

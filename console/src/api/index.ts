@@ -2,7 +2,7 @@ export * from "./types";
 
 export { request } from "./request";
 
-export { getApiUrl, getApiToken } from "./config";
+export { getApiUrl, getApiToken, getAuthMode, setAuthMode, clearAuthMode } from "./config";
 
 import { rootApi } from "./modules/root";
 import { acpApi } from "./modules/acp";
@@ -25,6 +25,7 @@ import { securityApi } from "./modules/security";
 import { userTimezoneApi } from "./modules/userTimezone";
 import { languageApi } from "./modules/language";
 import { backupApi } from "./modules/backup";
+import { jwtAuthApi } from "./modules/auth";
 
 export const api = {
   // Root
@@ -87,6 +88,9 @@ export const api = {
 
   // Backups
   ...backupApi,
+
+  // JWT Auth
+  ...jwtAuthApi,
 };
 
 export default api;

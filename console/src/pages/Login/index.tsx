@@ -4,8 +4,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Form, Input } from "antd";
 import { useAppMessage } from "../../hooks/useAppMessage";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
-import { authApi } from "../../api/modules/auth";
-import { setAuthToken } from "../../api/config";
+import { authApi, jwtAuthApi } from "../../api/modules/auth";
+import { setAuthToken, setAuthMode } from "../../api/config";
 import { useTheme } from "../../contexts/ThemeContext";
 
 export default function LoginPage() {
@@ -16,12 +16,28 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [hasUsers, setHasUsers] = useState(true);
+  const [authMode, setLocalAuthMode] = useState<"legacy" | "jwt">("legacy");
   const { message } = useAppMessage();
 
   useEffect(() => {
-    authApi
+    // Step 1: Detect JWT auth mode
+    jwtAuthApi
       .getStatus()
       .then((res) => {
+        if (res.enabled) {
+          setLocalAuthMode("jwt");
+          setAuthMode("jwt");
+          // In JWT mode, always allow login form (register is for first user)
+          setHasUsers(true); // don't auto-switch to register
+          return;
+        }
+        // Legacy mode
+        setLocalAuthMode("legacy");
+        setAuthMode("legacy");
+        return authApi.getStatus();
+      })
+      .then((res) => {
+        if (!res) return; // JWT mode, no legacy check
         if (!res.enabled) {
           navigate("/chat", { replace: true });
           return;
@@ -31,7 +47,24 @@ export default function LoginPage() {
           setIsRegister(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        // Fallback: try legacy auth status
+        authApi
+          .getStatus()
+          .then((res) => {
+            setLocalAuthMode("legacy");
+            setAuthMode("legacy");
+            if (!res.enabled) {
+              navigate("/chat", { replace: true });
+              return;
+            }
+            setHasUsers(res.has_users);
+            if (!res.has_users) {
+              setIsRegister(true);
+            }
+          })
+          .catch(() => {});
+      });
   }, [navigate]);
 
   const onFinish = async (values: { username: string; password: string }) => {
@@ -41,21 +74,40 @@ export default function LoginPage() {
       const redirect =
         raw.startsWith("/") && !raw.startsWith("//") ? raw : "/chat";
 
-      if (isRegister) {
-        const res = await authApi.register(values.username, values.password);
-        if (res.token) {
-          setAuthToken(res.token);
-          message.success(t("login.registerSuccess"));
-          navigate(redirect, { replace: true });
+      if (authMode === "jwt") {
+        // JWT mode
+        if (isRegister) {
+          const res = await jwtAuthApi.register(values.username, values.password);
+          if (res.token) {
+            setAuthToken(res.token);
+            message.success(t("login.registerSuccess"));
+            navigate(redirect, { replace: true });
+          }
+        } else {
+          const res = await jwtAuthApi.login(values.username, values.password);
+          if (res.token) {
+            setAuthToken(res.token);
+            navigate(redirect, { replace: true });
+          }
         }
       } else {
-        const res = await authApi.login(values.username, values.password);
-        if (res.token) {
-          setAuthToken(res.token);
-          navigate(redirect, { replace: true });
+        // Legacy mode
+        if (isRegister) {
+          const res = await authApi.register(values.username, values.password);
+          if (res.token) {
+            setAuthToken(res.token);
+            message.success(t("login.registerSuccess"));
+            navigate(redirect, { replace: true });
+          }
         } else {
-          message.info(t("login.authNotEnabled"));
-          navigate(redirect, { replace: true });
+          const res = await authApi.login(values.username, values.password);
+          if (res.token) {
+            setAuthToken(res.token);
+            navigate(redirect, { replace: true });
+          } else {
+            message.info(t("login.authNotEnabled"));
+            navigate(redirect, { replace: true });
+          }
         }
       }
     } catch (err) {
@@ -111,7 +163,9 @@ export default function LoginPage() {
                 fontSize: 13,
               }}
             >
-              {t("login.firstUserHint")}
+              {authMode === "jwt"
+                ? t("login.jwtFirstUserHint")
+                : t("login.firstUserHint")}
             </p>
           )}
         </div>
@@ -166,6 +220,21 @@ export default function LoginPage() {
               {isRegister ? t("login.register") : t("login.submit")}
             </Button>
           </Form.Item>
+
+          {/* Toggle between login and register */}
+          {hasUsers && (
+            <div style={{ textAlign: "center", marginTop: 16 }}>
+              <Button
+                type="link"
+                onClick={() => setIsRegister(!isRegister)}
+                style={{ padding: 0, fontSize: 13 }}
+              >
+                {isRegister
+                  ? t("login.switchToLogin", "Already have an account? Login")
+                  : t("login.switchToRegister", "No account? Register")}
+              </Button>
+            </div>
+          )}
         </Form>
       </div>
     </div>
