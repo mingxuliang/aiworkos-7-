@@ -34,6 +34,13 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "0.0.0.0",
       port: 5173,
+      // 为了方便开发，这里配置proxy，将/api请求转发到8088端口
+      proxy: {
+        "/api": {
+          target: "http://127.0.0.1:8088",
+          changeOrigin: true,
+        },
+      },
     },
     optimizeDeps: {
       include: ["diff"],

@@ -19,6 +19,47 @@ from .utils import agentscope_msg_to_message
 router = APIRouter(prefix="/chats", tags=["chats"])
 
 
+async def _get_jwt_user(request: Request) -> str | None:
+    """Return the authenticated username from JWT, with fallback decoding.
+
+    Tries ``request.state.user_id`` first (set by middleware).  Falls back to
+    decoding the ``Authorization`` header directly when the middleware's
+    ``request.state`` did not propagate (known Starlette BaseHTTPMiddleware
+    issue with ``call_next`` and ``_CachedRequest``).
+
+    Reads ``username`` and ``roles`` from the Redis session cache
+    (source of truth), falling back to the JWT payload when Redis
+    is unavailable.
+    """
+    jwt_user = getattr(request.state, "user_id", None)
+    if jwt_user:
+        return jwt_user
+    # Fallback: decode JWT directly from the Authorization header
+    from ..auth_jwt.jwt_utils import decode_token as jwt_decode_token
+    from ..auth_jwt.middleware import JWTAuthMiddleware
+    from ..auth_jwt.redis_client import get_session_user_info
+
+    token = JWTAuthMiddleware._extract_token(request)
+    if not token:
+        return None
+    try:
+        payload = await jwt_decode_token(token)
+    except Exception:
+        return None
+    if not payload:
+        return None
+
+    # Try Redis session cache first (source of truth)
+    jti = payload.get("jti", "")
+    if jti:
+        user_info = await get_session_user_info(jti)
+        if user_info:
+            return str(user_info.get("user_id", "")) or user_info.get("username", "")
+
+    # Fallback to JWT payload
+    return payload.get("sub") or payload.get("username")
+
+
 async def get_workspace(request: Request):
     """Get the workspace for the active agent."""
     from ..agent_context import get_agent_for_request
@@ -64,6 +105,7 @@ async def get_session(
 
 @router.get("", response_model=list[ChatSpec])
 async def list_chats(
+    request: Request,
     user_id: Optional[str] = Query(None, description="Filter by user ID"),
     channel: Optional[str] = Query(None, description="Filter by channel"),
     mgr: ChatManager = Depends(get_chat_manager),
@@ -71,14 +113,24 @@ async def list_chats(
 ):
     """List all chats with optional filters.
 
+    When JWT authentication is active, the list is automatically filtered
+    by the authenticated user so that each user only sees their own chats.
+
     Args:
+        request: FastAPI request object (used to read JWT user identity)
         user_id: Optional user ID to filter chats
         channel: Optional channel name to filter chats
         mgr: Chat manager dependency
     """
+    # Auto-filter by JWT user when authenticated
+    jwt_user = await _get_jwt_user(request)
+    if jwt_user:
+        user_id = jwt_user
+
     chats = await mgr.list_chats(user_id=user_id, channel=channel)
     tracker = workspace.task_tracker
     result = []
+
     for spec in chats:
         status = await tracker.get_status(spec.id)
         result.append(spec.model_copy(update={"status": status}))
@@ -131,9 +183,25 @@ async def batch_delete_chats(
     return {"deleted": deleted}
 
 
+async def _check_chat_ownership(chat_spec: ChatSpec, request: Request) -> None:
+    """Raise 403 if JWT user does not own the chat.
+
+    No-op when JWT authentication is not active (no user in request.state).
+    Uses fallback JWT decoding when middleware's request.state did not
+    propagate.
+    """
+    jwt_user = await _get_jwt_user(request)
+    if jwt_user and chat_spec.user_id != jwt_user:
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to access this chat",
+        )
+
+
 @router.get("/{chat_id}", response_model=ChatHistory)
 async def get_chat(
     chat_id: str,
+    request: Request,
     mgr: ChatManager = Depends(get_chat_manager),
     session: SafeJSONSession = Depends(get_session),
     workspace=Depends(get_workspace),
@@ -141,8 +209,8 @@ async def get_chat(
     """Get detailed information about a specific chat by UUID.
 
     Args:
-        request: FastAPI request (for agent context)
         chat_id: Chat UUID
+        request: FastAPI request (for agent context & JWT identity)
         mgr: Chat manager dependency
         session: SafeJSONSession dependency
 
@@ -150,7 +218,7 @@ async def get_chat(
         ChatHistory with messages and status (idle/running)
 
     Raises:
-        HTTPException: If chat not found (404)
+        HTTPException: If chat not found (404) or not authorized (403)
     """
     chat_spec = await mgr.get_chat(chat_id)
     if not chat_spec:
@@ -158,6 +226,8 @@ async def get_chat(
             status_code=404,
             detail=f"Chat not found: {chat_id}",
         )
+
+    await _check_chat_ownership(chat_spec, request)
 
     state = await session.get_session_state_dict(
         chat_spec.session_id,
@@ -179,6 +249,7 @@ async def get_chat(
 async def update_chat(
     chat_id: str,
     spec: ChatUpdate,
+    request: Request,
     mgr: ChatManager = Depends(get_chat_manager),
 ):
     """Update an existing chat.
@@ -186,14 +257,24 @@ async def update_chat(
     Args:
         chat_id: Chat UUID
         spec: Partial chat update payload
+        request: FastAPI request (for JWT identity)
         mgr: Chat manager dependency
 
     Returns:
         Updated chat spec
 
     Raises:
-        HTTPException: If chat not found (404)
+        HTTPException: If chat not found (404) or not authorized (403)
     """
+    # Verify ownership before patching
+    existing = await mgr.get_chat(chat_id)
+    if existing is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Chat not found: {chat_id}",
+        )
+    await _check_chat_ownership(existing, request)
+
     updated = await mgr.patch_chat(chat_id, spec)
     if updated is None:
         raise HTTPException(
@@ -206,6 +287,7 @@ async def update_chat(
 @router.delete("/{chat_id}", response_model=dict)
 async def delete_chat(
     chat_id: str,
+    request: Request,
     mgr: ChatManager = Depends(get_chat_manager),
 ):
     """Delete a chat by UUID.
@@ -215,14 +297,24 @@ async def delete_chat(
 
     Args:
         chat_id: Chat UUID
+        request: FastAPI request (for JWT identity)
         mgr: Chat manager dependency
 
     Returns:
         True if deleted, False if failed
 
     Raises:
-        HTTPException: If chat not found (404)
+        HTTPException: If chat not found (404) or not authorized (403)
     """
+    # Verify ownership before deleting
+    existing = await mgr.get_chat(chat_id)
+    if existing is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Chat not found: {chat_id}",
+        )
+    await _check_chat_ownership(existing, request)
+
     deleted = await mgr.delete_chats(chat_ids=[chat_id])
     if not deleted:
         raise HTTPException(

@@ -65,6 +65,8 @@ async def store_session(
     user_id: int,
     jti: str,
     ttl_seconds: int,
+    username: str = "",
+    roles: list[str] | None = None,
 ) -> None:
     """Store a login session in Redis.
 
@@ -72,15 +74,26 @@ async def store_session(
         user_id: Database user ID.
         jti: JWT ID (unique token identifier).
         ttl_seconds: Time-to-live matching the JWT expiry.
+        username: Username for fast lookup without decoding JWT.
+        roles: List of role names for fast lookup.
     """
     client = await get_redis()
     key = f"{_SESSION_PREFIX}{jti}"
+    session_data = {
+        "user_id": user_id,
+        "jti": jti,
+        "username": username,
+        "roles": roles or [],
+    }
     await client.setex(
         key,
         ttl_seconds,
-        json.dumps({"user_id": user_id, "jti": jti}),
+        json.dumps(session_data),
     )
-    logger.debug("Session stored: jti=%s ttl=%ds", jti[:8], ttl_seconds)
+    logger.debug(
+        "Session stored: jti=%s user=%s roles=%s ttl=%ds",
+        jti[:8], username, roles, ttl_seconds,
+    )
 
 
 async def validate_session(jti: str) -> Optional[dict]:
@@ -98,6 +111,26 @@ async def validate_session(jti: str) -> Optional[dict]:
         return json.loads(data)
     except (json.JSONDecodeError, TypeError):
         return None
+
+
+async def get_session_user_info(jti: str) -> Optional[dict]:
+    """Get user info (username, roles, user_id) from a Redis session.
+
+    This avoids decoding the JWT payload for user identity on every
+    request — the session cache in Redis is the source of truth.
+
+    Returns:
+        Dict with ``username``, ``roles``, ``user_id`` if found,
+        None otherwise.
+    """
+    session = await validate_session(jti)
+    if session is None:
+        return None
+    return {
+        "user_id": session.get("user_id"),
+        "username": session.get("username", ""),
+        "roles": session.get("roles", []),
+    }
 
 
 async def delete_session(jti: str) -> bool:

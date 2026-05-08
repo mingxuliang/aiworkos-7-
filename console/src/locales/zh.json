@@ -1362,7 +1362,11 @@
     "tutorial": "教程",
     "faq": "常见问题",
     "github": "GitHub",
-    "updateAvailable": "有可用更新"
+    "updateAvailable": "有可用更新",
+    "user": {
+      "logout": "退出登录",
+      "changePassword": "修改密码"
+    }
   },
   "theme": {
     "dark": "深色",

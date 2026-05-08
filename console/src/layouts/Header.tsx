@@ -1,4 +1,4 @@
-import { Layout, Space, Badge, Spin, Tooltip } from "antd";
+import { Layout, Space, Badge, Spin, Tooltip, Dropdown, Avatar } from "antd";
 import LanguageSwitcher from "../components/LanguageSwitcher/index";
 import ThemeToggleButton from "../components/ThemeToggleButton";
 import { useTranslation } from "react-i18next";
@@ -20,7 +20,17 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { CopyOutlined, CheckOutlined, TagOutlined } from "@ant-design/icons";
+import {
+  CopyOutlined,
+  CheckOutlined,
+  TagOutlined,
+  LogoutOutlined,
+  KeyOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import { useAuthStore } from "../stores/authStore";
+import { clearAuthToken } from "../api/config";
+import { useNavigate } from "react-router-dom";
 
 const { Header: AntHeader } = Layout;
 
@@ -52,10 +62,40 @@ function UpdateCodeBlock({ code }: { code: string }) {
 export default function Header() {
   const { t, i18n } = useTranslation();
   const { isDark } = useTheme();
+  const navigate = useNavigate();
   const [version, setVersion] = useState<string>("");
   const [latestVersion, setLatestVersion] = useState<string>("");
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [updateMarkdown, setUpdateMarkdown] = useState<string>("");
+  const { user, clearUser } = useAuthStore();
+
+  const handleLogout = () => {
+    clearAuthToken();
+    clearUser();
+    navigate("/login");
+  };
+
+  const userMenuItems = [
+    {
+      key: "change-password",
+      label: t("header.user.changePassword", "Change Password"),
+      icon: <KeyOutlined />,
+      onClick: () => {
+        // Implementation for change password can be added here or navigate to a profile page
+        navigate("/settings/security");
+      },
+    },
+    {
+      type: "divider" as const,
+    },
+    {
+      key: "logout",
+      label: t("header.user.logout", "Logout"),
+      icon: <LogoutOutlined />,
+      danger: true,
+      onClick: handleLogout,
+    },
+  ];
 
   useEffect(() => {
     api
@@ -209,6 +249,22 @@ export default function Header() {
             </Button>
           </Tooltip>
           <div className={styles.headerDivider} />
+          {user && (
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <div
+                className={`${styles.userDropdown} ${
+                  isDark ? styles.userDropdownDark : ""
+                }`}
+              >
+                <Avatar
+                  size="small"
+                  icon={<UserOutlined />}
+                  style={{ backgroundColor: "#ff7f16" }}
+                />
+                <span className={styles.username}>{user.username}</span>
+              </div>
+            </Dropdown>
+          )}
           <LanguageSwitcher />
           <ThemeToggleButton />
         </Space>

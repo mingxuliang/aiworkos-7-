@@ -63,13 +63,11 @@ const CHAT_ATTACHMENT_MAX_MB = 10;
 
 interface SessionInfo {
   session_id?: string;
-  user_id?: string;
   channel?: string;
 }
 
 interface CustomWindow extends Window {
   currentSessionId?: string;
-  currentUserId?: string;
   currentChannel?: string;
 }
 
@@ -134,8 +132,8 @@ function renderSuggestionLabel(command: string, description: string) {
 // Constants
 // ---------------------------------------------------------------------------
 
-const DEFAULT_USER_ID = "default";
 const DEFAULT_CHANNEL = "console";
+const DEFAULT_SESSION_NAME = "New Chat";
 
 // ---------------------------------------------------------------------------
 // Custom hooks
@@ -881,7 +879,6 @@ export default function ChatPage() {
       const requestBody = {
         input: rewrittenInput,
         session_id: window.currentSessionId || session?.session_id || "",
-        user_id: window.currentUserId || session?.user_id || DEFAULT_USER_ID,
         channel: window.currentChannel || session?.channel || DEFAULT_CHANNEL,
         stream: true,
         ...biz_params,

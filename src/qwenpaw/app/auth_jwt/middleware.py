@@ -15,6 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from ...constant import EnvVarLoader
 from .jwt_utils import decode_token
+from .redis_client import get_session_user_info
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +55,8 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         token = self._extract_token(request)
-        print(f"token: {token}")
         if not token:
-            print("Not authenticated, 无token")
+            logger.debug("Not authenticated: no token provided")
             return Response(
                 content=json.dumps({"detail": "Not authenticated"}),
                 status_code=401,
@@ -73,12 +73,27 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                 media_type="application/json",
             )
 
-        # Attach user info to request state for downstream handlers
-        request.state.user = payload.get("username", "")
-        request.state.user_id = payload.get("sub", "")
-        request.state.roles = payload.get("roles", [])
-        request.state.jti = payload.get("jti", "")
+        # Attach user info to request state for downstream handlers.
+        # Redis session cache is the source of truth; fall back to JWT
+        # payload when Redis is unavailable.
+        jti = payload.get("jti", "")
+        user_info = await get_session_user_info(jti) if jti else None
+        if user_info:
+            request.state.user = user_info.get("username", "")
+            request.state.user_id = str(user_info.get("user_id", ""))
+            request.state.roles = user_info.get("roles", [])
+        else:
+            request.state.user = payload.get("username", "")
+            request.state.user_id = payload.get("sub", "")
+            request.state.roles = payload.get("roles", [])
+        request.state.jti = jti
 
+        logger.debug(
+            "中间件日志：当前登录用户为 %s (%s) roles=%s",
+            request.state.user,
+            request.state.user_id,
+            request.state.roles,
+        )
         return await call_next(request)
 
     # ------------------------------------------------------------------
@@ -101,7 +116,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
 
         token = JWTAuthMiddleware._extract_token(request)
         if not token:
-            print("Not authenticated, 无token")
+            logger.debug("Not authenticated: no token provided")
             return Response(
                 content=json.dumps({"detail": "Not authenticated"}),
                 status_code=401,
@@ -118,11 +133,20 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                 media_type="application/json",
             )
 
-        # Attach user info to request state for downstream handlers
-        request.state.user = payload.get("username", "")
-        request.state.user_id = payload.get("sub", "")
-        request.state.roles = payload.get("roles", [])
-        request.state.jti = payload.get("jti", "")
+        # Attach user info to request state for downstream handlers.
+        # Redis session cache is the source of truth; fall back to JWT
+        # payload when Redis is unavailable.
+        jti = payload.get("jti", "")
+        user_info = await get_session_user_info(jti) if jti else None
+        if user_info:
+            request.state.user = user_info.get("username", "")
+            request.state.user_id = str(user_info.get("user_id", ""))
+            request.state.roles = user_info.get("roles", [])
+        else:
+            request.state.user = payload.get("username", "")
+            request.state.user_id = payload.get("sub", "")
+            request.state.roles = payload.get("roles", [])
+        request.state.jti = jti
 
         return await call_next(request)
 

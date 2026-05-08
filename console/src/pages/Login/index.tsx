@@ -7,6 +7,7 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { authApi, jwtAuthApi } from "../../api/modules/auth";
 import { setAuthToken, setAuthMode } from "../../api/config";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuthStore } from "../../stores/authStore";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [hasUsers, setHasUsers] = useState(true);
   const [authMode, setLocalAuthMode] = useState<"legacy" | "jwt">("legacy");
   const { message } = useAppMessage();
+  const { setUser } = useAuthStore();
 
   useEffect(() => {
     // Step 1: Detect JWT auth mode
@@ -80,6 +82,8 @@ export default function LoginPage() {
           const res = await jwtAuthApi.register(values.username, values.password);
           if (res.token) {
             setAuthToken(res.token);
+            setUser({ username: res.username, roles: res.roles });
+            window.currentUserId = res.username;
             message.success(t("login.registerSuccess"));
             navigate(redirect, { replace: true });
           }
@@ -87,6 +91,8 @@ export default function LoginPage() {
           const res = await jwtAuthApi.login(values.username, values.password);
           if (res.token) {
             setAuthToken(res.token);
+            setUser({ username: res.username, roles: res.roles });
+            window.currentUserId = res.username;
             navigate(redirect, { replace: true });
           }
         }
@@ -96,6 +102,7 @@ export default function LoginPage() {
           const res = await authApi.register(values.username, values.password);
           if (res.token) {
             setAuthToken(res.token);
+            setUser({ username: res.username, roles: [] });
             message.success(t("login.registerSuccess"));
             navigate(redirect, { replace: true });
           }
@@ -103,6 +110,7 @@ export default function LoginPage() {
           const res = await authApi.login(values.username, values.password);
           if (res.token) {
             setAuthToken(res.token);
+            setUser({ username: res.username, roles: [] });
             navigate(redirect, { replace: true });
           } else {
             message.info(t("login.authNotEnabled"));

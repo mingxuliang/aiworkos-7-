@@ -27,7 +27,7 @@ class ChatSpec(BaseModel):
         ...,
         description="Session identifier (channel:user_id format)",
     )
-    user_id: str = Field(..., description="User identifier")
+    user_id: str = Field(default="", description="User identifier", exclude=True)
     channel: str = Field(default=DEFAULT_CHANNEL, description="Channel name")
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),

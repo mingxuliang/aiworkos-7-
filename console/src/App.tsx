@@ -32,6 +32,7 @@ import { authApi } from "./api/modules/auth";
 import { jwtAuthApi } from "./api/modules/auth";
 import { languageApi } from "./api/modules/language";
 import { getApiUrl, getApiToken, clearAuthToken, setAuthMode } from "./api/config";
+import { useAuthStore } from "./stores/authStore";
 import "./styles/layout.css";
 import "./styles/form-override.css";
 
@@ -164,11 +165,20 @@ function AppInner() {
   const { i18n } = useTranslation();
   const { isDark } = useTheme();
   const { loading: pluginsLoading } = usePlugins();
+  const { user } = useAuthStore();
   const selectedTheme = isDark ? bailianDarkTheme : bailianTheme;
   const lang = i18n.resolvedLanguage || i18n.language || "en";
   const [antdLocale, setAntdLocale] = useState<Locale>(
     antdLocaleMap[lang] ?? enUS,
   );
+
+  useEffect(() => {
+    // Sync logged-in username to global variable used by Chat/sessionApi
+    const w = window as { currentUserId?: string };
+    if (user?.username) {
+      w.currentUserId = user.username;
+    }
+  }, [user?.username]);
 
   useEffect(() => {
     if (!localStorage.getItem("language")) {

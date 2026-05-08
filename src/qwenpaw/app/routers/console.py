@@ -19,6 +19,47 @@ from ..agent_context import get_agent_for_request
 from ..runner.title_generator import generate_and_update_title
 
 
+async def _extract_jwt_user(request: Request) -> str | None:
+    """Fallback: decode the JWT directly from the Authorization header.
+
+    Starlette's BaseHTTPMiddleware may not reliably propagate
+    ``request.state`` to downstream handlers (the ``call_next`` closure
+    captures the outer ``scope`` but the inner app receives a fresh
+    ``Request`` built from that scope).  When ``request.state.user_id`` is
+    absent we decode the token ourselves so the handler still gets the
+    authenticated identity.
+
+    Reads ``username`` and ``roles`` from the Redis session cache
+    (source of truth), falling back to the JWT payload when Redis
+    is unavailable.
+    """
+    from ..auth_jwt.jwt_utils import decode_token as jwt_decode_token
+    from ..auth_jwt.middleware import JWTAuthMiddleware
+    from ..auth_jwt.redis_client import get_session_user_info
+
+    token = JWTAuthMiddleware._extract_token(request)
+    if not token:
+        return None
+    try:
+        payload = await jwt_decode_token(token)
+        logger.debug("JWT payload: %s", payload)
+    except Exception:
+        logger.debug("Fallback JWT decode failed", exc_info=True)
+        return None
+    if not payload:
+        return None
+
+    # Try Redis session cache first (source of truth)
+    jti = payload.get("jti", "")
+    if jti:
+        user_info = await get_session_user_info(jti)
+        if user_info:
+            return user_info.get("username") or str(user_info.get("user_id", ""))
+
+    # Fallback to JWT payload
+    return payload.get("username") or payload.get("sub")
+
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/console", tags=["console"])
@@ -150,6 +191,28 @@ async def post_console_chat(
         native_payload = _extract_session_and_payload(request_data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+
+    # Override user_id with JWT identity when available.
+    # This ensures sessions are associated with the actual logged-in user
+    # rather than the client-supplied value (which defaults to "default").
+    #
+    # NOTE: BaseHTTPMiddleware in Starlette may not reliably propagate
+    # request.state to downstream handlers, so we use a fallback that
+    # decodes the JWT directly from the Authorization header.
+    jwt_user = getattr(request.state, "user_id", None)
+
+    logger.debug("JWT user_id: %s", jwt_user)
+    if not jwt_user:
+        jwt_user = await _extract_jwt_user(request)
+    if jwt_user:
+        native_payload["sender_id"] = jwt_user
+        native_payload["meta"]["user_id"] = jwt_user
+        logger.debug(
+            "JWT user applied: user=%s session=%s",
+            jwt_user,
+            native_payload["meta"].get("session_id", "")[:20],
+        )
+
     session_id = console_channel.resolve_session_id(
         sender_id=native_payload["sender_id"],
         channel_meta=native_payload["meta"],
@@ -163,8 +226,18 @@ async def post_console_chat(
         native_payload["channel_id"],
         name=name,
     )
+
+
+
     tracker = workspace.task_tracker
 
+    logger.debug(
+        "新会话: chat_id=%s session_id=%s user_id=%s agent_id=%s",
+        chat.id,
+        session_id,
+        native_payload["sender_id"],
+        workspace.agent_id,
+    )
     # Kick off an LLM-backed title generation in the background when the chat
     # was just created with the truncated placeholder. This runs detached so
     # the streaming response is never blocked by title generation latency.

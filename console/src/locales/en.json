@@ -1499,7 +1499,11 @@
     "tutorial": "Tutorial",
     "faq": "FAQ",
     "github": "GitHub",
-    "updateAvailable": "Update Available"
+    "updateAvailable": "Update Available",
+    "user": {
+      "logout": "Logout",
+      "changePassword": "Change Password"
+    }
   },
   "theme": {
     "dark": "Dark",

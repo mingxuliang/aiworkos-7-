@@ -61,6 +61,14 @@ class JsonChatRepository(BaseChatRepository):
         tmp_path = self._path.with_suffix(self._path.suffix + ".tmp")
         payload = chats_file.model_dump(mode="json")
 
+        # user_id has exclude=True to hide it from API responses,
+        # but it MUST be persisted in JSON for query filtering.
+        # model_dump() skips excluded fields, so we re-inject here.
+        chats_payload = payload.get("chats", [])
+        for i, chat_spec in enumerate(chats_file.chats):
+            if i < len(chats_payload):
+                chats_payload[i]["user_id"] = chat_spec.user_id
+
         tmp_path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True),
             encoding="utf-8",

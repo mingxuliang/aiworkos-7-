@@ -125,7 +125,13 @@ async def create_access_token(
 
     # Register session in Redis with the same TTL
     ttl_seconds = expires_minutes * 60
-    await store_session(user_id, jti, ttl_seconds)
+    await store_session(
+        user_id=user_id,
+        jti=jti,
+        ttl_seconds=ttl_seconds,
+        username=username,
+        roles=roles,
+    )
 
     logger.info(
         "JWT created: user=%s roles=%s expires_in=%dm",

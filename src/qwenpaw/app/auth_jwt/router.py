@@ -115,7 +115,7 @@ def _get_current_user(request: Request) -> dict:
     """Extract current user info from request state (set by middleware)."""
     user = getattr(request.state, "user", None)
     if not user:
-        print("Not authenticated, 用户不存在")
+        logger.debug("Not authenticated: user not found in request state")
         raise HTTPException(status_code=401, detail="Not authenticated")
     return {
         "username": user,
