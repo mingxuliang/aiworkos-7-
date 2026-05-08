@@ -1,4 +1,5 @@
 import { getApiUrl } from "../config";
+import { buildAuthHeaders } from "../authHeaders";
 import { request } from "../request";
 
 // ── Legacy Auth types ──────────────────────────────────────────────
@@ -51,6 +52,25 @@ export interface JWTPermissionOut {
   id: number;
   code: string;
   description: string;
+}
+
+export interface PaginatedUserResponse {
+  items: JWTUserOut[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface UserCreateParams {
+  username: string;
+  password: string;
+  role_names: string[];
+}
+
+export interface ImportResultResponse {
+  created: number;
+  errors: string[];
 }
 
 // ── Legacy Auth API ──────────────────────────────────────────────
@@ -164,4 +184,60 @@ export const jwtAuthApi = {
 
   listPermissions: () =>
     request<JWTPermissionOut[]>("/auth/jwt/permissions"),
+
+  // User management page endpoints (admin only)
+  listUsersPaginated: (params: {
+    page?: number;
+    page_size?: number;
+    username?: string;
+    role?: string;
+  }) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set("page", String(params.page));
+    if (params.page_size) query.set("page_size", String(params.page_size));
+    if (params.username) query.set("username", params.username);
+    if (params.role) query.set("role", params.role);
+    const qs = query.toString();
+    return request<PaginatedUserResponse>(
+      `/auth/jwt/users/paginated${qs ? `?${qs}` : ""}`,
+    );
+  },
+
+  createUser: (params: UserCreateParams) =>
+    request<JWTUserOut>("/auth/jwt/users/create", {
+      method: "POST",
+      body: JSON.stringify(params),
+    }),
+
+  batchDeleteUsers: (userIds: number[]) =>
+    request<{ message: string }>("/auth/jwt/users/batch-delete", {
+      method: "POST",
+      body: JSON.stringify({ user_ids: userIds }),
+    }),
+
+  resetUserPassword: (userId: number, newPassword: string) =>
+    request<{ message: string }>(`/auth/jwt/users/${userId}/reset-password`, {
+      method: "PUT",
+      body: JSON.stringify({ new_password: newPassword }),
+    }),
+
+  importUsers: async (file: File): Promise<ImportResultResponse> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(getApiUrl("/auth/jwt/users/import"), {
+      method: "POST",
+      headers: buildAuthHeaders(),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Import failed: ${response.status} ${response.statusText} - ${errorText}`,
+      );
+    }
+
+    return await response.json();
+  },
 };

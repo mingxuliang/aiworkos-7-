@@ -113,6 +113,7 @@ jwt-auth = [
     "sqlalchemy[asyncio]>=2.0.0",
     "aiomysql>=0.2.0",
     "bcrypt>=4.0.0",
+    "openpyxl>=3.1.0",
 ]
 
 [tool.pytest.ini_options]

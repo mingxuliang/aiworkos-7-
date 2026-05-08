@@ -6,6 +6,7 @@ All routes are prefixed with ``/auth/jwt`` under the main ``/api`` router.
 from __future__ import annotations
 
 import logging
+import math
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -27,6 +28,10 @@ from .user_service import (
     remove_roles,
     update_user_password,
     user_has_role,
+    list_users_paginated,
+    batch_delete_users,
+    reset_user_password,
+    import_users_from_excel,
 )
 from ...constant import AUTH_MODE
 
@@ -64,6 +69,25 @@ class JWTChangePasswordRequest(BaseModel):
 
 class JWTAssignRolesRequest(BaseModel):
     role_ids: list[int]
+
+
+class UserCreateRequest(BaseModel):
+    username: str = Field(..., min_length=2, max_length=64)
+    password: str = Field(..., min_length=6)
+    role_names: list[str] = Field(default_factory=lambda: ["user"])
+
+
+class BatchDeleteRequest(BaseModel):
+    user_ids: list[int]
+
+
+class ResetPasswordRequest(BaseModel):
+    new_password: str = Field(..., min_length=6)
+
+
+class JWTChangePasswordRequest(BaseModel):
+    new_password: str = Field(..., min_length=6)
+    new_password_repeat: str = Field(..., min_length=6)
 
 
 class JWTStatusResponse(BaseModel):
@@ -104,6 +128,21 @@ class PermissionOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PaginatedUserOut(BaseModel):
+    """Paginated user list response."""
+    items: list[UserOut]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+class ImportResultOut(BaseModel):
+    """Result of Excel user import."""
+    created: int
+    errors: list[str]
 
 
 # ---------------------------------------------------------------------------
@@ -351,3 +390,124 @@ async def jwt_list_permissions(
         PermissionOut(id=p.id, code=p.code, description=p.description)
         for p in perms
     ]
+
+
+# ---------------------------------------------------------------------------
+# Admin-only endpoints (user management page)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/users/paginated", response_model=PaginatedUserOut)
+async def jwt_list_users_paginated(
+    page: int = 1,
+    page_size: int = 10,
+    username: Optional[str] = None,
+    role: Optional[str] = None,
+    request: Request = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """Paginated user list with optional search/filter (admin only)."""
+    _require_admin(request)
+    if page < 1:
+        page = 1
+    if page_size < 1 or page_size > 100:
+        page_size = 10
+
+    users, total = await list_users_paginated(
+        db, page=page, page_size=page_size,
+        username=username, role_name=role,
+    )
+    total_pages = math.ceil(total / page_size) if total > 0 else 0
+    return PaginatedUserOut(
+        items=[
+            UserOut(
+                id=u.id,
+                username=u.username,
+                is_active=u.is_active,
+                roles=[ur.role.name for ur in u.user_roles],
+            )
+            for u in users
+        ],
+        total=total,
+        page=page,
+        page_size=page_size,
+        total_pages=total_pages,
+    )
+
+
+@router.post("/users/create", response_model=UserOut)
+async def jwt_create_user(
+    req: UserCreateRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new user (admin only)."""
+    _require_admin(request)
+    try:
+        user = await create_user(db, req.username, req.password, req.role_names)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    return UserOut(
+        id=user.id,
+        username=user.username,
+        is_active=user.is_active,
+        roles=[ur.role.name for ur in user.user_roles],
+    )
+
+
+@router.post("/users/batch-delete")
+async def jwt_batch_delete_users(
+    req: BatchDeleteRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete multiple users by IDs (admin only)."""
+    _require_admin(request)
+    deleted = await batch_delete_users(db, req.user_ids)
+    return {"message": f"Deleted {deleted} user(s)"}
+
+
+@router.put("/users/{user_id}/reset-password")
+async def jwt_reset_user_password(
+    user_id: int,
+    req: ResetPasswordRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Reset a user's password (admin only)."""
+    _require_admin(request)
+    success, message = await reset_user_password(db, user_id, req.new_password)
+    if not success:
+        raise HTTPException(status_code=404, detail=message)
+    return {"message": message}
+
+
+@router.post("/users/import", response_model=ImportResultOut)
+async def jwt_import_users(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Import users from an Excel file (admin only).
+
+    Expected columns: username, password, role (comma-separated, optional).
+    """
+    _require_admin(request)
+
+    content_type = request.headers.get("content-type", "")
+    if "multipart/form-data" not in content_type:
+        raise HTTPException(
+            status_code=400,
+            detail="Content-Type must be multipart/form-data",
+        )
+
+    form = await request.form()
+    file = form.get("file")
+    if file is None:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Empty file")
+
+    created, errors = await import_users_from_excel(db, file_bytes)
+    return ImportResultOut(created=created, errors=errors)

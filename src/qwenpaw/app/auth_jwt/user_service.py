@@ -10,7 +10,7 @@ import logging
 from typing import Optional
 
 import bcrypt
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -320,3 +320,170 @@ def user_has_role(user: User, role_name: str) -> bool:
     Uses the in-memory user_roles relationship (no DB query).
     """
     return any(ur.role.name == role_name for ur in user.user_roles)
+
+
+# ---------------------------------------------------------------------------
+# Paginated user list with search & filter
+# ---------------------------------------------------------------------------
+
+
+async def list_users_paginated(
+    session: AsyncSession,
+    page: int = 1,
+    page_size: int = 10,
+    username: str | None = None,
+    role_name: str | None = None,
+) -> tuple[list[User], int]:
+    """Return a paginated list of users with optional filtering.
+
+    Args:
+        session: Async DB session.
+        page: 1-based page number.
+        page_size: Items per page.
+        username: Optional username substring filter (case-insensitive).
+        role_name: Optional role name filter.
+
+    Returns:
+        Tuple of (list of User, total_count).
+    """
+    # Base query with eager loading
+    query = select(User).options(
+        selectinload(User.user_roles).selectinload(UserRole.role),
+    )
+    count_query = select(func.count(User.id))
+
+    # Apply filters
+    if username:
+        query = query.where(User.username.ilike(f"%{username}%"))
+        count_query = count_query.where(User.username.ilike(f"%{username}%"))
+
+    if role_name:
+        query = (
+            query
+            .join(User.user_roles)
+            .join(UserRole.role)
+            .where(Role.name == role_name)
+        )
+        count_query = (
+            count_query
+            .join(User.user_roles)
+            .join(UserRole.role)
+            .where(Role.name == role_name)
+        )
+
+    # Get total count
+    total = (await session.execute(count_query)).scalar_one()
+
+    # Apply pagination
+    offset = (page - 1) * page_size
+    query = query.order_by(User.id).offset(offset).limit(page_size)
+
+    result = await session.execute(query)
+    users = list(result.scalars().unique().all())
+    return users, total
+
+
+# ---------------------------------------------------------------------------
+# Batch delete users
+# ---------------------------------------------------------------------------
+
+
+async def batch_delete_users(
+    session: AsyncSession,
+    user_ids: list[int],
+) -> int:
+    """Delete multiple users by their IDs.
+
+    Returns:
+        Number of users actually deleted.
+    """
+    deleted = 0
+    for uid in user_ids:
+        user = await get_user_by_id(session, uid)
+        if user is not None:
+            await session.delete(user)
+            deleted += 1
+    await session.commit()
+    logger.info("Batch deleted %d users: ids=%s", deleted, user_ids)
+    return deleted
+
+
+# ---------------------------------------------------------------------------
+# Admin reset user password
+# ---------------------------------------------------------------------------
+
+
+async def reset_user_password(
+    session: AsyncSession,
+    user_id: int,
+    new_password: str,
+) -> tuple[bool, str]:
+    """Admin resets a user's password without verifying the old one.
+
+    Returns:
+        Tuple of (success, message).
+    """
+    user = await get_user_by_id(session, user_id)
+    if user is None:
+        return False, "User not found"
+    user.password_hash = hash_password(new_password)
+    await session.commit()
+    logger.info("Password reset by admin for user id=%d", user_id)
+    return True, "Password reset successfully"
+
+
+# ---------------------------------------------------------------------------
+# Import users from Excel
+# ---------------------------------------------------------------------------
+
+
+async def import_users_from_excel(
+    session: AsyncSession,
+    file_bytes: bytes,
+) -> tuple[int, list[str]]:
+    """Parse an Excel file and create users in bulk.
+
+    Expected columns: username, password, role (comma-separated role names).
+
+    Returns:
+        Tuple of (created_count, error_messages).
+    """
+    import io
+    from openpyxl import load_workbook
+
+    wb = load_workbook(io.BytesIO(file_bytes), read_only=True)
+    ws = wb.active
+
+    created = 0
+    errors: list[str] = []
+
+    # Skip header row
+    rows = list(ws.iter_rows(min_row=2, values_only=True))
+    for idx, row in enumerate(rows, start=2):
+        if not row or len(row) < 2:
+            errors.append(f"Row {idx}: insufficient columns")
+            continue
+
+        username_val = str(row[0]).strip() if row[0] else ""
+        password_val = str(row[1]).strip() if row[1] else ""
+        role_val = str(row[2]).strip() if len(row) > 2 and row[2] else "user"
+
+        if not username_val or not password_val:
+            errors.append(f"Row {idx}: username or password is empty")
+            continue
+
+        role_names = [r.strip() for r in role_val.split(",") if r.strip()]
+        if not role_names:
+            role_names = ["user"]
+
+        try:
+            await create_user(session, username_val, password_val, role_names)
+            created += 1
+        except ValueError as exc:
+            errors.append(f"Row {idx} ({username_val}): {exc}")
+
+    wb.close()
+    logger.info(
+        "Excel import: created=%d, errors=%d", created, len(errors),
+    )
+    return created, errors

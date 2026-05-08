@@ -45,6 +45,7 @@ import { authApi, jwtAuthApi } from "../api/modules/auth";
 import { usePlugins } from "../plugins/PluginContext";
 import styles from "./index.module.less";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuthStore } from "../stores/authStore";
 import { KEY_TO_PATH, DEFAULT_OPEN_KEYS } from "./constants";
 
 // ── Layout ────────────────────────────────────────────────────────────────
@@ -65,6 +66,8 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
   const { message } = useAppMessage();
   const { isDark } = useTheme();
   const { pluginRoutes } = usePlugins();
+  const { user: authUser } = useAuthStore();
+  const isAdmin = authUser?.roles?.includes("admin") ?? false;
   const [authEnabled, setAuthEnabled] = useState(false);
   const [authMode, setLocalAuthMode] = useState<"legacy" | "jwt">("legacy");
   const [accountModalOpen, setAccountModalOpen] = useState(false);
@@ -314,6 +317,16 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       path: "/debug",
       label: t("nav.debug", "Debug"),
     },
+    ...(isAdmin
+      ? [
+          {
+            key: "user-management",
+            icon: <SparkSearchUserLine size={18} />,
+            path: "/user-management",
+            label: t("nav.userManagement"),
+          },
+        ]
+      : []),
     // Append plugin nav items dynamically
     ...pluginRoutes.map((route) => ({
       key: route.path.replace(/^\//, ""),
@@ -452,6 +465,15 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
           label: collapsed ? null : t("nav.debug", "Debug"),
           icon: <SparkDebugLine size={16} />,
         },
+        ...(isAdmin
+          ? [
+              {
+                key: "user-management",
+                label: collapsed ? null : t("nav.userManagement"),
+                icon: <SparkSearchUserLine size={16} />,
+              },
+            ]
+          : []),
       ],
     },
   ];
