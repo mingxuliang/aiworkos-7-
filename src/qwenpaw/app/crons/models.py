@@ -136,6 +136,7 @@ class CronJobSpec(BaseModel):
 
     runtime: JobRuntimeSpec = Field(default_factory=JobRuntimeSpec)
     meta: Dict[str, Any] = Field(default_factory=dict)
+    owner_user_id: Optional[str] = None
 
     @model_validator(mode="after")
     def _validate_task_type_fields(self) -> "CronJobSpec":
