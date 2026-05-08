@@ -967,6 +967,10 @@ class AgentProfileRef(BaseModel):
         default=True,
         description="Whether agent is enabled (controls instance loading)",
     )
+    user_id: Optional[str] = Field(
+        default=None,
+        description="Owner user ID for user isolation",
+    )
 
 
 class PlanConfig(BaseModel):
@@ -994,6 +998,10 @@ class AgentProfileConfig(BaseModel):
     template_id: Optional[str] = Field(
         default=None,
         description="Builtin template used when this agent was created",
+    )
+    user_id: Optional[str] = Field(
+        default=None,
+        description="Owner user ID for user isolation",
     )
 
     # Agent-specific configurations

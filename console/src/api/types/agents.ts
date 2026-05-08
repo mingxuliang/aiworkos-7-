@@ -9,6 +9,7 @@ export interface AgentSummary {
   workspace_dir: string;
   enabled: boolean;
   active_model?: ModelSlotConfig | null;
+  user_id?: string | null;
 }
 
 export interface AgentListResponse {
@@ -35,6 +36,7 @@ export interface AgentProfileConfig {
   system_prompt_files?: string[];
   tools?: unknown;
   security?: unknown;
+  user_id?: string | null;
 }
 
 export interface CreateAgentRequest {
@@ -50,4 +52,5 @@ export interface CreateAgentRequest {
 export interface AgentProfileRef {
   id: string;
   workspace_dir: string;
+  user_id?: string | null;
 }
