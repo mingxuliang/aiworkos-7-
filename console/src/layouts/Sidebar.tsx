@@ -325,6 +325,12 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
             path: "/user-management",
             label: t("nav.userManagement"),
           },
+          {
+            key: "role-management",
+            icon: <SparkAgentLine size={18} />,
+            path: "/role-management",
+            label: t("nav.roleManagement"),
+          },
         ]
       : []),
     // Append plugin nav items dynamically
@@ -471,6 +477,11 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
                 key: "user-management",
                 label: collapsed ? null : t("nav.userManagement"),
                 icon: <SparkSearchUserLine size={16} />,
+              },
+              {
+                key: "role-management",
+                label: collapsed ? null : t("nav.roleManagement"),
+                icon: <SparkAgentLine size={16} />,
               },
             ]
           : []),

@@ -64,7 +64,8 @@
     "debug": "Depuracao",
     "plugins": "Plugins",
     "backups": "Backups",
-    "userManagement": "Gerenciamento de Usuarios"
+    "userManagement": "Gerenciamento de Usuarios",
+    "roleManagement": "Gerenciamento de Funcoes"
   },
   "debug": {
     "title": "Depuracao",
@@ -1836,6 +1837,31 @@
     "selectAll": "Selecionar Todos",
     "selectedCount": "{{count}} selecionados",
     "totalUsers": "Total de {{total}} usuarios"
+  },
+  "roleManagementPage": {
+    "title": "Gerenciamento de Funcoes",
+    "description": "Gerenciar funcoes do sistema, incluindo criacao, edicao e exclusao.",
+    "roleName": "Nome da Funcao",
+    "description_field": "Descricao",
+    "description": "Descricao",
+    "descriptionPlaceholder": "Insira a descricao da funcao",
+    "permissions": "Permissoes",
+    "userCount": "Contagem de Usuarios",
+    "actions": "Acoes",
+    "addRole": "Adicionar Funcao",
+    "editRole": "Editar",
+    "deleteRole": "Excluir",
+    "deleteConfirm": "Tem certeza de que deseja excluir a funcao {{name}}? Esta acao nao pode ser desfeita.",
+    "deleteSuccess": "Funcao excluida",
+    "deleteFailed": "Falha ao excluir funcao",
+    "deleteHasUsers": "Nao e possivel excluir: usuarios estao atribuidos a esta funcao",
+    "createSuccess": "Funcao criada",
+    "createFailed": "Falha ao criar funcao",
+    "updateSuccess": "Funcao atualizada",
+    "updateFailed": "Falha ao atualizar funcao",
+    "loadFailed": "Falha ao carregar lista de funcoes",
+    "noRoles": "Sem funcoes",
+    "roleNamePlaceholder": "Insira o nome da funcao"
   },
   "login": {
     "title": "Login to QwenPaw",

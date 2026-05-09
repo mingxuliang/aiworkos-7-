@@ -40,6 +40,7 @@ export const KEY_TO_PATH: Record<string, string> = {
   debug: "/debug",
   backups: "/backups",
   "user-management": "/user-management",
+  "role-management": "/role-management",
 };
 
 export const KEY_TO_LABEL: Record<string, string> = {
@@ -63,6 +64,7 @@ export const KEY_TO_LABEL: Record<string, string> = {
   debug: "nav.debug",
   backups: "nav.backups",
   "user-management": "nav.userManagement",
+  "role-management": "nav.roleManagement",
 };
 
 // ── URL helpers ───────────────────────────────────────────────────────────

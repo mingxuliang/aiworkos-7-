@@ -262,6 +262,157 @@ async def list_roles(session: AsyncSession) -> list[Role]:
     return list(result.scalars().all())
 
 
+async def get_role_by_id(
+    session: AsyncSession,
+    role_id: int,
+) -> Optional[Role]:
+    """Get a role by its database ID."""
+    result = await session.execute(
+        select(Role)
+        .where(Role.id == role_id)
+        .options(
+            selectinload(Role.role_permissions).selectinload(
+                RolePermission.permission,
+            ),
+        ),
+    )
+    return result.scalar_one_or_none()
+
+
+async def count_users_with_role(
+    session: AsyncSession,
+    role_id: int,
+) -> int:
+    """Count how many users are assigned to a given role."""
+    result = await session.execute(
+        select(func.count(UserRole.user_id)).where(
+            UserRole.role_id == role_id,
+        ),
+    )
+    return result.scalar_one()
+
+
+async def create_role(
+    session: AsyncSession,
+    name: str,
+    description: str = "",
+) -> Role:
+    """Create a new role.
+
+    Args:
+        session: Async DB session.
+        name: Unique role name.
+        description: Optional role description.
+
+    Returns:
+        The created Role instance.
+
+    Raises:
+        ValueError: If a role with the same name already exists.
+    """
+    existing = await session.execute(
+        select(Role).where(Role.name == name),
+    )
+    if existing.scalar_one_or_none() is not None:
+        raise ValueError(f"Role '{name}' already exists")
+
+    role = Role(name=name, description=description)
+    session.add(role)
+    await session.commit()
+
+    # Re-query with eager loading
+    result = await session.execute(
+        select(Role)
+        .where(Role.id == role.id)
+        .options(
+            selectinload(Role.role_permissions).selectinload(
+                RolePermission.permission,
+            ),
+        ),
+    )
+    role = result.scalar_one()
+    logger.info("Role created: %s", name)
+    return role
+
+
+async def update_role(
+    session: AsyncSession,
+    role_id: int,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+) -> Optional[Role]:
+    """Update a role's name and/or description.
+
+    Args:
+        session: Async DB session.
+        role_id: Role ID to update.
+        name: New name (optional).
+        description: New description (optional).
+
+    Returns:
+        Updated Role instance, or None if not found.
+
+    Raises:
+        ValueError: If the new name conflicts with an existing role.
+    """
+    role = await get_role_by_id(session, role_id)
+    if role is None:
+        return None
+
+    if name is not None and name != role.name:
+        # Check uniqueness of new name
+        existing = await session.execute(
+            select(Role).where(Role.name == name),
+        )
+        if existing.scalar_one_or_none() is not None:
+            raise ValueError(f"Role '{name}' already exists")
+        role.name = name
+
+    if description is not None:
+        role.description = description
+
+    await session.commit()
+
+    # Re-query with eager loading
+    result = await session.execute(
+        select(Role)
+        .where(Role.id == role.id)
+        .options(
+            selectinload(Role.role_permissions).selectinload(
+                RolePermission.permission,
+            ),
+        ),
+    )
+    role = result.scalar_one()
+    logger.info("Role updated: id=%d name=%s", role_id, role.name)
+    return role
+
+
+async def delete_role(
+    session: AsyncSession,
+    role_id: int,
+) -> tuple[bool, str]:
+    """Delete a role by ID.
+
+    Refuses to delete if any users are still assigned to this role.
+
+    Returns:
+        Tuple of (success, message).
+    """
+    role = await get_role_by_id(session, role_id)
+    if role is None:
+        return False, "Role not found"
+
+    user_count = await count_users_with_role(session, role_id)
+    if user_count > 0:
+        return False, f"Cannot delete role '{role.name}': {user_count} user(s) are assigned to it"
+
+    await session.delete(role)
+    await session.commit()
+    logger.info("Role deleted: id=%d name=%s", role_id, role.name)
+    return True, "Role deleted"
+
+
 async def list_permissions(session: AsyncSession) -> list[Permission]:
     """List all permissions."""
     result = await session.execute(select(Permission))

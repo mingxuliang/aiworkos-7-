@@ -32,6 +32,11 @@ from .user_service import (
     batch_delete_users,
     reset_user_password,
     import_users_from_excel,
+    create_role,
+    update_role,
+    delete_role,
+    get_role_by_id,
+    count_users_with_role,
 )
 from ...constant import AUTH_MODE
 
@@ -116,9 +121,20 @@ class RoleOut(BaseModel):
     name: str
     description: str
     permissions: list[str]
+    user_count: int = 0
 
     class Config:
         from_attributes = True
+
+
+class RoleCreateRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=32)
+    description: str = Field(default="", max_length=256)
+
+
+class RoleUpdateRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=32)
+    description: str | None = Field(default=None, max_length=256)
 
 
 class PermissionOut(BaseModel):
@@ -364,18 +380,82 @@ async def jwt_list_roles(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """List all roles with their permissions (admin only)."""
+    """List all roles with their permissions and user count (admin only)."""
     _require_admin(request)
     roles = await list_roles(db)
-    return [
-        RoleOut(
-            id=r.id,
-            name=r.name,
-            description=r.description,
-            permissions=[rp.permission.code for rp in r.role_permissions],
+    result = []
+    for r in roles:
+        user_count = await count_users_with_role(db, r.id)
+        result.append(
+            RoleOut(
+                id=r.id,
+                name=r.name,
+                description=r.description,
+                permissions=[rp.permission.code for rp in r.role_permissions],
+                user_count=user_count,
+            )
         )
-        for r in roles
-    ]
+    return result
+
+
+@router.post("/roles/create", response_model=RoleOut)
+async def jwt_create_role(
+    req: RoleCreateRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new role (admin only)."""
+    _require_admin(request)
+    try:
+        role = await create_role(db, req.name, req.description)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    return RoleOut(
+        id=role.id,
+        name=role.name,
+        description=role.description,
+        permissions=[rp.permission.code for rp in role.role_permissions],
+        user_count=0,
+    )
+
+
+@router.put("/roles/{role_id}", response_model=RoleOut)
+async def jwt_update_role(
+    role_id: int,
+    req: RoleUpdateRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update a role's name and/or description (admin only)."""
+    _require_admin(request)
+    try:
+        role = await update_role(db, role_id, req.name, req.description)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    if role is None:
+        raise HTTPException(status_code=404, detail="Role not found")
+    user_count = await count_users_with_role(db, role.id)
+    return RoleOut(
+        id=role.id,
+        name=role.name,
+        description=role.description,
+        permissions=[rp.permission.code for rp in role.role_permissions],
+        user_count=user_count,
+    )
+
+
+@router.delete("/roles/{role_id}")
+async def jwt_delete_role(
+    role_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete a role (admin only). Refuses if users are assigned to it."""
+    _require_admin(request)
+    success, message = await delete_role(db, role_id)
+    if not success:
+        raise HTTPException(status_code=409, detail=message)
+    return {"message": message}
 
 
 @router.get("/permissions", response_model=list[PermissionOut])

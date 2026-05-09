@@ -64,7 +64,8 @@
     "debug": "Debug",
     "plugins": "Plugins",
     "backups": "Backups",
-    "userManagement": "User Management"
+    "userManagement": "User Management",
+    "roleManagement": "Role Management"
   },
   "debug": {
     "title": "Debug",
@@ -1861,6 +1862,31 @@
     "selectAll": "Select All",
     "selectedCount": "{{count}} selected",
     "totalUsers": "Total {{total}} users"
+  },
+  "roleManagementPage": {
+    "title": "Role Management",
+    "description": "Manage system roles, including creating, editing, and deleting roles.",
+    "roleName": "Role Name",
+    "description_field": "Description",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter role description",
+    "permissions": "Permissions",
+    "userCount": "User Count",
+    "actions": "Actions",
+    "addRole": "Add Role",
+    "editRole": "Edit",
+    "deleteRole": "Delete",
+    "deleteConfirm": "Are you sure you want to delete role {{name}}? This action cannot be undone.",
+    "deleteSuccess": "Role deleted",
+    "deleteFailed": "Failed to delete role",
+    "deleteHasUsers": "Cannot delete: users are assigned to this role",
+    "createSuccess": "Role created",
+    "createFailed": "Failed to create role",
+    "updateSuccess": "Role updated",
+    "updateFailed": "Failed to update role",
+    "loadFailed": "Failed to load role list",
+    "noRoles": "No roles",
+    "roleNamePlaceholder": "Enter role name"
   },
   "login": {
     "title": "Login to QwenPaw",

@@ -46,6 +46,7 @@ export interface JWTRoleOut {
   name: string;
   description: string;
   permissions: string[];
+  user_count: number;
 }
 
 export interface JWTPermissionOut {
@@ -181,6 +182,23 @@ export const jwtAuthApi = {
     }),
 
   listRoles: () => request<JWTRoleOut[]>("/auth/jwt/roles"),
+
+  createRole: (name: string, description: string = "") =>
+    request<JWTRoleOut>("/auth/jwt/roles/create", {
+      method: "POST",
+      body: JSON.stringify({ name, description }),
+    }),
+
+  updateRole: (roleId: number, data: { name?: string; description?: string }) =>
+    request<JWTRoleOut>(`/auth/jwt/roles/${roleId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteRole: (roleId: number) =>
+    request<{ message: string }>(`/auth/jwt/roles/${roleId}`, {
+      method: "DELETE",
+    }),
 
   listPermissions: () =>
     request<JWTPermissionOut[]>("/auth/jwt/permissions"),

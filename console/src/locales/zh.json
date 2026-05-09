@@ -64,7 +64,8 @@
     "debug": "调试",
     "plugins": "插件",
     "backups": "备份",
-    "userManagement": "用户管理"
+    "userManagement": "用户管理",
+    "roleManagement": "角色管理"
   },
   "debug": {
     "title": "调试",
@@ -1724,6 +1725,31 @@
     "selectAll": "全选",
     "selectedCount": "已选 {{count}} 项",
     "totalUsers": "共 {{total}} 个用户"
+  },
+  "roleManagementPage": {
+    "title": "角色管理",
+    "description": "管理系统角色，包括创建、编辑和删除角色。",
+    "roleName": "角色名",
+    "description_field": "描述",
+    "description": "描述",
+    "descriptionPlaceholder": "请输入角色描述",
+    "permissions": "权限",
+    "userCount": "用户数",
+    "actions": "操作",
+    "addRole": "添加角色",
+    "editRole": "编辑",
+    "deleteRole": "删除",
+    "deleteConfirm": "确定删除角色 {{name}} 吗？此操作不可撤销。",
+    "deleteSuccess": "角色已删除",
+    "deleteFailed": "删除角色失败",
+    "deleteHasUsers": "该角色下有用户，无法删除",
+    "createSuccess": "角色已创建",
+    "createFailed": "创建角色失败",
+    "updateSuccess": "角色已更新",
+    "updateFailed": "更新角色失败",
+    "loadFailed": "加载角色列表失败",
+    "noRoles": "暂无角色",
+    "roleNamePlaceholder": "请输入角色名"
   },
   "login": {
     "title": "登录 QwenPaw",

@@ -62,7 +62,8 @@
     "plugins": "Плагины",
     "acp": "ACP",
     "backups": "Резервные копии",
-    "userManagement": "Управление пользователями"
+    "userManagement": "Управление пользователями",
+    "roleManagement": "Управление ролями"
   },
   "debug": {
     "title": "Отладка",
@@ -1595,6 +1596,31 @@
     "selectAll": "Выбрать все",
     "selectedCount": "Выбрано {{count}}",
     "totalUsers": "Всего {{total}} пользователей"
+  },
+  "roleManagementPage": {
+    "title": "Управление ролями",
+    "description": "Управление ролями системы, включая создание, редактирование и удаление.",
+    "roleName": "Имя роли",
+    "description_field": "Описание",
+    "description": "Описание",
+    "descriptionPlaceholder": "Введите описание роли",
+    "permissions": "Разрешения",
+    "userCount": "Количество пользователей",
+    "actions": "Действия",
+    "addRole": "Добавить роль",
+    "editRole": "Редактировать",
+    "deleteRole": "Удалить",
+    "deleteConfirm": "Вы уверены, что хотите удалить роль {{name}}? Это действие нельзя отменить.",
+    "deleteSuccess": "Роль удалена",
+    "deleteFailed": "Не удалось удалить роль",
+    "deleteHasUsers": "Нельзя удалить: к этой роли привязаны пользователи",
+    "createSuccess": "Роль создана",
+    "createFailed": "Не удалось создать роль",
+    "updateSuccess": "Роль обновлена",
+    "updateFailed": "Не удалось обновить роль",
+    "loadFailed": "Не удалось загрузить список ролей",
+    "noRoles": "Нет ролей",
+    "roleNamePlaceholder": "Введите имя роли"
   },
   "login": {
     "title": "Вход в QwenPaw",

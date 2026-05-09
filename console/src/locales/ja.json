@@ -62,7 +62,8 @@
     "plugins": "プラグイン",
     "acp": "ACP",
     "backups": "バックアップ",
-    "userManagement": "ユーザー管理"
+    "userManagement": "ユーザー管理",
+    "roleManagement": "ロール管理"
   },
   "debug": {
     "title": "デバッグ",
@@ -1580,6 +1581,31 @@
     "selectAll": "全選択",
     "selectedCount": "{{count}} 件選択中",
     "totalUsers": "合計 {{total}} ユーザー"
+  },
+  "roleManagementPage": {
+    "title": "ロール管理",
+    "description": "システムロールの作成、編集、削除を管理します。",
+    "roleName": "ロール名",
+    "description_field": "説明",
+    "description": "説明",
+    "descriptionPlaceholder": "ロールの説明を入力",
+    "permissions": "権限",
+    "userCount": "ユーザー数",
+    "actions": "操作",
+    "addRole": "ロール追加",
+    "editRole": "編集",
+    "deleteRole": "削除",
+    "deleteConfirm": "ロール {{name}} を削除しますか？この操作は元に戻せません。",
+    "deleteSuccess": "ロールを削除しました",
+    "deleteFailed": "ロールの削除に失敗しました",
+    "deleteHasUsers": "このロールにユーザーがいるため削除できません",
+    "createSuccess": "ロールを作成しました",
+    "createFailed": "ロールの作成に失敗しました",
+    "updateSuccess": "ロールを更新しました",
+    "updateFailed": "ロールの更新に失敗しました",
+    "loadFailed": "ロールリストの読み込みに失敗しました",
+    "noRoles": "ロールがありません",
+    "roleNamePlaceholder": "ロール名を入力"
   },
   "login": {
     "title": "QwenPaw にログイン",
