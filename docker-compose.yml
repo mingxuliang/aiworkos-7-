@@ -10,11 +10,14 @@ volumes:
 
 services:
   qwenpaw:
-    image: agentscope/qwenpaw:latest
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    image: qwenpaw:custom
     container_name: qwenpaw
     restart: always
     ports:
-      - "127.0.0.1:8088:8088"
+      - "8088:8088"
     # environment:
     #   - QWENPAW_AUTH_ENABLED=true
     #   - QWENPAW_AUTH_USERNAME=admin

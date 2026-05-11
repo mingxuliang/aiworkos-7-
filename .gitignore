@@ -34,7 +34,6 @@ website/dist/
 website/public/search-index.json
 
 # misc
-.env
 .env.*
 providers.json
 envs.json
@@ -63,8 +62,9 @@ yarn-error.log*
 openapi-ts*.log
 
 # Only ignore npm lockfiles inside subpackages
-console/package-lock.json
-website/package-lock.json
+# 生产环境部署，保证依赖版本一致
+# console/package-lock.json
+# website/package-lock.json
 
 # MacOS
 .DS_Store
