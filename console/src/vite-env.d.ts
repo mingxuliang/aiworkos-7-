@@ -18,6 +18,9 @@ interface PyWebViewAPI {
 
 declare global {
   interface Window {
+    currentUserId?: string;
+    currentSessionId?: string;
+    currentChannel?: string;
     pywebview?: {
       api: PyWebViewAPI;
     };

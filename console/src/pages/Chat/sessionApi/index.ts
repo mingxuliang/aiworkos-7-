@@ -29,6 +29,7 @@ const CARD_RESPONSE = "AgentScopeRuntimeResponseCard";
 // ---------------------------------------------------------------------------
 
 interface CustomWindow extends Window {
+  currentUserId?: string;
   currentSessionId?: string;
   currentChannel?: string;
 }

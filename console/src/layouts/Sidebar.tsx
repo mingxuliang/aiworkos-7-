@@ -40,7 +40,7 @@ import {
   SparkDebugLine,
   SparkSaveLine,
 } from "@agentscope-ai/icons";
-import { clearAuthToken, getAuthMode } from "../api/config";
+import { clearAuthToken } from "../api/config";
 import { authApi, jwtAuthApi } from "../api/modules/auth";
 import { usePlugins } from "../plugins/PluginContext";
 import styles from "./index.module.less";

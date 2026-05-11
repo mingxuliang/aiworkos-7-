@@ -39,7 +39,7 @@ export function UserManagementTab() {
   }, [fetchData]);
 
   const handleDeleteUser = useCallback(
-    async (userId: number, username: string) => {
+    async (userId: number, _username: string) => {
       try {
         await jwtAuthApi.deleteUser(userId);
         message.success(t("security.userManagement.deleteSuccess"));

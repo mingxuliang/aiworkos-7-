@@ -67,6 +67,7 @@ interface SessionInfo {
 }
 
 interface CustomWindow extends Window {
+  currentUserId?: string;
   currentSessionId?: string;
   currentChannel?: string;
 }
@@ -133,7 +134,7 @@ function renderSuggestionLabel(command: string, description: string) {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_CHANNEL = "console";
-const DEFAULT_SESSION_NAME = "New Chat";
+const DEFAULT_USER_ID = "admin";
 
 // ---------------------------------------------------------------------------
 // Custom hooks
