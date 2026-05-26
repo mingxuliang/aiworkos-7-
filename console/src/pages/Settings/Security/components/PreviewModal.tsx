@@ -5,8 +5,8 @@ import { useTheme } from "../../../../contexts/ThemeContext";
 
 const SEVERITY_COLORS: Record<string, string> = {
   CRITICAL: "red",
-  HIGH: "orange",
-  MEDIUM: "gold",
+  HIGH: "volcano",
+  MEDIUM: "geekblue",
   LOW: "blue",
   INFO: "default",
 };
@@ -63,7 +63,7 @@ export function PreviewModal({ rule, onClose }: PreviewModalProps) {
         </p>
         <p>
           <strong>{t("security.rules.actionLabel")}:</strong>{" "}
-          <Tag color="orange">{t("security.rules.actionApproval")}</Tag>
+          <Tag color="geekblue">{t("security.rules.actionApproval")}</Tag>
         </p>
         <p style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
           <strong>{t("security.rules.descriptionLabel")}:</strong>{" "}

@@ -29,11 +29,10 @@ import { lazyImportWithRetry } from "./utils/lazyWithRetry";
 
 const LoginPage = lazyImportWithRetry("./pages/Login/index");
 import { authApi } from "./api/modules/auth";
-import { jwtAuthApi } from "./api/modules/auth";
 import { languageApi } from "./api/modules/language";
-import { getApiUrl, getApiToken, clearAuthToken, setAuthMode } from "./api/config";
-import { useAuthStore } from "./stores/authStore";
+import { getApiUrl, getApiToken, clearAuthToken } from "./api/config";
 import "./styles/layout.css";
+import "./styles/agent-team-port.css";
 import "./styles/form-override.css";
 
 const antdLocaleMap: Record<string, Locale> = {
@@ -66,48 +65,6 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     (async () => {
       try {
-        // Step 1: Detect auth mode (JWT vs legacy)
-        let isJwtMode = false;
-        try {
-          const jwtStatus = await jwtAuthApi.getStatus();
-          if (cancelled) return;
-          if (jwtStatus.enabled) {
-            isJwtMode = true;
-            setAuthMode("jwt");
-          } else {
-            setAuthMode("legacy");
-          }
-        } catch {
-          // JWT status endpoint not available → legacy mode
-          if (!cancelled) setAuthMode("legacy");
-        }
-
-        if (isJwtMode) {
-          // JWT auth mode
-          const token = getApiToken();
-          if (!token) {
-            if (!cancelled) setStatus("auth-required");
-            return;
-          }
-          try {
-            const res = await jwtAuthApi.verify();
-            if (cancelled) return;
-            if (res.valid) {
-              setStatus("ok");
-            } else {
-              clearAuthToken();
-              setStatus("auth-required");
-            }
-          } catch {
-            if (!cancelled) {
-              clearAuthToken();
-              setStatus("auth-required");
-            }
-          }
-          return;
-        }
-
-        // Legacy auth mode
         const res = await authApi.getStatus();
         if (cancelled) return;
         if (!res.enabled) {
@@ -165,20 +122,11 @@ function AppInner() {
   const { i18n } = useTranslation();
   const { isDark } = useTheme();
   const { loading: pluginsLoading } = usePlugins();
-  const { user } = useAuthStore();
   const selectedTheme = isDark ? bailianDarkTheme : bailianTheme;
   const lang = i18n.resolvedLanguage || i18n.language || "en";
   const [antdLocale, setAntdLocale] = useState<Locale>(
     antdLocaleMap[lang] ?? enUS,
   );
-
-  useEffect(() => {
-    // Sync logged-in username to global variable used by Chat/sessionApi
-    const w = window as { currentUserId?: string };
-    if (user?.username) {
-      w.currentUserId = user.username;
-    }
-  }, [user?.username]);
 
   useEffect(() => {
     if (!localStorage.getItem("language")) {
@@ -231,7 +179,19 @@ function AppInner() {
             ? antdTheme.darkAlgorithm
             : antdTheme.defaultAlgorithm,
           token: {
-            colorPrimary: "#FF7F16",
+            colorPrimary: "#3b82f6",
+            colorLink: "#3b82f6",
+            colorInfo: "#3b82f6",
+            colorSuccess: "#4ade80",
+            colorWarning: "#3b82f6",
+            colorError: "#ef4444",
+            borderRadius: 10,
+            borderRadiusLG: 12,
+            borderRadiusSM: 8,
+            controlHeight: 36,
+            controlHeightLG: 40,
+            fontFamily:
+              "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
           },
         }}
       >

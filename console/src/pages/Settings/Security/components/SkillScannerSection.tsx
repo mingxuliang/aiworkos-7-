@@ -196,7 +196,7 @@ export function SkillScannerSection() {
       key: "action",
       width: 100,
       render: (action: string) => (
-        <Tag color={action === "blocked" ? "red" : "orange"}>
+        <Tag color={action === "blocked" ? "red" : "geekblue"}>
           {action === "blocked"
             ? t("security.skillScanner.scanAlerts.actionBlocked")
             : t("security.skillScanner.scanAlerts.actionWarned")}

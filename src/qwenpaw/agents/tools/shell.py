@@ -21,6 +21,9 @@ from ...config.context import (
     get_current_shell_command_timeout,
     get_current_workspace_dir,
 )
+from ...security.sandbox import get_current_sandbox_root
+from ...security.sandbox.docker_runner import DockerSandboxRunner
+from ...security.sandbox.settings import load_sandbox_settings, use_docker_shell_backend
 
 
 def _kill_process_tree_win32(pid: int) -> None:
@@ -212,8 +215,8 @@ def _execute_subprocess_sync(
         cmd = _sanitize_win_cmd(cmd)
         wrapped = f'cmd /D /S /C "{cmd}"'
 
-        stdout_fd, stdout_path = tempfile.mkstemp(prefix="qwenpaw_out_")
-        stderr_fd, stderr_path = tempfile.mkstemp(prefix="qwenpaw_err_")
+        stdout_fd, stdout_path = tempfile.mkstemp(prefix="aiwork_out_")
+        stderr_fd, stderr_path = tempfile.mkstemp(prefix="aiwork_err_")
         stdout_file = os.fdopen(stdout_fd, "wb")
         stderr_file = os.fdopen(stderr_fd, "wb")
 
@@ -283,6 +286,94 @@ def _execute_subprocess_sync(
                     pass
 
 
+                    pass
+
+
+def _format_shell_tool_response(
+    returncode: int,
+    stdout_str: str,
+    stderr_str: str,
+) -> ToolResponse:
+    """Build a ToolResponse from shell execution output."""
+    if returncode == 0:
+        if stdout_str:
+            response_text = stdout_str
+        else:
+            response_text = "Command executed successfully (no output)."
+        if stderr_str:
+            response_text += f"\n[stderr]\n{stderr_str}"
+    else:
+        response_parts = [f"Command failed with exit code {returncode}."]
+        if stdout_str:
+            response_parts.append(f"\n[stdout]\n{stdout_str}")
+        if stderr_str:
+            response_parts.append(f"\n[stderr]\n{stderr_str}")
+        response_text = "".join(response_parts)
+
+    return ToolResponse(
+        content=[
+            TextBlock(
+                type="text",
+                text=response_text,
+            ),
+        ],
+    )
+
+
+async def _execute_shell_in_docker(
+    command: str,
+    working_dir: Path,
+    timeout: float,
+) -> ToolResponse | None:
+    """Execute shell in Docker sandbox, or return None to fall back to local."""
+    settings = load_sandbox_settings()
+    runner = DockerSandboxRunner(settings)
+    available = await runner.is_available()
+    if not available:
+        if settings.fail_closed:
+            return ToolResponse(
+                content=[
+                    TextBlock(
+                        type="text",
+                        text=(
+                            "Error: Docker sandbox backend is unavailable and "
+                            "fail_closed=true."
+                        ),
+                    ),
+                ],
+            )
+        if settings.fallback_backend != "local":
+            return ToolResponse(
+                content=[
+                    TextBlock(
+                        type="text",
+                        text=(
+                            "Error: Docker sandbox backend is unavailable and "
+                            "no local fallback is configured."
+                        ),
+                    ),
+                ],
+            )
+        return None
+
+    result = await runner.run_shell(
+        command,
+        Path(working_dir),
+        timeout=timeout,
+        workspace_dir=get_current_workspace_dir(),
+    )
+    prefix = f"[sandbox:{result.backend} {result.duration_seconds:.2f}s]\n"
+    stdout = result.stdout
+    stderr = result.stderr
+    if stdout:
+        stdout = prefix + stdout
+    elif stderr:
+        stderr = prefix + stderr
+    else:
+        stdout = prefix
+    return _format_shell_tool_response(result.returncode, stdout, stderr)
+
+
 # pylint: disable=too-many-branches, too-many-statements
 async def execute_shell_command(
     command: str,
@@ -327,11 +418,15 @@ async def execute_shell_command(
         if configured is not None:
             timeout = configured
 
-    # Use current workspace_dir from context, fallback to WORKING_DIR
+    # Use sandbox root when available, else workspace_dir, else WORKING_DIR.
     if cwd is not None:
         working_dir = cwd
     else:
-        working_dir = get_current_workspace_dir() or WORKING_DIR
+        working_dir = (
+            get_current_sandbox_root()
+            or get_current_workspace_dir()
+            or WORKING_DIR
+        )
 
     # Ensure the venv Python is on PATH for subprocesses
     env = os.environ.copy()
@@ -343,6 +438,15 @@ async def execute_shell_command(
         env["PATH"] = python_bin_dir
 
     try:
+        if use_docker_shell_backend():
+            docker_response = await _execute_shell_in_docker(
+                cmd,
+                Path(working_dir),
+                timeout,
+            )
+            if docker_response is not None:
+                return docker_response
+
         if sys.platform == "win32":
             # Windows: use thread pool to avoid asyncio subprocess limitations
             returncode, stdout_str, stderr_str = await asyncio.to_thread(
@@ -418,28 +522,10 @@ async def execute_shell_command(
                     stdout_str = ""
                     stderr_str = stderr_suffix
 
-        if returncode == 0:
-            if stdout_str:
-                response_text = stdout_str
-            else:
-                response_text = "Command executed successfully (no output)."
-            if stderr_str:
-                response_text += f"\n[stderr]\n{stderr_str}"
-        else:
-            response_parts = [f"Command failed with exit code {returncode}."]
-            if stdout_str:
-                response_parts.append(f"\n[stdout]\n{stdout_str}")
-            if stderr_str:
-                response_parts.append(f"\n[stderr]\n{stderr_str}")
-            response_text = "".join(response_parts)
-
-        return ToolResponse(
-            content=[
-                TextBlock(
-                    type="text",
-                    text=response_text,
-                ),
-            ],
+        return _format_shell_tool_response(
+            returncode,
+            stdout_str,
+            stderr_str,
         )
 
     except Exception as e:

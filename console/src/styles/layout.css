@@ -1,89 +1,364 @@
+/* ─── Design System: Enterprise AI Workbench ───────────────────────────────── */
+
 html,
 body {
   height: 100%;
   overflow: hidden;
   margin: 0;
   padding: 0;
-  background: #f9f8f4;
+  background: #f0f4fa;
 }
 
 .qwenpaw-layout {
-  background: #f9f8f4;
+  background: #f0f4fa;
 }
 
-/* ─── Dark mode global token overrides ─────────────────────────────────────── */
+/* ─── Page layout helpers ─────────────────────────────────────────────────── */
+.page-container {
+  background: #f0f4fa !important;
+  overflow-y: auto;
+}
+
+.page-content {
+  background: transparent;
+  padding: 20px 24px;
+  min-height: calc(100vh - 56px);
+}
+
+/* ─── Ant Design layout background overrides ────────────────────────────────── */
+.qwenpaw-layout-content {
+  background: #f0f4fa !important;
+}
+
+.qwenpaw-layout-has-sider > .qwenpaw-layout,
+.qwenpaw-layout-has-sider > .qwenpaw-layout-content {
+  background: #f0f4fa !important;
+}
+
+/* ─── Typography refinements ──────────────────────────────────────────────── */
+body {
+  font-feature-settings: "cv01", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Card baseline ──────────────────────────────────────────────────────── */
+.qwenpaw-card,
+.ant-card {
+  border-radius: 16px !important;
+  border-color: #f3f4f6 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  background: #ffffff !important;
+}
+
+.qwenpaw-card-head,
+.ant-card-head {
+  border-radius: 16px 16px 0 0 !important;
+  border-bottom-color: #f3f4f6 !important;
+  padding: 0 20px !important;
+  min-height: 48px !important;
+}
+
+.qwenpaw-card-body,
+.ant-card-body {
+  padding: 16px 20px !important;
+}
+
+/* ─── Table refinements ──────────────────────────────────────────────────── */
+.qwenpaw-table-wrapper,
+.ant-table-wrapper {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.qwenpaw-table,
+.ant-table {
+  border-radius: 16px !important;
+}
+
+/* ─── Form / Input refinements ───────────────────────────────────────────── */
+.qwenpaw-input,
+.ant-input {
+  border-radius: 10px !important;
+  border-color: #e5e7eb !important;
+  background: #fafafa;
+  transition: all 0.18s ease;
+}
+
+.qwenpaw-input:focus,
+.ant-input:focus,
+.qwenpaw-input-focused,
+.ant-input-focused {
+  border-color: #3b82f6 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+.qwenpaw-input-affix-wrapper,
+.ant-input-affix-wrapper {
+  border-radius: 10px !important;
+  border-color: #e5e7eb !important;
+  background: #fafafa;
+}
+
+.qwenpaw-input-affix-wrapper:focus-within,
+.ant-input-affix-wrapper:focus-within {
+  border-color: #3b82f6 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* ─── Select refinements ─────────────────────────────────────────────────── */
+.qwenpaw-select-selector,
+.ant-select-selector {
+  border-radius: 10px !important;
+  border-color: #e5e7eb !important;
+  background: #fafafa !important;
+  transition: all 0.18s ease !important;
+}
+
+.qwenpaw-select-focused .qwenpaw-select-selector,
+.ant-select-focused .ant-select-selector {
+  border-color: #3b82f6 !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* ─── Button refinements ─────────────────────────────────────────────────── */
+.qwenpaw-btn-primary,
+.ant-btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.28) !important;
+  font-weight: 600;
+}
+
+.qwenpaw-btn-primary:hover,
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%) !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.36) !important;
+}
+
+/* ─── Tag refinements ────────────────────────────────────────────────────── */
+.qwenpaw-tag,
+.ant-tag {
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 2px 8px !important;
+  border: 1px solid transparent !important;
+}
+
+/* ─── Dropdown / Popup ───────────────────────────────────────────────────── */
+.qwenpaw-dropdown .qwenpaw-dropdown-menu,
+.ant-dropdown .ant-dropdown-menu {
+  border-radius: 12px !important;
+  border: 1px solid #f3f4f6 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  padding: 6px !important;
+}
+
+.qwenpaw-dropdown-menu-item,
+.ant-dropdown-menu-item {
+  border-radius: 8px !important;
+  font-size: 13px !important;
+}
+
+/* ─── Switch ─────────────────────────────────────────────────────────────── */
+.qwenpaw-switch-checked,
+.ant-switch-checked {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+}
+
+/* ─── Animation keyframes ─────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes message-in {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes guide-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+@keyframes voice-bar {
+  0%, 100% { height: 4px; }
+  50%       { height: 16px; }
+}
+
+/* Utility animation classes */
+.animate-fadeIn       { animation: fadeIn 0.2s ease-out; }
+.animate-fadeInUp     { animation: fadeInUp 0.3s ease-out; }
+.animate-message-in   { animation: message-in 0.25s ease-out; }
+.animate-cursor-blink { animation: cursor-blink 1s infinite; }
+.animate-guide-float  { animation: guide-float 3s ease-in-out infinite; }
+.animate-voice-bar    { animation: voice-bar 0.8s ease-in-out infinite; }
+
+
+/* ─── Dark mode — tokens mirror copaw二次开发/opt平台/src/index.css (dark) ─── */
 html.dark-mode {
   color-scheme: dark;
+  /* ── depth layers (opt平台 exact match) ── */
+  --copaw-dm-canvas: #0a0f1e;
+  --copaw-dm-rail: #0e1525;
+  --copaw-dm-surface: #111827;
+  --copaw-dm-surface-inner: #111827;
+  --copaw-dm-surface-raised: #1a2235;
+  --copaw-dm-deep: #0d1424;          /* inner card / report card background */
+  --copaw-dm-input: #1f2a42;
+  --copaw-dm-border: rgba(255, 255, 255, 0.06);
+  --copaw-dm-border-subtle: rgba(255, 255, 255, 0.05);
+  /* ── text hierarchy (opt平台 slate palette) ── */
+  --copaw-dm-text-primary: #ffffff;
+  --copaw-dm-text-secondary: #94a3b8;  /* slate-400 */
+  --copaw-dm-text-muted: #475569;      /* slate-600 */
+  --copaw-dm-text-faint: #334155;      /* slate-700 */
+  /* ── accent colors (opt平台 cyan + semantic) ── */
+  --copaw-dm-accent: #06b6d4;          /* cyan-500 — primary interactive */
+  --copaw-dm-accent-light: #22d3ee;    /* cyan-400 */
+  --copaw-dm-accent-ring: rgba(6, 182, 212, 0.25);
+  --copaw-dm-success: #4ade80;         /* emerald-400 */
+  --copaw-dm-warning: #fb923c;         /* orange-400 */
+  --copaw-dm-error: #f87171;           /* red-400 */
+  /* ── scrollbar (opt平台 chat-scroll-y) ── */
+  --copaw-dm-sb-track: transparent;
+  --copaw-dm-sb-thumb: rgba(34, 211, 238, 0.22);
+  --copaw-dm-sb-thumb-hover: rgba(45, 212, 191, 0.42);
+  --copaw-dm-sb-thumb-active: rgba(6, 182, 212, 0.62);
+  --copaw-dm-sb-inset: rgba(255, 255, 255, 0.28);
+  --copaw-dm-sb-ambient: rgba(0, 0, 0, 0.35);
 }
 
 html.dark-mode body {
-  background: #141414;
-  color: rgba(255, 255, 255, 0.85);
+  background: var(--copaw-dm-canvas);
+  color: var(--copaw-dm-text-primary);
 }
 
 /* Ant Design layout background in dark mode */
 html.dark-mode .ant-layout,
 html.dark-mode .qwenpaw-layout {
-  background: #141414 !important;
+  background: var(--copaw-dm-canvas) !important;
 }
 
 html.dark-mode .ant-layout-content,
 html.dark-mode .qwenpaw-layout-content {
-  background: #141414 !important;
+  background: var(--copaw-dm-canvas) !important;
+}
+
+html.dark-mode .page-container {
+  background: var(--copaw-dm-canvas) !important;
 }
 
 /* Page content area background */
 html.dark-mode .page-content {
-  background: #141414;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
-/* Card components — @agentscope-ai/design uses qwenpaw prefix */
+/* Dropdown / Popover (dark surfaces — light styles stay above) */
+html.dark-mode .qwenpaw-dropdown .qwenpaw-dropdown-menu,
+html.dark-mode .ant-dropdown .ant-dropdown-menu {
+  background: var(--copaw-dm-surface-raised) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
+  box-shadow:
+    0 14px 44px rgba(0, 0, 0, 0.55),
+    0 2px 12px rgba(0, 0, 0, 0.38) !important;
+}
+
+html.dark-mode .qwenpaw-dropdown-menu-item,
+html.dark-mode .ant-dropdown-menu-item,
+html.dark-mode .ant-dropdown-menu-submenu-title {
+  color: rgba(255, 255, 255, 0.84) !important;
+}
+
+html.dark-mode .qwenpaw-dropdown-menu-item:hover,
+html.dark-mode .ant-dropdown-menu-item:hover,
+html.dark-mode .ant-dropdown-menu-submenu-title:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+html.dark-mode .qwenpaw-dropdown-menu-item-disabled,
+html.dark-mode .ant-dropdown-menu-item-disabled {
+  color: rgba(255, 255, 255, 0.35) !important;
+}
+
+html.dark-mode .qwenpaw-popover-inner,
+html.dark-mode .ant-popover-inner {
+  background: var(--copaw-dm-surface-raised) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55) !important;
+}
+
+html.dark-mode .qwenpaw-popover-inner-content,
+html.dark-mode .ant-popover-inner-content {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+/* Card components — opt: --bg-card (#1a2235) */
 html.dark-mode .qwenpaw-card,
 html.dark-mode .ant-card {
-  background: #1f1f1f !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border-color: var(--copaw-dm-border) !important;
+  color: var(--copaw-dm-text-primary) !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 12px 40px rgba(0, 0, 0, 0.45) !important;
 }
 
 html.dark-mode .qwenpaw-card-head,
 html.dark-mode .ant-card-head {
-  background: #1f1f1f !important;
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border-bottom-color: var(--copaw-dm-border-subtle) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .qwenpaw-card-head-title,
 html.dark-mode .ant-card-head-title {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 /* @agentscope-ai/design Card custom title (sparkPrefix-title inside card-wrapper) */
 html.dark-mode .qwenpaw-card-wrapper .qwenpaw-title,
 html.dark-mode .qwenpaw-spark-title {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .qwenpaw-card-wrapper .qwenpaw-info,
 html.dark-mode .qwenpaw-spark-info {
-  color: rgba(255, 255, 255, 0.35) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 html.dark-mode .qwenpaw-card-body,
 html.dark-mode .ant-card-body {
-  background: #1f1f1f !important;
+  background: var(--copaw-dm-surface-raised) !important;
 }
 
 /* Table components */
 html.dark-mode .qwenpaw-table,
 html.dark-mode .ant-table {
-  background: #1f1f1f !important;
+  background: var(--copaw-dm-surface) !important;
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
 html.dark-mode .qwenpaw-table-wrapper,
 html.dark-mode .ant-table-wrapper {
-  background: #1f1f1f !important;
+  background: var(--copaw-dm-surface) !important;
 }
 
 html.dark-mode .qwenpaw-table-thead > tr > th,
@@ -114,22 +389,22 @@ html.dark-mode
   .ant-table-thead
   > tr
   > td {
-  background: #262626 !important;
-  color: rgba(255, 255, 255, 0.65) !important;
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  color: var(--copaw-dm-text-secondary) !important;
+  border-bottom-color: var(--copaw-dm-border-subtle) !important;
 }
 
 /* Sticky thead background (scroll.y tables) */
 html.dark-mode .qwenpaw-table-sticky-holder,
 html.dark-mode .ant-table-sticky-holder {
-  background: #262626 !important;
+  background: var(--copaw-dm-surface-raised) !important;
 }
 
 html.dark-mode .qwenpaw-table-sticky-holder .qwenpaw-table-thead > tr > th,
 html.dark-mode .ant-table-sticky-holder .ant-table-thead > tr > th,
 html.dark-mode .qwenpaw-table-sticky-holder .qwenpaw-table-thead > tr > td,
 html.dark-mode .ant-table-sticky-holder .ant-table-thead > tr > td {
-  background: #262626 !important;
+  background: var(--copaw-dm-surface-raised) !important;
 }
 
 /* Fix left/right sticky columns in thead */
@@ -137,19 +412,19 @@ html.dark-mode .qwenpaw-table-thead > tr > th.qwenpaw-table-cell-fix-left,
 html.dark-mode .ant-table-thead > tr > th.ant-table-cell-fix-left,
 html.dark-mode .qwenpaw-table-thead > tr > th.qwenpaw-table-cell-fix-right,
 html.dark-mode .ant-table-thead > tr > th.ant-table-cell-fix-right {
-  background: #262626 !important;
+  background: var(--copaw-dm-surface-raised) !important;
 }
 
 html.dark-mode .qwenpaw-table-tbody > tr > td,
 html.dark-mode .ant-table-tbody > tr > td {
-  background: #1f1f1f !important;
-  color: rgba(255, 255, 255, 0.85) !important;
-  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+  background: var(--copaw-dm-surface) !important;
+  color: var(--copaw-dm-text-primary) !important;
+  border-bottom-color: var(--copaw-dm-border-subtle) !important;
 }
 
 html.dark-mode .qwenpaw-table-tbody > tr:hover > td,
 html.dark-mode .ant-table-tbody > tr:hover > td {
-  background: #2a2a2a !important;
+  background: var(--copaw-dm-input) !important;
 }
 
 html.dark-mode .qwenpaw-table-tbody > tr.qwenpaw-table-row-selected > td,
@@ -160,7 +435,7 @@ html.dark-mode .ant-table-tbody > tr.ant-table-row-selected > td {
 /* Table fixed columns shadow in dark mode */
 html.dark-mode .qwenpaw-table-cell-fix-right,
 html.dark-mode .ant-table-cell-fix-right {
-  background: #1f1f1f !important;
+  background: var(--copaw-dm-surface) !important;
 }
 
 html.dark-mode .qwenpaw-table-cell-fix-right-first::after,
@@ -171,7 +446,7 @@ html.dark-mode .ant-table-cell-fix-right-first::after {
 /* Table pagination */
 html.dark-mode .qwenpaw-pagination .qwenpaw-pagination-item,
 html.dark-mode .ant-pagination .ant-pagination-item {
-  background: #1f1f1f !important;
+  background: var(--copaw-dm-surface) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
@@ -182,8 +457,8 @@ html.dark-mode .ant-pagination .ant-pagination-item a {
 
 html.dark-mode .qwenpaw-pagination .qwenpaw-pagination-item-active,
 html.dark-mode .ant-pagination .ant-pagination-item-active {
-  background: #ff7f16 !important;
-  border-color: #ff7f16 !important;
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
 }
 
 html.dark-mode .qwenpaw-pagination .qwenpaw-pagination-item-active a,
@@ -195,7 +470,7 @@ html.dark-mode .qwenpaw-pagination .qwenpaw-pagination-prev button,
 html.dark-mode .qwenpaw-pagination .qwenpaw-pagination-next button,
 html.dark-mode .ant-pagination .ant-pagination-prev button,
 html.dark-mode .ant-pagination .ant-pagination-next button {
-  background: #1f1f1f !important;
+  background: var(--copaw-dm-surface) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
   color: rgba(255, 255, 255, 0.65) !important;
 }
@@ -210,34 +485,34 @@ html.dark-mode .qwenpaw-table-column-sorter-up.active,
 html.dark-mode .qwenpaw-table-column-sorter-down.active,
 html.dark-mode .ant-table-column-sorter-up.active,
 html.dark-mode .ant-table-column-sorter-down.active {
-  color: #ff7f16 !important;
+  color: #3b82f6 !important;
 }
 
 /* Checkbox in table */
 html.dark-mode .qwenpaw-checkbox-inner,
 html.dark-mode .ant-checkbox-inner {
-  background: #2a2a2a !important;
+  background: var(--copaw-dm-input) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 html.dark-mode .qwenpaw-checkbox-checked .qwenpaw-checkbox-inner,
 html.dark-mode .ant-checkbox-checked .ant-checkbox-inner {
-  background: #ff7f16 !important;
-  border-color: #ff7f16 !important;
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
 }
 
 /* Page titles (h1) */
 html.dark-mode h1,
 html.dark-mode h2,
 html.dark-mode h3 {
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--copaw-dm-text-primary);
 }
 
 /* Input / Textarea */
 html.dark-mode .qwenpaw-input,
 html.dark-mode .ant-input {
-  background: #2a2a2a !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: var(--copaw-dm-input) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
@@ -269,15 +544,15 @@ html.dark-mode .ant-input::placeholder {
 
 html.dark-mode .qwenpaw-input-affix-wrapper,
 html.dark-mode .ant-input-affix-wrapper {
-  background: #2a2a2a !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: var(--copaw-dm-input) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Select */
 html.dark-mode .qwenpaw-select-selector,
 html.dark-mode .ant-select-selector {
-  background: #2a2a2a !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: var(--copaw-dm-input) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
@@ -294,18 +569,18 @@ html.dark-mode .ant-select-arrow {
 /* Select dropdown */
 html.dark-mode .qwenpaw-select-dropdown,
 html.dark-mode .ant-select-dropdown {
-  background: #1f1f1f !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border-color: var(--copaw-dm-border) !important;
 }
 
 html.dark-mode .qwenpaw-select-item,
 html.dark-mode .ant-select-item {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .qwenpaw-select-item-empty,
 html.dark-mode .ant-select-item-empty {
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--copaw-dm-text-secondary);
 }
 
 html.dark-mode .qwenpaw-select-item-option-active,
@@ -316,13 +591,13 @@ html.dark-mode .ant-select-item-option-active {
 html.dark-mode .qwenpaw-select-item-option-selected,
 html.dark-mode .ant-select-item-option-selected {
   background: rgba(97, 92, 237, 0.2) !important;
-  color: #ff7f16 !important;
+  color: #3b82f6 !important;
 }
 
 /* Form labels */
 html.dark-mode .qwenpaw-form-item-label > label,
 html.dark-mode .ant-form-item-label > label {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 html.dark-mode .qwenpaw-form-item-required::before,
@@ -333,20 +608,20 @@ html.dark-mode .ant-form-item-required::before {
 /* InputNumber */
 html.dark-mode .qwenpaw-input-number,
 html.dark-mode .ant-input-number {
-  background: #2a2a2a !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: var(--copaw-dm-input) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
 html.dark-mode .qwenpaw-input-number-input,
 html.dark-mode .ant-input-number-input {
-  background: #2a2a2a !important;
+  background: var(--copaw-dm-input) !important;
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
 html.dark-mode .qwenpaw-input-number-handler-wrap,
 html.dark-mode .ant-input-number-handler-wrap {
-  background: #2a2a2a !important;
+  background: var(--copaw-dm-input) !important;
   border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
@@ -359,8 +634,8 @@ html.dark-mode .ant-input-number-handler {
 /* TimePicker */
 html.dark-mode .qwenpaw-picker,
 html.dark-mode .ant-picker {
-  background: #2a2a2a !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: var(--copaw-dm-input) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
@@ -376,13 +651,13 @@ html.dark-mode .ant-picker-suffix {
 
 html.dark-mode .qwenpaw-picker-dropdown,
 html.dark-mode .ant-picker-dropdown {
-  background: #1f1f1f !important;
+  background: var(--copaw-dm-surface-raised) !important;
 }
 
 html.dark-mode .qwenpaw-picker-panel,
 html.dark-mode .ant-picker-panel {
-  background: #1f1f1f !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border-color: var(--copaw-dm-border) !important;
 }
 
 html.dark-mode .qwenpaw-picker-time-panel-cell-inner,
@@ -397,7 +672,7 @@ html.dark-mode
   .ant-picker-time-panel-cell-selected
   .ant-picker-time-panel-cell-inner {
   background: rgba(97, 92, 237, 0.2) !important;
-  color: #ff7f16 !important;
+  color: #3b82f6 !important;
 }
 
 /* DatePicker / RangePicker calendar panel */
@@ -408,8 +683,8 @@ html.dark-mode .ant-picker-dropdown {
 
 html.dark-mode .qwenpaw-picker-panel-container,
 html.dark-mode .ant-picker-panel-container {
-  background: #1f1f1f !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
 }
 
@@ -467,7 +742,7 @@ html.dark-mode .ant-picker-cell-disabled {
 /* Today marker */
 html.dark-mode .qwenpaw-picker-cell-today .qwenpaw-picker-cell-inner::before,
 html.dark-mode .ant-picker-cell-today .ant-picker-cell-inner::before {
-  border-color: #ff7f16 !important;
+  border-color: #3b82f6 !important;
 }
 
 /* Selected start/end cell */
@@ -477,7 +752,7 @@ html.dark-mode .qwenpaw-picker-cell-range-start .qwenpaw-picker-cell-inner,
 html.dark-mode .ant-picker-cell-range-start .ant-picker-cell-inner,
 html.dark-mode .qwenpaw-picker-cell-range-end .qwenpaw-picker-cell-inner,
 html.dark-mode .ant-picker-cell-range-end .ant-picker-cell-inner {
-  background: #ff7f16 !important;
+  background: #3b82f6 !important;
   color: #fff !important;
 }
 
@@ -503,19 +778,19 @@ html.dark-mode
 html.dark-mode
   .qwenpaw-picker-cell-in-view.qwenpaw-picker-cell-range-hover-end::after,
 html.dark-mode .ant-picker-cell-in-view.ant-picker-cell-range-hover-end::after {
-  border-color: #ff7f16 !important;
+  border-color: #3b82f6 !important;
 }
 
 /* Panel footer (OK button area) */
 html.dark-mode .qwenpaw-picker-footer,
 html.dark-mode .ant-picker-footer {
-  border-top-color: rgba(255, 255, 255, 0.08) !important;
-  background: #1f1f1f !important;
+  border-top-color: var(--copaw-dm-border-subtle) !important;
+  background: var(--copaw-dm-surface-raised) !important;
 }
 
 html.dark-mode .qwenpaw-picker-today-btn,
 html.dark-mode .ant-picker-today-btn {
-  color: #ff7f16 !important;
+  color: #3b82f6 !important;
 }
 
 /* Divider between two panels in RangePicker */
@@ -524,68 +799,68 @@ html.dark-mode .ant-picker-panel + .ant-picker-panel {
   border-left-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Modal */
+/* Modal — opt elevated card (#1a2235) */
 html.dark-mode .qwenpaw-modal-content,
 html.dark-mode .ant-modal-content {
-  background: #1f1f1f !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  color: var(--copaw-dm-text-primary) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
 }
 
 html.dark-mode .qwenpaw-modal-header,
 html.dark-mode .ant-modal-header {
-  background: #1f1f1f !important;
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border-bottom-color: var(--copaw-dm-border-subtle) !important;
 }
 
 html.dark-mode .qwenpaw-modal-title,
 html.dark-mode .ant-modal-title {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .qwenpaw-modal-close,
 html.dark-mode .ant-modal-close {
-  color: rgba(255, 255, 255, 0.45) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 html.dark-mode .qwenpaw-modal-close:hover,
 html.dark-mode .ant-modal-close:hover {
-  color: rgba(255, 255, 255, 0.85) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--copaw-dm-text-primary) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
 }
 
 html.dark-mode .qwenpaw-modal-body,
 html.dark-mode .ant-modal-body {
-  background: #1f1f1f !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .qwenpaw-modal-footer,
 html.dark-mode .ant-modal-footer {
-  background: #1f1f1f !important;
-  border-top-color: rgba(255, 255, 255, 0.08) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border-top-color: var(--copaw-dm-border-subtle) !important;
 }
 
 /* Modal.confirm — confirm dialog dark mode */
 html.dark-mode .ant-modal-confirm-content,
 html.dark-mode .qwenpaw-modal-confirm-content {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .ant-modal-confirm-title,
 html.dark-mode .qwenpaw-modal-confirm-title {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .ant-modal-confirm-body,
 html.dark-mode .qwenpaw-modal-confirm-body {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .ant-modal-confirm-paragraph,
 html.dark-mode .qwenpaw-modal-confirm-paragraph {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 .qwenpaw-free-model-warning-link-row {
@@ -600,59 +875,59 @@ html.dark-mode .qwenpaw-modal-confirm-paragraph {
 html.dark-mode .qwenpaw-modal-body .qwenpaw-form-item-label > label,
 html.dark-mode .qwenpaw-modal-body .ant-form-item-label > label,
 html.dark-mode .ant-modal-body .ant-form-item-label > label {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 /* Extra description text inside modal */
 html.dark-mode .qwenpaw-modal-body .qwenpaw-form-item-extra,
 html.dark-mode .ant-modal-body .ant-form-item-extra {
-  color: rgba(255, 255, 255, 0.35) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 /* Drawer */
 html.dark-mode .qwenpaw-drawer-content,
 html.dark-mode .ant-drawer-content {
-  background: #1f1f1f !important;
+  background: var(--copaw-dm-surface-raised) !important;
 }
 
 html.dark-mode .qwenpaw-drawer-header,
 html.dark-mode .ant-drawer-header {
-  background: #1f1f1f !important;
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border-bottom-color: var(--copaw-dm-border-subtle) !important;
 }
 
 html.dark-mode .qwenpaw-drawer-title,
 html.dark-mode .ant-drawer-title {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .qwenpaw-drawer-close,
 html.dark-mode .ant-drawer-close {
-  color: rgba(255, 255, 255, 0.45) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 html.dark-mode .qwenpaw-drawer-close:hover,
 html.dark-mode .ant-drawer-close:hover {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .qwenpaw-drawer-body,
 html.dark-mode .ant-drawer-body {
-  background: #1f1f1f !important;
-  color: rgba(255, 255, 255, 0.85) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 html.dark-mode .qwenpaw-drawer-footer,
 html.dark-mode .ant-drawer-footer {
-  background: #1f1f1f !important;
-  border-top-color: rgba(255, 255, 255, 0.08) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+  border-top-color: var(--copaw-dm-border-subtle) !important;
 }
 
 /* Form labels inside drawer */
 html.dark-mode .qwenpaw-drawer-body .qwenpaw-form-item-label > label,
 html.dark-mode .qwenpaw-drawer-body .ant-form-item-label > label,
 html.dark-mode .ant-drawer-body .ant-form-item-label > label {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 /* Tooltip info icon inside drawer (Form.Item tooltip only, not Alert icons) */
@@ -673,12 +948,12 @@ html.dark-mode .ant-slider-rail {
 
 html.dark-mode .qwenpaw-slider-track,
 html.dark-mode .ant-slider-track {
-  background-color: #ff7f16 !important;
+  background-color: #3b82f6 !important;
 }
 
 html.dark-mode .qwenpaw-slider-mark-text,
 html.dark-mode .ant-slider-mark-text {
-  color: #ff7f16 !important;
+  color: #3b82f6 !important;
 }
 
 html.dark-mode .qwenpaw-form-item-label > label .qwenpaw-form-item-tooltip,
@@ -688,26 +963,26 @@ html.dark-mode .ant-form-item-label > label .ant-form-item-tooltip {
 
 html.dark-mode .qwenpaw-slider-handle::after,
 html.dark-mode .ant-slider-handle::after {
-  box-shadow: 0 0 0 2px #ff7f16 !important;
-  background-color: #1f1f1f !important;
+  box-shadow: 0 0 0 2px #3b82f6 !important;
+  background-color: var(--copaw-dm-surface-raised) !important;
 }
 
 html.dark-mode .qwenpaw-slider-dot,
 html.dark-mode .ant-slider-dot {
   border-color: rgba(255, 255, 255, 0.15) !important;
-  background-color: #2a2a2a !important;
+  background-color: var(--copaw-dm-input) !important;
 }
 
 /* Tooltip popup (slider value) */
 html.dark-mode .qwenpaw-tooltip-inner,
 html.dark-mode .ant-tooltip-inner {
-  background-color: #2a2a2a !important;
+  background-color: var(--copaw-dm-input) !important;
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
 html.dark-mode .qwenpaw-tooltip-arrow::before,
 html.dark-mode .ant-tooltip-arrow::before {
-  background: #2a2a2a !important;
+  background: var(--copaw-dm-input) !important;
 }
 
 /* Tooltip global override — force opaque background in light mode */
@@ -729,13 +1004,13 @@ html.dark-mode
 html.dark-mode [class*="chatDisabledOverlay"] :global([class*="chat-input"]),
 html.dark-mode [class*="chatDisabledOverlay"] :global(textarea),
 html.dark-mode [class*="chatDisabledOverlay"] :global(input[type="text"]) {
-  background-color: #2a2a2a !important;
+  background-color: var(--copaw-dm-input) !important;
 }
 
 /* Sender area dark mode */
 html.dark-mode [class*="qwenpaw-sender-content"],
 html.dark-mode [class*="sender-content"] {
-  background: #2a2a2a !important;
+  background: var(--copaw-dm-input) !important;
 }
 
 /* Chat page bottom input area container */
@@ -743,7 +1018,7 @@ html.dark-mode .qwenpaw-chat-anywhere-input,
 html.dark-mode [class*="chat-anywhere-input"],
 html.dark-mode [class*="qwenpaw-chat-anywhere-default-footer"],
 html.dark-mode [class*="chat-anywhere-footer"] {
-  background: #141414 !important;
+  background: var(--copaw-dm-canvas) !important;
 }
 
 /* Chat input placeholder text in dark mode */
@@ -797,7 +1072,7 @@ html.dark-mode [class*="chat-anywhere"] [class*="message"] code {
 }
 
 html.dark-mode [class*="chat-anywhere"] [class*="message"] a {
-  color: #ff7f16 !important;
+  color: #3b82f6 !important;
 }
 
 #root {
@@ -838,25 +1113,35 @@ html.dark-mode [class*="chat-anywhere"] [class*="message"] a {
 html.dark-mode .qwenpaw-chat-anywhere,
 html.dark-mode .qwenpaw-chat-anywhere-message-list,
 html.dark-mode .qwenpaw-bubble-list-wrapper {
-  background: #141414 !important;
+  background: var(--copaw-dm-canvas) !important;
 }
 
 /* Chat welcome message in dark mode */
 html.dark-mode .qwenpaw-chat-anywhere-welcome-default {
-  background: #141414 !important;
+  background: var(--copaw-dm-canvas) !important;
 }
 
 /* Chat input area in dark mode */
 html.dark-mode .qwenpaw-sender,
 html.dark-mode .qwenpaw-sender-content {
-  background: #2a2a2a !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: var(--copaw-dm-input) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Menu background in light mode */
 .qwenpaw-menu,
 .ant-menu {
   background: #f9f8f4 !important;
+}
+
+html.dark-mode .qwenpaw-menu.ant-menu-root:not(.ant-menu-dark),
+html.dark-mode .ant-menu.ant-menu-root:not(.ant-menu-dark) {
+  background: var(--copaw-dm-surface-raised) !important;
+}
+
+html.dark-mode .qwenpaw-menu.ant-menu-dark,
+html.dark-mode .ant-menu.ant-menu-dark {
+  background: transparent !important;
 }
 
 /* Menu selected item in light mode */
@@ -999,12 +1284,19 @@ html.dark-mode .qwenpaw-btn-primary.qwenpaw-btn-disabled {
   box-shadow: none !important;
 }
 
-/* Dark mode - default button */
+/* Dark mode - default button — surface (opt列表行底板) */
 html.dark-mode .ant-btn-default,
 html.dark-mode .qwenpaw-btn-default {
-  color: rgba(255, 235, 218, 0.88) !important;
-  background-color: #000000 !important;
-  border: 1px solid #3a312a !important;
+  color: var(--copaw-dm-text-primary) !important;
+  background-color: var(--copaw-dm-surface) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
+}
+
+html.dark-mode .ant-btn-default:hover,
+html.dark-mode .qwenpaw-btn-default:hover {
+  color: var(--copaw-dm-text-primary) !important;
+  background-color: var(--copaw-dm-surface-raised) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Dark mode - danger button */
@@ -1040,11 +1332,11 @@ html.dark-mode .ant-empty-image {
 
 html.dark-mode .qwenpaw-empty-description,
 html.dark-mode .ant-empty-description {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 html.dark-mode .qwenpaw-input-prefix {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 .debug-log-container {
@@ -1064,11 +1356,11 @@ html.dark-mode .debug-log-container mark {
 
 html.dark-mode .qwenpaw-typography-secondary,
 html.dark-mode .ant-typography-secondary {
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: var(--copaw-dm-text-secondary) !important;
 }
 
 html.dark-mode .debug-log-path strong {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: var(--copaw-dm-text-primary) !important;
 }
 
 [class*="tool-call-block-content"] .cm-content,
@@ -1083,7 +1375,668 @@ html.dark-mode .debug-log-path strong {
   max-width: 100% !important;
 }
 
-[class*="tool-call-block-content"] {
-  max-height: 250px !important;
-  overflow-y: auto !important;
+/* Warning Alert → 蓝色信息样式（全局去琥珀黄） */
+.ant-alert-warning,
+.qwenpaw-alert-warning {
+  background-color: #e6f4ff !important;
+  border: 1px solid #91caff !important;
+}
+
+.ant-alert-warning .ant-alert-icon,
+.qwenpaw-alert-warning .qwenpaw-alert-icon {
+  color: #1677ff !important;
+}
+
+html.dark-mode .ant-alert-warning,
+html.dark-mode .qwenpaw-alert-warning {
+  background-color: rgba(22, 119, 255, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.45) !important;
+}
+
+html.dark-mode .ant-alert-warning .ant-alert-icon,
+html.dark-mode .qwenpaw-alert-warning .qwenpaw-alert-icon {
+  color: #3b82f6 !important;
+}
+
+/* ─── Dark: cross-module lists / tabs / meta / icons (opt-aligned tokens) ───── */
+
+html.dark-mode .ant-typography a,
+html.dark-mode .qwenpaw-typography a,
+html.dark-mode a.ant-typography-link,
+html.dark-mode a.qwenpaw-typography-link {
+  color: #60a5fa !important;
+}
+
+html.dark-mode .ant-breadcrumb a,
+html.dark-mode .qwenpaw-breadcrumb a {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-breadcrumb li:last-child,
+html.dark-mode .qwenpaw-breadcrumb li:last-child {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-breadcrumb-separator,
+html.dark-mode .qwenpaw-breadcrumb-separator {
+  color: var(--copaw-dm-text-muted) !important;
+}
+
+html.dark-mode .ant-list-item-meta-title,
+html.dark-mode .qwenpaw-list-item-meta-title {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-list-item-meta-description,
+html.dark-mode .qwenpaw-list-item-meta-description {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-list-item,
+html.dark-mode .qwenpaw-list-item {
+  border-block-end-color: var(--copaw-dm-border-subtle) !important;
+}
+
+html.dark-mode .ant-list-split .ant-list-item,
+html.dark-mode .qwenpaw-list-split .qwenpaw-list-item {
+  border-block-end-color: var(--copaw-dm-border-subtle) !important;
+}
+
+html.dark-mode .ant-list-empty-text,
+html.dark-mode .qwenpaw-list-empty-text {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-descriptions-item-label,
+html.dark-mode .qwenpaw-descriptions-item-label {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-descriptions-item-content,
+html.dark-mode .qwenpaw-descriptions-item-content {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-descriptions-bordered .ant-descriptions-view table,
+html.dark-mode .ant-descriptions-bordered .ant-descriptions-row,
+html.dark-mode .qwenpaw-descriptions-bordered .qwenpaw-descriptions-view table,
+html.dark-mode .qwenpaw-descriptions-bordered .qwenpaw-descriptions-row {
+  border-color: var(--copaw-dm-border) !important;
+}
+
+html.dark-mode .ant-descriptions-bordered .ant-descriptions-item-label,
+html.dark-mode .ant-descriptions-bordered .ant-descriptions-item-content,
+html.dark-mode .qwenpaw-descriptions-bordered .qwenpaw-descriptions-item-label,
+html.dark-mode .qwenpaw-descriptions-bordered .qwenpaw-descriptions-item-content {
+  border-inline-end-color: var(--copaw-dm-border) !important;
+  border-block-end-color: var(--copaw-dm-border) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+}
+
+html.dark-mode .ant-collapse,
+html.dark-mode .qwenpaw-collapse {
+  border-color: var(--copaw-dm-border) !important;
+  background: transparent;
+}
+
+html.dark-mode .ant-collapse > .ant-collapse-item > .ant-collapse-header,
+html.dark-mode .qwenpaw-collapse > .qwenpaw-collapse-item > .qwenpaw-collapse-header {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-collapse > .ant-collapse-item,
+html.dark-mode .qwenpaw-collapse > .qwenpaw-collapse-item {
+  border-bottom-color: var(--copaw-dm-border-subtle) !important;
+}
+
+html.dark-mode .ant-collapse-content,
+html.dark-mode .qwenpaw-collapse-content {
+  border-top-color: var(--copaw-dm-border-subtle) !important;
+  background: transparent !important;
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-collapse-arrow,
+html.dark-mode .qwenpaw-collapse-expand-icon .anticon,
+html.dark-mode .qwenpaw-collapse-arrow {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-tabs-tab,
+html.dark-mode .qwenpaw-tabs-tab {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-tabs-tab:hover .ant-tabs-tab-btn,
+html.dark-mode .qwenpaw-tabs-tab:hover .qwenpaw-tabs-tab-btn {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn,
+html.dark-mode .qwenpaw-tabs-tab.qwenpaw-tabs-tab-active .qwenpaw-tabs-tab-btn {
+  color: #93c5fd !important;
+}
+
+html.dark-mode .ant-tabs-nav::before,
+html.dark-mode .qwenpaw-tabs-nav::before {
+  border-bottom-color: var(--copaw-dm-border) !important;
+}
+
+html.dark-mode .ant-tabs-dropdown,
+html.dark-mode .qwenpaw-tabs-dropdown {
+  background: var(--copaw-dm-surface-raised) !important;
+}
+
+html.dark-mode .ant-tabs-dropdown-menu-item,
+html.dark-mode .qwenpaw-tabs-dropdown-menu-item {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-segmented,
+html.dark-mode .qwenpaw-segmented {
+  background: var(--copaw-dm-surface-raised) !important;
+}
+
+html.dark-mode .ant-segmented-item,
+html.dark-mode .qwenpaw-segmented-item {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-segmented-thumb,
+html.dark-mode .qwenpaw-segmented-thumb {
+  background: var(--copaw-dm-input) !important;
+}
+
+html.dark-mode .ant-segmented-item-selected,
+html.dark-mode .qwenpaw-segmented-item-selected {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-radio-wrapper,
+html.dark-mode .ant-checkbox-wrapper span,
+html.dark-mode .qwenpaw-radio-wrapper,
+html.dark-mode .qwenpaw-checkbox-wrapper span {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-divider,
+html.dark-mode .qwenpaw-divider {
+  border-block-start-color: var(--copaw-dm-border-subtle) !important;
+}
+
+html.dark-mode .ant-statistic-title,
+html.dark-mode .qwenpaw-statistic-title {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-statistic-content,
+html.dark-mode .qwenpaw-statistic-content {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-steps-item-title,
+html.dark-mode .qwenpaw-steps-item-title {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-steps-item-description,
+html.dark-mode .qwenpaw-steps-item-description {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-steps-item-wait .ant-steps-item-icon,
+html.dark-mode .qwenpaw-steps-item-wait .qwenpaw-steps-item-icon {
+  border-color: var(--copaw-dm-border) !important;
+  background: var(--copaw-dm-surface) !important;
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-alert-info,
+html.dark-mode .qwenpaw-alert-info {
+  background-color: rgba(22, 119, 255, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+
+html.dark-mode .ant-alert-success,
+html.dark-mode .qwenpaw-alert-success {
+  background-color: rgba(34, 197, 94, 0.12) !important;
+  border-color: rgba(74, 222, 128, 0.35) !important;
+}
+
+html.dark-mode .ant-alert-error,
+html.dark-mode .qwenpaw-alert-error {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(248, 113, 113, 0.4) !important;
+}
+
+html.dark-mode .ant-alert .ant-alert-message,
+html.dark-mode .qwenpaw-alert .qwenpaw-alert-message {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-alert .ant-alert-description,
+html.dark-mode .qwenpaw-alert .qwenpaw-alert-description {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-transfer-list,
+html.dark-mode .qwenpaw-transfer-list {
+  border-color: var(--copaw-dm-border) !important;
+  background: var(--copaw-dm-surface-raised) !important;
+}
+
+html.dark-mode .ant-transfer-list-header,
+html.dark-mode .qwenpaw-transfer-list-header {
+  background: var(--copaw-dm-surface) !important;
+  border-block-end-color: var(--copaw-dm-border-subtle) !important;
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-tree,
+html.dark-mode .qwenpaw-tree {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-tree .ant-tree-node-content-wrapper:hover,
+html.dark-mode .qwenpaw-tree .qwenpaw-tree-node-content-wrapper:hover {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+html.dark-mode .ant-tree-switcher .ant-tree-switcher-icon,
+html.dark-mode .qwenpaw-tree-switcher-icon {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+/* De-emphasized icons in card heads / extras (explicit paths avoid primary buttons) */
+html.dark-mode .ant-card-extra .anticon,
+html.dark-mode .qwenpaw-card-extra .anticon,
+html.dark-mode .ant-card-head-title .anticon,
+html.dark-mode .qwenpaw-card-head-title .anticon {
+  color: var(--copaw-dm-text-secondary);
+}
+
+html.dark-mode .ant-page-header-heading-title,
+html.dark-mode .ant-page-header-heading-sub-title,
+html.dark-mode .qwenpaw-page-header-heading-title,
+html.dark-mode .qwenpaw-page-header-heading-sub-title {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-anchor-link-title,
+html.dark-mode .qwenpaw-anchor-link-title {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-anchor-link-active > .ant-anchor-link-title {
+  color: #60a5fa !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   opt平台 dark polish — ported to QwenPaw dark-mode
+   Reference: copaw二次开发/opt平台/src/index.css + component palette
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Sider background (opt平台 bg-[#111827]) ──────────────────────────────── */
+html.dark-mode .ant-layout-sider,
+html.dark-mode .qwenpaw-layout-sider {
+  background: var(--copaw-dm-rail) !important;
+}
+
+/* ── Layout content background ──────────────────────────────────────────── */
+html.dark-mode .ant-layout,
+html.dark-mode .qwenpaw-layout {
+  background: var(--copaw-dm-canvas) !important;
+}
+
+/* ── Input focus glow — cyan ring (opt平台 focus:border-cyan-500/40) ────── */
+html.dark-mode .qwenpaw-input:focus,
+html.dark-mode .ant-input:focus,
+html.dark-mode .qwenpaw-input-focused,
+html.dark-mode .ant-input-focused {
+  border-color: rgba(6, 182, 212, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12) !important;
+  background: var(--copaw-dm-input) !important;
+}
+
+html.dark-mode .qwenpaw-input-affix-wrapper:focus-within,
+html.dark-mode .ant-input-affix-wrapper:focus-within {
+  border-color: rgba(6, 182, 212, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12) !important;
+}
+
+html.dark-mode .qwenpaw-select-focused .qwenpaw-select-selector,
+html.dark-mode .ant-select-focused .ant-select-selector {
+  border-color: rgba(6, 182, 212, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12) !important;
+}
+
+html.dark-mode .qwenpaw-input-number:focus,
+html.dark-mode .ant-input-number-focused {
+  border-color: rgba(6, 182, 212, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12) !important;
+}
+
+html.dark-mode .qwenpaw-picker:focus,
+html.dark-mode .qwenpaw-picker-focused,
+html.dark-mode .ant-picker-focused {
+  border-color: rgba(6, 182, 212, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12) !important;
+}
+
+/* ── Tabs active ink bar — cyan (opt平台 border-cyan-400) ─────────────────── */
+html.dark-mode .ant-tabs-ink-bar,
+html.dark-mode .qwenpaw-tabs-ink-bar {
+  background: var(--copaw-dm-accent-light, #22d3ee) !important;
+}
+
+html.dark-mode .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn,
+html.dark-mode .qwenpaw-tabs-tab.qwenpaw-tabs-tab-active .qwenpaw-tabs-tab-btn {
+  color: var(--copaw-dm-accent-light, #22d3ee) !important;
+}
+
+/* ── Card elevated look with inset top highlight (opt平台 style) ──────────── */
+html.dark-mode .qwenpaw-card,
+html.dark-mode .ant-card {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.48) !important;
+}
+
+/* ── Inner card surface (#0d1424 — ReportCard / TaskCard in opt平台) ─────── */
+html.dark-mode .copaw-inner-surface {
+  background: var(--copaw-dm-deep, #0d1424);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+}
+
+/* ── Progress bar — cyan gradient (opt平台 running state) ─────────────────── */
+html.dark-mode .ant-progress-bg,
+html.dark-mode .qwenpaw-progress-bg {
+  background: linear-gradient(90deg, #22d3ee, #06b6d4) !important;
+}
+
+html.dark-mode .ant-progress-inner,
+html.dark-mode .qwenpaw-progress-inner {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ── Badge / Tag accent (opt平台 bg-cyan-500/10 text-cyan-400) ───────────── */
+html.dark-mode .ant-badge-count,
+html.dark-mode .qwenpaw-badge-count {
+  background: var(--copaw-dm-accent, #06b6d4) !important;
+  box-shadow: 0 0 0 1px var(--copaw-dm-canvas) !important;
+}
+
+/* ── Spinner / Spin dots — cyan ──────────────────────────────────────────── */
+html.dark-mode .ant-spin-dot-item,
+html.dark-mode .qwenpaw-spin-dot-item {
+  background: var(--copaw-dm-accent-light, #22d3ee) !important;
+}
+
+/* ── Switch checked — cyan ───────────────────────────────────────────────── */
+html.dark-mode .ant-switch-checked,
+html.dark-mode .qwenpaw-switch-checked {
+  background: var(--copaw-dm-accent, #06b6d4) !important;
+}
+
+/* ── Tooltip inner — deep surface ───────────────────────────────────────── */
+html.dark-mode .ant-tooltip-inner,
+html.dark-mode .qwenpaw-tooltip-inner {
+  background: var(--copaw-dm-deep, #0d1424) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark-mode .ant-tooltip-arrow::before,
+html.dark-mode .qwenpaw-tooltip-arrow::before {
+  background: var(--copaw-dm-deep, #0d1424) !important;
+}
+
+/* ── Link color — cyan (opt平台 text-cyan-500 hover:text-cyan-400) ───────── */
+html.dark-mode a,
+html.dark-mode .ant-typography a,
+html.dark-mode .qwenpaw-typography a {
+  color: var(--copaw-dm-accent, #06b6d4) !important;
+}
+
+html.dark-mode a:hover {
+  color: var(--copaw-dm-accent-light, #22d3ee) !important;
+}
+
+/* ── Active select option — cyan tint ───────────────────────────────────── */
+html.dark-mode .ant-select-item-option-selected,
+html.dark-mode .qwenpaw-select-item-option-selected {
+  background: rgba(6, 182, 212, 0.15) !important;
+  color: var(--copaw-dm-accent-light, #22d3ee) !important;
+}
+
+html.dark-mode .ant-select-item-option-active,
+html.dark-mode .qwenpaw-select-item-option-active {
+  background: rgba(6, 182, 212, 0.08) !important;
+}
+
+/* ── Notification pop & message — deep surface ───────────────────────────── */
+html.dark-mode .ant-notification-notice,
+html.dark-mode .qwenpaw-notification-notice {
+  background: var(--copaw-dm-surface-raised) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55) !important;
+}
+
+html.dark-mode .ant-notification-notice-message,
+html.dark-mode .qwenpaw-notification-notice-message {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+html.dark-mode .ant-notification-notice-description,
+html.dark-mode .qwenpaw-notification-notice-description {
+  color: var(--copaw-dm-text-secondary) !important;
+}
+
+html.dark-mode .ant-message-notice-content,
+html.dark-mode .qwenpaw-message-notice-content {
+  background: var(--copaw-dm-surface-raised) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
+  color: var(--copaw-dm-text-primary) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ── Scrollbars (opt平台 chat-scroll-y ported globally) ──────────────────── */
+html.dark-mode *::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+html.dark-mode *::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+html.dark-mode *::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+html.dark-mode *::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background-color: var(--copaw-dm-sb-thumb);
+  box-shadow:
+    inset 0 1px 0 var(--copaw-dm-sb-inset),
+    0 2px 10px -2px var(--copaw-dm-sb-ambient);
+  transition:
+    background-color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html.dark-mode *::-webkit-scrollbar-thumb:hover {
+  background-color: var(--copaw-dm-sb-thumb-hover);
+}
+
+html.dark-mode *::-webkit-scrollbar-thumb:active {
+  background-color: var(--copaw-dm-sb-thumb-active);
+}
+
+/* Firefox */
+html.dark-mode * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--copaw-dm-sb-thumb) transparent;
+}
+
+/* ── Primary button — cyan brand (opt平台 bg-cyan-500 hover:bg-cyan-400) ── */
+html.dark-mode .ant-btn-primary,
+html.dark-mode .qwenpaw-btn-primary {
+  background: linear-gradient(135deg, var(--copaw-dm-accent, #06b6d4) 0%, #0891b2 100%) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.32) !important;
+}
+
+html.dark-mode .ant-btn-primary:hover,
+html.dark-mode .qwenpaw-btn-primary:hover {
+  background: linear-gradient(135deg, var(--copaw-dm-accent-light, #22d3ee) 0%, var(--copaw-dm-accent, #06b6d4) 100%) !important;
+  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.42) !important;
+}
+
+html.dark-mode .ant-btn-primary:disabled,
+html.dark-mode .ant-btn-primary[disabled],
+html.dark-mode .qwenpaw-btn-primary:disabled,
+html.dark-mode .qwenpaw-btn-primary[disabled] {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: none !important;
+}
+
+/* ── Chat user bubble — cyan (opt平台 bg-cyan-500) ───────────────────────── */
+html.dark-mode [class*="bubble"][class*="user"] [class*="content"],
+html.dark-mode [class*="chat-anywhere"] [class*="message"][class*="user"] [class*="bubble"],
+html.dark-mode .qwenpaw-bubble.qwenpaw-bubble-end [class*="content"] {
+  background: var(--copaw-dm-accent, #06b6d4) !important;
+  color: #fff !important;
+}
+
+/* ── Chat AI bubble — deep card (opt平台 bg-[#1a2235]) ──────────────────── */
+html.dark-mode [class*="bubble"][class*="start"] [class*="content"],
+html.dark-mode [class*="chat-anywhere"] [class*="message"][class*="assistant"] [class*="bubble"] {
+  background: var(--copaw-dm-surface-raised, #1a2235) !important;
+  border: 1px solid var(--copaw-dm-border) !important;
+  color: #cbd5e1 !important;
+}
+
+/* ── Status-dot animations (opt平台 active: emerald pulse) ───────────────── */
+@keyframes dm-status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(74, 222, 128, 0); }
+}
+
+/* ── Tag — cyan tint (opt平台 bg-cyan-500/10 text-cyan-400 for feature tags) */
+html.dark-mode .ant-tag-cyan,
+html.dark-mode .qwenpaw-tag-cyan {
+  background: rgba(6, 182, 212, 0.12) !important;
+  border-color: rgba(34, 211, 238, 0.28) !important;
+  color: #22d3ee !important;
+}
+
+html.dark-mode .ant-tag-green,
+html.dark-mode .qwenpaw-tag-green {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border-color: rgba(74, 222, 128, 0.28) !important;
+  color: #4ade80 !important;
+}
+
+html.dark-mode .ant-tag-blue,
+html.dark-mode .qwenpaw-tag-blue {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  color: #93c5fd !important;
+}
+
+html.dark-mode .ant-tag-orange,
+html.dark-mode .qwenpaw-tag-orange {
+  background: rgba(251, 146, 60, 0.12) !important;
+  border-color: rgba(251, 146, 60, 0.28) !important;
+  color: #fb923c !important;
+}
+
+html.dark-mode .ant-tag-red,
+html.dark-mode .qwenpaw-tag-red {
+  background: rgba(248, 113, 113, 0.12) !important;
+  border-color: rgba(248, 113, 113, 0.28) !important;
+  color: #f87171 !important;
+}
+
+html.dark-mode .ant-tag-default,
+html.dark-mode .qwenpaw-tag-default,
+html.dark-mode .ant-tag:not([class*="tag-"]),
+html.dark-mode .qwenpaw-tag:not([class*="tag-"]) {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(248, 250, 252, 0.85) !important;
+}
+
+/* ── Table row hover — opt平台 style ─────────────────────────────────────── */
+html.dark-mode .ant-table-tbody > tr:hover > td,
+html.dark-mode .qwenpaw-table-tbody > tr:hover > td {
+  background: rgba(6, 182, 212, 0.06) !important;
+}
+
+/* ── Collapse header hover ───────────────────────────────────────────────── */
+html.dark-mode .ant-collapse > .ant-collapse-item > .ant-collapse-header:hover,
+html.dark-mode .qwenpaw-collapse > .qwenpaw-collapse-item > .qwenpaw-collapse-header:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ── Skeleton loading — deep surface ─────────────────────────────────────── */
+html.dark-mode .ant-skeleton-content .ant-skeleton-paragraph > li,
+html.dark-mode .ant-skeleton-content .ant-skeleton-title,
+html.dark-mode .qwenpaw-skeleton-content .qwenpaw-skeleton-paragraph > li,
+html.dark-mode .qwenpaw-skeleton-content .qwenpaw-skeleton-title {
+  background: linear-gradient(
+    90deg,
+    var(--copaw-dm-surface-raised) 25%,
+    var(--copaw-dm-input) 37%,
+    var(--copaw-dm-surface-raised) 63%
+  ) !important;
+  background-size: 400% 100% !important;
+  animation: ant-skeleton-loading 1.4s ease infinite !important;
+}
+
+/* ── Statistic value — white ──────────────────────────────────────────────── */
+html.dark-mode .ant-statistic-content-value,
+html.dark-mode .qwenpaw-statistic-content-value {
+  color: var(--copaw-dm-text-primary) !important;
+}
+
+/* ── Radio button group (selected = cyan) ─────────────────────────────────── */
+html.dark-mode .ant-radio-button-wrapper-checked,
+html.dark-mode .qwenpaw-radio-button-wrapper-checked {
+  background: rgba(6, 182, 212, 0.15) !important;
+  border-color: var(--copaw-dm-accent, #06b6d4) !important;
+  color: var(--copaw-dm-accent-light, #22d3ee) !important;
+}
+
+/* ── Pagination ── */
+html.dark-mode .ant-pagination-item-active,
+html.dark-mode .qwenpaw-pagination-item-active {
+  background: var(--copaw-dm-accent, #06b6d4) !important;
+  border-color: var(--copaw-dm-accent, #06b6d4) !important;
+}
+
+/* ── Steps current icon ── */
+html.dark-mode .ant-steps-item-process .ant-steps-item-icon,
+html.dark-mode .qwenpaw-steps-item-process .qwenpaw-steps-item-icon {
+  background: var(--copaw-dm-accent, #06b6d4) !important;
+  border-color: var(--copaw-dm-accent, #06b6d4) !important;
+}
+
+/* ── OrgBuilder page — force light color-scheme on form controls ── */
+/* Prevents html.dark-mode { color-scheme: dark } from making native inputs dark */
+.org-builder-page input,
+.org-builder-page textarea,
+.org-builder-page select {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  font-family: inherit !important;
 }

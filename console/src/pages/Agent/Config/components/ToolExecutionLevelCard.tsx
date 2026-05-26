@@ -41,7 +41,7 @@ export function ToolExecutionLevelCard({
       label: t("agentConfig.toolExecutionLevel.smart"),
       icon: <AlertTriangle size={18} />,
       description: t("agentConfig.toolExecutionLevel.smartDesc"),
-      color: "#faad14",
+      color: "#6366f1",
     },
     {
       value: "AUTO",

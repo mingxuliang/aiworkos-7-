@@ -187,7 +187,7 @@ def desktop_cmd(
             [
                 sys.executable,
                 "-m",
-                "qwenpaw",
+                "aiwork",
                 "app",
                 "--host",
                 host,

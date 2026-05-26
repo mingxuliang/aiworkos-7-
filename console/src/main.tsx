@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./i18n";
+import "./styles/tailwind.css";
 import { installHostExternals } from "./plugins/hostExternals";
 import { registerHostModulesEager } from "./plugins/dynamicModuleRegistry";
 

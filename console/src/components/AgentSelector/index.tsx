@@ -1,5 +1,5 @@
-import { Select, Tag, Tooltip } from "antd";
-import { useEffect, useState } from "react";
+import { Dropdown, Select, Spin, Tag, Tooltip } from "antd";
+import { CheckOutlined, RightOutlined, LoadingOutlined } from "@ant-design/icons";
 import { Bot, CheckCircle, EyeOff, ChevronRight } from "lucide-react";
 import { SparkDownLine, SparkUpLine } from "@agentscope-ai/icons";
 import { useAgentStore } from "../../stores/agentStore";
@@ -7,15 +7,23 @@ import { agentsApi } from "../../api/modules/agents";
 import { useTranslation } from "react-i18next";
 import { getAgentDisplayName } from "../../utils/agentDisplayName";
 import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import { useAppMessage } from "../../hooks/useAppMessage";
+import modelUi from "../../pages/Chat/ModelSelector/index.module.less";
 import styles from "./index.module.less";
 
+function briefAgentDescription(text: string, maxChars = 64): string {
+  const collapsed = text.replace(/\s+/g, " ").trim();
+  if (collapsed.length <= maxChars) return collapsed;
+  return `${collapsed.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+}
+
 interface AgentSelectorProps {
-  collapsed?: boolean;
+  variant?: "sidebar" | "chatToolbar";
 }
 
 export default function AgentSelector({
-  collapsed = false,
+  variant = "sidebar",
 }: AgentSelectorProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -25,15 +33,10 @@ export default function AgentSelector({
   const [loading, setLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  useEffect(() => {
-    loadAgents();
-  }, []);
-
-  const loadAgents = async () => {
+  const loadAgents = useCallback(async () => {
     try {
       setLoading(true);
       const data = await agentsApi.listAgents();
-      // Sort agents: enabled first, disabled last
       const sortedAgents = [...data.agents].sort((a, b) => {
         if (a.enabled === b.enabled) return 0;
         return a.enabled ? -1 : 1;
@@ -45,63 +48,173 @@ export default function AgentSelector({
     } finally {
       setLoading(false);
     }
-  };
+  }, [message, setAgents, t]);
 
-  const handleChange = (value: string) => {
-    const targetAgent = agents?.find((a) => a.id === value);
+  useEffect(() => {
+    void loadAgents();
+  }, [loadAgents]);
 
-    // Prevent switching to disabled agent
-    if (targetAgent && !targetAgent.enabled) {
-      message.warning(t("agent.cannotSwitchToDisabled"));
-      return;
-    }
+  const selectAgentById = useCallback(
+    (agentId: string) => {
+      const targetAgent = agents?.find((a) => a.id === agentId);
 
-    setSelectedAgent(value);
-    message.success(t("agent.switchSuccess"));
-  };
+      if (targetAgent && !targetAgent.enabled) {
+        message.warning(t("agent.cannotSwitchToDisabled"));
+        return;
+      }
 
-  // Auto-switch to default if the selected agent was deleted or disabled
+      setSelectedAgent(agentId);
+      message.success(t("agent.switchSuccess"));
+      setDropdownOpen(false);
+    },
+    [agents, message, setSelectedAgent, t],
+  );
+
   useEffect(() => {
     if (!agents?.length || selectedAgent === "default") return;
 
     const currentAgent = agents.find((a) => a.id === selectedAgent);
 
     if (!currentAgent) {
-      // Agent was deleted — no longer in the list
       setSelectedAgent("default");
       message.warning(t("agent.currentAgentDeleted"));
     } else if (!currentAgent.enabled) {
-      // Agent exists but was disabled
       setSelectedAgent("default");
       message.warning(t("agent.currentAgentDisabled"));
     }
-  }, [agents, selectedAgent, setSelectedAgent, t]);
+  }, [agents, selectedAgent, setSelectedAgent, message, t]);
 
-  // Count only enabled agents for badge
-  const enabledCount = agents?.filter((a) => a.enabled).length ?? 0;
-  const agentCount = enabledCount;
+  const agentCount = agents?.filter((a) => a.enabled).length ?? 0;
 
-  const currentAgentInfo = agents?.find((a) => a.id === selectedAgent);
+  const toolbarOpenChange = useCallback(
+    (next: boolean) => {
+      setDropdownOpen(next);
+      if (next) void loadAgents();
+    },
+    [loadAgents],
+  );
 
-  // Collapsed: show just the Bot icon with Tooltip
-  if (collapsed) {
-    return (
-      <Tooltip
-        title={
-          currentAgentInfo
-            ? getAgentDisplayName(currentAgentInfo, t)
-            : selectedAgent
-        }
-        placement="right"
-        overlayInnerStyle={{ background: "rgba(0,0,0,0.75)", color: "#fff" }}
-      >
-        <div className={styles.agentSelectorCollapsed}>
-          <Bot size={18} strokeWidth={2} />
+  /** Chat header: match ModelSelector — Dropdown + .panel rows (no bulky Select chrome). */
+  if (variant === "chatToolbar") {
+    const currentAgent = agents?.find((a) => a.id === selectedAgent);
+    const triggerLabel = currentAgent
+      ? getAgentDisplayName(currentAgent, t)
+      : t("agent.selectAgent");
+
+    const panel = (
+      <div className={modelUi.panel}>
+        {loading ? (
+          <div className={modelUi.spinWrapper}>
+            <Spin size="small" />
+          </div>
+        ) : !agents?.length ? (
+          <div className={modelUi.emptyTip}>{t("agent.selectAgent")}</div>
+        ) : (
+          agents.map((agent) => {
+            const isActive = agent.id === selectedAgent;
+            const rowClass = [
+              modelUi.modelItem,
+              isActive ? modelUi.modelItemActive : "",
+              !agent.enabled ? styles.agentToolbarRowDisabled : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            return (
+              <div
+                key={agent.id}
+                role="button"
+                tabIndex={0}
+                className={rowClass}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!agent.enabled) {
+                    message.warning(t("agent.cannotSwitchToDisabled"));
+                    return;
+                  }
+                  selectAgentById(agent.id);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (!agent.enabled) {
+                      message.warning(t("agent.cannotSwitchToDisabled"));
+                      return;
+                    }
+                    selectAgentById(agent.id);
+                  }
+                }}
+              >
+                <span className={styles.agentToolbarRowIcon}>
+                  <Bot size={14} strokeWidth={2} />
+                </span>
+                <span className={modelUi.modelName}>
+                  {getAgentDisplayName(agent, t)}
+                </span>
+                {!agent.enabled ? (
+                  <span className={styles.agentToolbarDisabledHint}>
+                    {t("agent.disabled")}
+                  </span>
+                ) : isActive ? (
+                  <CheckOutlined className={modelUi.checkIcon} />
+                ) : null}
+              </div>
+            );
+          })
+        )}
+        <div className={styles.agentToolbarFooter}>
+          <button
+            type="button"
+            className={styles.agentToolbarManage}
+            onClick={() => {
+              setDropdownOpen(false);
+              navigate("/agents");
+            }}
+          >
+            {t("agent.management")}
+            <RightOutlined />
+          </button>
         </div>
-      </Tooltip>
+      </div>
+    );
+
+    return (
+      <Dropdown
+        open={dropdownOpen}
+        onOpenChange={toolbarOpenChange}
+        dropdownRender={() => panel}
+        trigger={["click"]}
+        placement="bottomLeft"
+      >
+        <Tooltip title={t("agent.selectAgent")} mouseEnterDelay={0.5}>
+          <div
+            className={[modelUi.trigger, dropdownOpen ? modelUi.triggerActive : ""]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {loading && !agents?.length ? (
+              <LoadingOutlined style={{ fontSize: 11, color: "#3b82f6" }} />
+            ) : (
+              <span className={styles.agentToolbarTriggerIcon}>
+                <Bot size={16} strokeWidth={2} />
+              </span>
+            )}
+            <span className={modelUi.triggerName}>{triggerLabel}</span>
+            <SparkDownLine
+              className={[
+                modelUi.triggerArrow,
+                dropdownOpen ? modelUi.triggerArrowOpen : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            />
+          </div>
+        </Tooltip>
+      </Dropdown>
     );
   }
 
+  // ─── Sidebar card (antd Select + rich rows) ───────────────────────────────
   return (
     <div className={styles.agentSelectorWrapper}>
       <div className={styles.agentSelectorLabel}>
@@ -114,11 +227,12 @@ export default function AgentSelector({
       </div>
       <Select
         value={selectedAgent}
-        onChange={handleChange}
+        onChange={(v) => selectAgentById(v)}
         loading={loading}
         className={styles.agentSelector}
         placeholder={t("agent.selectAgent")}
         optionLabelProp="label"
+        popupMatchSelectWidth
         popupClassName={styles.agentSelectorDropdown}
         onDropdownVisibleChange={setDropdownOpen}
         suffixIcon={
@@ -131,6 +245,7 @@ export default function AgentSelector({
                 {t("agent.currentWorkspace")}
               </span>
               <button
+                type="button"
                 className={styles.managementLink}
                 onClick={() => navigate("/agents")}
               >
@@ -179,14 +294,16 @@ export default function AgentSelector({
                       <Tag style={{ margin: 0 }}>{t("agent.disabled")}</Tag>
                     )}
                   </div>
-                  {agent.description && (
-                    <div className={styles.agentOptionDescription}>
-                      {agent.description}
+                  {agent.description ? (
+                    <div
+                      className={styles.agentOptionDescription}
+                      title={agent.description}
+                    >
+                      {briefAgentDescription(agent.description)}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
-              <div className={styles.agentOptionId}>ID: {agent.id}</div>
             </div>
           </Select.Option>
         ))}

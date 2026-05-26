@@ -3,7 +3,7 @@ name: channel_message
 description: Use this skill to proactively send a one-way message to a user/session/channel, usually only when the user explicitly asks to send to a channel/session or when proactive notification is needed. First query sessions with qwenpaw chats list, then push with qwenpaw channels send.
 metadata:
   builtin_skill_version: "1.3"
-  qwenpaw:
+  aiwork:
     emoji: "📤"
 ---
 
@@ -42,19 +42,19 @@ This is a **one-way send** — **no reply is returned**.
 ### 1) Query available sessions first
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --channel <channel>
+aiwork chats list --agent-id <your_agent> --channel <channel>
 ```
 
 You can also filter by user:
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --user-id <user_id>
+aiwork chats list --agent-id <your_agent> --user-id <user_id>
 ```
 
 ### 2) Send a message
 
 ```bash
-qwenpaw channels send \
+aiwork channels send \
   --agent-id <your_agent> \
   --channel <channel> \
   --target-user <user_id> \
@@ -93,7 +93,7 @@ qwenpaw channels send \
 Before sending, run:
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --channel <channel>
+aiwork chats list --agent-id <your_agent> --channel <channel>
 ```
 
 Extract from the results:
@@ -113,9 +113,9 @@ If there are multiple candidate sessions, prefer the one with the most recent `u
 ### User explicitly asks to send to a channel
 
 ```bash
-qwenpaw chats list --agent-id notify_bot --channel feishu
+aiwork chats list --agent-id notify_bot --channel feishu
 
-qwenpaw channels send \
+aiwork channels send \
   --agent-id notify_bot \
   --channel feishu \
   --target-user manager_id \
@@ -126,9 +126,9 @@ qwenpaw channels send \
 ### Task completion notification
 
 ```bash
-qwenpaw chats list --agent-id task_bot --channel console
+aiwork chats list --agent-id task_bot --channel console
 
-qwenpaw channels send \
+aiwork channels send \
   --agent-id task_bot \
   --channel console \
   --target-user alice \
@@ -139,9 +139,9 @@ qwenpaw channels send \
 ### Async result push-back
 
 ```bash
-qwenpaw chats list --agent-id analyst_bot --user-id alice
+aiwork chats list --agent-id analyst_bot --user-id alice
 
-qwenpaw channels send \
+aiwork channels send \
   --agent-id analyst_bot \
   --channel console \
   --target-user alice \
@@ -162,7 +162,7 @@ If you are replying to the user in the current session, do not use `qwenpaw chan
 Do not guess `target-user` or `target-session`. First run:
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --channel <channel>
+aiwork chats list --agent-id <your_agent> --channel <channel>
 ```
 
 ### Mistake 3: Missing required parameters
@@ -184,27 +184,27 @@ Prefer the most recently active session.
 ### List all sessions
 
 ```bash
-qwenpaw chats list --agent-id <your_agent>
+aiwork chats list --agent-id <your_agent>
 ```
 
 ### List sessions for a specific user
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --user-id <user_id>
+aiwork chats list --agent-id <your_agent> --user-id <user_id>
 ```
 
 ### List available channels
 
 ```bash
-qwenpaw channels list --agent-id <your_agent>
+aiwork channels list --agent-id <your_agent>
 ```
 
 ---
 
 ## Difference from Agent Chat
 
-- **qwenpaw agents chat**: sends to another agent, two-way, returns a reply
-- **qwenpaw channels send**: sends to a user/session/channel, one-way, no reply
+- **aiwork agents chat**: sends to another agent, two-way, returns a reply
+- **aiwork channels send**: sends to a user/session/channel, one-way, no reply
 
 **Selection principle**:
 - Need to collaborate with another agent → `qwenpaw agents chat`
@@ -243,8 +243,8 @@ qwenpaw channels list --agent-id <your_agent>
 Use `-h` at any time to view detailed help:
 
 ```bash
-qwenpaw channels -h
-qwenpaw channels send -h
-qwenpaw chats -h
-qwenpaw chats list -h
+aiwork channels -h
+aiwork channels send -h
+aiwork chats -h
+aiwork chats list -h
 ```

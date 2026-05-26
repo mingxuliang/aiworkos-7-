@@ -59,7 +59,7 @@ export const getFileIcon = (filePath: string) => {
     case "7z":
     case "tar":
     case "gz":
-      return <FileZipFilled style={{ color: "#fa8c16" }} />;
+      return <FileZipFilled style={{ color: "#3b82f6" }} />;
     case "pdf":
       return <FilePdfFilled style={{ color: "#F04B57" }} />;
     case "doc":

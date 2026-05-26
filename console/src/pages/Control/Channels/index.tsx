@@ -10,6 +10,7 @@ import {
   type ChannelKey,
 } from "./components";
 import { PageHeader } from "@/components/PageHeader";
+import { CopawWorkbenchShell } from "@/components/CopawWorkbenchShell";
 import { useAppMessage } from "../../../hooks/useAppMessage";
 import styles from "./index.module.less";
 
@@ -108,56 +109,58 @@ function ChannelsPage() {
   ];
 
   return (
-    <div className={styles.channelsPage}>
-      <PageHeader
-        items={[{ title: t("nav.control") }, { title: t("channels.title") }]}
-        center={
-          <div className={styles.filterTabs}>
-            {FILTER_TABS.map(({ key, label }) => (
-              <button
-                key={key}
-                className={`${styles.filterTab} ${
-                  filter === key ? styles.filterTabActive : ""
-                }`}
-                onClick={() => setFilter(key)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        }
-      />
-      <div className={styles.channelsContainer}>
-        {loading ? (
-          <div className={styles.loading}>
-            <span className={styles.loadingText}>{t("channels.loading")}</span>
-          </div>
-        ) : (
-          <div className={styles.channelsGrid}>
-            {cards.map(({ key, config }) => (
-              <ChannelCard
-                key={key}
-                channelKey={key}
-                config={config}
-                onClick={() => handleCardClick(key)}
-              />
-            ))}
-          </div>
-        )}
+    <CopawWorkbenchShell>
+      <div className={styles.channelsPage}>
+        <PageHeader
+          items={[{ title: t("nav.control") }, { title: t("channels.title") }]}
+          center={
+            <div className={styles.filterTabs}>
+              {FILTER_TABS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`${styles.filterTab} ${
+                    filter === key ? styles.filterTabActive : ""
+                  }`}
+                  onClick={() => setFilter(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          }
+        />
+        <div className={styles.channelsContainer}>
+          {loading ? (
+            <div className={styles.loading}>
+              <span className={styles.loadingText}>{t("channels.loading")}</span>
+            </div>
+          ) : (
+            <div className={styles.channelsGrid}>
+              {cards.map(({ key, config }, index) => (
+                <ChannelCard
+                  key={key}
+                  channelKey={key}
+                  config={config}
+                  visualVariant={index}
+                  onClick={() => handleCardClick(key)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        <ChannelDrawer
+          open={drawerOpen}
+          activeKey={activeKey}
+          activeLabel={activeLabel}
+          form={form}
+          saving={saving}
+          initialValues={activeKey ? channels[activeKey] : undefined}
+          isBuiltin={activeKey ? isBuiltin(activeKey) : true}
+          onClose={handleDrawerClose}
+          onSubmit={handleSubmit}
+        />
       </div>
-      <ChannelDrawer
-        open={drawerOpen}
-        activeKey={activeKey}
-        activeLabel={activeLabel}
-        form={form}
-        saving={saving}
-        initialValues={activeKey ? channels[activeKey] : undefined}
-        isBuiltin={activeKey ? isBuiltin(activeKey) : true}
-        onClose={handleDrawerClose}
-        onSubmit={handleSubmit}
-      />
-    </div>
-  );
-}
+    </CopawWorkbenchShell>
+  );}
 
 export default ChannelsPage;

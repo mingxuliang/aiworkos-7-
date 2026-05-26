@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""qwenpaw uninstall — remove the QwenPaw environment and CLI wrapper."""
+"""aiwork uninstall — remove the QwenPaw environment and CLI wrapper."""
 from __future__ import annotations
 
 import shutil
@@ -32,7 +32,7 @@ def _remove_path_entry(profile: Path) -> bool:
     text = profile.read_text()
     # Remove the "# QwenPaw" comment line and the export PATH line
     cleaned = re.sub(
-        r"\n?# QwenPaw\nexport PATH=\"\$HOME/\.qwenpaw/bin:\$PATH\"\n?",
+        r"\n?# QwenPaw\nexport PATH=\"\$HOME/\.aiwork/bin:\$PATH\"\n?",
         "\n",
         text,
     )

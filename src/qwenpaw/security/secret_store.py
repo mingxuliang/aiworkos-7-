@@ -26,7 +26,7 @@ from ..constant import EnvVarLoader
 logger = logging.getLogger(__name__)
 
 _ENC_PREFIX = "ENC:"
-_KEYRING_SERVICE = "qwenpaw"
+_KEYRING_SERVICE = "aiwork"
 _KEYRING_SERVICE_LEGACY = "copaw"
 _KEYRING_ACCOUNT = "master_key"
 

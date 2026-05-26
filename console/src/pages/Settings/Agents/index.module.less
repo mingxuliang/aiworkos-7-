@@ -1,5 +1,5 @@
 .agentsPage {
-  height: calc(100vh - 128px);
+  min-height: calc(100vh - 128px);
   padding: 0;
 
   :global {
@@ -94,7 +94,35 @@
   font-size: 14px;
 }
 
-/* ---- Table Card ---- */
+/* Agent 卡片区：不再套一层白 Card，直接与页面灰底衔接 */
+.agentGridSection {
+  padding: 8px 20px 28px;
+  background: transparent;
+}
+
+.listLoadAlert {
+  margin-bottom: 16px;
+}
+
+.listLoadDetail {
+  margin: 0 0 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.listLoadHint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+:global(.dark-mode) .listLoadHint {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ---- Table Card（沿用 AgentTable 等表格场景的包裹层） ---- */
 
 .tableCard {
   margin-bottom: 24px;
@@ -106,6 +134,91 @@
   :global(.ant-card-body) {
     padding: 0;
   }
+}
+
+.pageDescription {
+  margin: 0;
+  padding: 0 20px 6px;
+  max-width: 720px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.cardDragGrip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.045);
+  color: rgba(0, 0, 0, 0.52);
+  cursor: grab;
+}
+
+.cardDragGrip:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.cardDragGrip:active {
+  cursor: grabbing;
+}
+
+.cardDragGrip[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.agentCardGripRow {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 8;
+}
+
+.agentCardHero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 40px;
+}
+
+.agentCardIconCube {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+}
+
+.agentCardTitles {
+  min-width: 0;
+  flex: 1;
+}
+
+.agentCardName {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  margin: 0 0 6px !important;
+}
+
+.agentCardTagSpacer {
+  margin-left: 6px !important;
+}
+
+.agentCardLines {
+  margin-top: 10px;
+}
+
+.agentCardLine {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 4px;
 }
 
 .dragHandleButton {
@@ -221,6 +334,20 @@
     color: rgba(255, 255, 255, 0.35);
   }
 
+  .pageDescription {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .cardDragGrip {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .cardDragGrip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.82);
+  }
+
   .dragHandleButton {
     color: rgba(255, 255, 255, 0.45);
   }
@@ -267,7 +394,7 @@
 
   &:hover {
     background: rgba(255, 255, 255, 0.08) !important;
-    color: #ff7f16 !important;
+    color: #3b82f6 !important;
   }
 
   .anticon,

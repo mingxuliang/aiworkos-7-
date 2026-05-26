@@ -1,22 +1,40 @@
 import { useState, useRef, useCallback } from "react";
-import { Card, Button, Form } from "antd";
+import { Alert, Button, Form } from "antd";
 import { useAppMessage } from "../../../hooks/useAppMessage";
 import { PlusOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { agentsApi } from "../../../api/modules/agents";
 import { invalidateSkillCache, skillApi } from "../../../api/modules/skill";
-import type { AgentSummary } from "../../../api/types/agents";
+import type {
+  AgentProfileConfig,
+  AgentSummary,
+  CreateAgentRequest,
+} from "../../../api/types/agents";
 import { useAgentStore } from "../../../stores/agentStore";
 import { useAgents } from "./useAgents";
-import { AgentTable, AgentModal } from "./components";
+import { AgentCardGrid, AgentModal } from "./components";
 import { PageHeader } from "@/components/PageHeader";
+import { CopawWorkbenchShell } from "@/components/CopawWorkbenchShell";
 import { reorderAgents } from "./reorder";
+import {
+  loadAgentPresentation,
+  removeAgentPresentation,
+  saveAgentPresentation,
+} from "@/utils/agentPresentationStorage";
+import { DEFAULT_TEAM_ICON_KEY } from "./components/agentTeamIcons";
 import styles from "./index.module.less";
 
 export default function AgentsPage() {
   const { t, i18n } = useTranslation();
-  const { agents, loading, deleteAgent, toggleAgent, loadAgents, setAgents } =
-    useAgents();
+  const {
+    agents,
+    loading,
+    error: agentsLoadError,
+    deleteAgent,
+    toggleAgent,
+    loadAgents,
+    setAgents,
+  } = useAgents();
   const { selectedAgent, setSelectedAgent } = useAgentStore();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingAgent, setEditingAgent] = useState<AgentSummary | null>(null);
@@ -33,6 +51,8 @@ export default function AgentsPage() {
       workspace_dir: "",
       active_model_provider: undefined,
       active_model_model: undefined,
+      team_icon: DEFAULT_TEAM_ICON_KEY,
+      team_tags: [],
     });
     setSelectedSkills([]);
     installedSkillsRef.current = [];
@@ -45,11 +65,14 @@ export default function AgentsPage() {
       installedSkillsRef.current = [];
       invalidateSkillCache({ agentId: agent.id });
       const config = await agentsApi.getAgent(agent.id);
+      const preset = loadAgentPresentation(agent.id);
       setEditingAgent(agent);
       form.setFieldsValue({
         ...config,
         active_model_provider: config.active_model?.provider_id || undefined,
         active_model_model: config.active_model?.model || undefined,
+        team_icon: preset.iconKey,
+        team_tags: preset.tags,
       });
       setModalVisible(true);
     } catch (error) {
@@ -61,6 +84,7 @@ export default function AgentsPage() {
   const handleDelete = async (agentId: string) => {
     try {
       await deleteAgent(agentId);
+      removeAgentPresentation(agentId);
 
       if (selectedAgent === agentId) {
         setSelectedAgent("default");
@@ -105,8 +129,30 @@ export default function AgentsPage() {
           ? { provider_id: providerId, model: modelId }
           : null;
 
-      const { active_model_provider, active_model_model, ...rest } = values;
-      const payload = { ...rest, workspace_dir, active_model };
+      const {
+        active_model_provider,
+        active_model_model,
+        team_icon,
+        team_tags,
+        ...rest
+      } = values;
+      let payload = {
+        ...rest,
+        workspace_dir,
+        active_model,
+      } as AgentProfileConfig;
+
+      if (!editingAgent) {
+        const rawId = payload.id;
+        const idTrim =
+          typeof rawId === "string" ? rawId.trim() : "";
+        if (idTrim) {
+          payload = { ...payload, id: idTrim };
+        } else {
+          const { id: _omitId, ...noIdPayload } = payload;
+          payload = noIdPayload as AgentProfileConfig;
+        }
+      }
 
       if (editingAgent) {
         const previousInstalledSkills = installedSkillsRef.current;
@@ -121,6 +167,11 @@ export default function AgentsPage() {
           });
         }
         await agentsApi.updateAgent(editingAgent.id, payload);
+        saveAgentPresentation(editingAgent.id, {
+          iconKey:
+            typeof team_icon === "string" ? team_icon : DEFAULT_TEAM_ICON_KEY,
+          tags: Array.isArray(team_tags) ? team_tags : [],
+        });
         installedSkillsRef.current = [
           ...previousInstalledSkills,
           ...newSkills.filter(
@@ -130,10 +181,16 @@ export default function AgentsPage() {
         invalidateSkillCache({ agentId: editingAgent.id });
         message.success(t("agent.updateSuccess"));
       } else {
-        const result = await agentsApi.createAgent({
+        const body: CreateAgentRequest = {
           ...payload,
           language: i18n.language,
           skill_names: selectedSkills,
+        };
+        const result = await agentsApi.createAgent(body);
+        saveAgentPresentation(result.id, {
+          iconKey:
+            typeof team_icon === "string" ? team_icon : DEFAULT_TEAM_ICON_KEY,
+          tags: Array.isArray(team_tags) ? team_tags : [],
         });
         message.success(`${t("agent.createSuccess")} (ID: ${result.id})`);
       }
@@ -172,45 +229,78 @@ export default function AgentsPage() {
   };
 
   return (
-    <div className={styles.agentsPage}>
-      <PageHeader
-        parent={t("agent.parent")}
-        current={t("agent.agents")}
-        extra={
-          <div className={styles.headerRight}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-            >
-              {t("agent.create")}
-            </Button>
-          </div>
-        }
-      />
-
-      <Card className={styles.tableCard}>
-        <AgentTable
-          agents={agents}
-          loading={loading || reordering}
-          reordering={reordering}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onToggle={handleToggle}
-          onReorder={handleReorder}
+    <CopawWorkbenchShell>
+      <div className={styles.agentsPage}>
+        <PageHeader
+          parent={t("agent.parent")}
+          current={t("agent.agents")}
+          subRow={
+            <p className={styles.pageDescription}>{t("agent.pageDescription")}</p>
+          }
+          extra={
+            <div className={styles.headerRight}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleCreate}
+              >
+                {t("agent.create")}
+              </Button>
+            </div>
+          }
         />
-      </Card>
 
-      <AgentModal
-        open={modalVisible}
-        editingAgent={editingAgent}
-        form={form}
-        selectedSkills={selectedSkills}
-        onSelectedSkillsChange={setSelectedSkills}
-        onInstalledSkillsLoaded={handleInstalledSkillsLoaded}
-        onSave={handleSubmit}
-        onCancel={() => setModalVisible(false)}
-      />
-    </div>
+        <div className={styles.agentGridSection}>
+          {agentsLoadError ? (
+            <Alert
+              className={styles.listLoadAlert}
+              type="error"
+              showIcon
+              message={t("agent.loadFailed")}
+              description={
+                <>
+                  {agentsLoadError.message ? (
+                    <p className={styles.listLoadDetail}>
+                      {agentsLoadError.message}
+                    </p>
+                  ) : null}
+                  <p className={styles.listLoadHint}>
+                    {t("agent.loadListHint")}
+                  </p>
+                  <Button
+                    size="small"
+                    type="primary"
+                    loading={loading}
+                    onClick={() => void loadAgents()}
+                  >
+                    {t("agent.listRetry")}
+                  </Button>
+                </>
+              }
+            />
+          ) : null}
+          <AgentCardGrid
+            agents={agents}
+            loading={loading}
+            reordering={reordering}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggle={handleToggle}
+            onReorder={handleReorder}
+          />
+        </div>
+
+        <AgentModal
+          open={modalVisible}
+          editingAgent={editingAgent}
+          form={form}
+          selectedSkills={selectedSkills}
+          onSelectedSkillsChange={setSelectedSkills}
+          onInstalledSkillsLoaded={handleInstalledSkillsLoaded}
+          onSave={handleSubmit}
+          onCancel={() => setModalVisible(false)}
+        />
+      </div>
+    </CopawWorkbenchShell>
   );
 }

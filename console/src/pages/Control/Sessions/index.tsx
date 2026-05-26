@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Form, Modal, Table, Button } from "@agentscope-ai/design";
+import { Form, Modal, Button } from "@agentscope-ai/design";
+import { Spin } from "antd";
 import { useAppMessage } from "../../../hooks/useAppMessage";
 import { useTranslation } from "react-i18next";
 import {
-  createColumns,
   FilterBar,
   SessionDrawer,
+  SessionCard,
   type Session,
 } from "./components";
 import { useSessions } from "./useSessions";
 import api from "../../../api";
 import { PageHeader } from "@/components/PageHeader";
+import { CopawWorkbenchShell } from "@/components/CopawWorkbenchShell";
 import styles from "./index.module.less";
 
 function SessionsPage() {
@@ -32,7 +34,6 @@ function SessionsPage() {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  // Filter states
   const [filterUserId, setFilterUserId] = useState<string>("");
   const [filterChannel, setFilterChannel] = useState<string>("");
   const [availableChannels, setAvailableChannels] = useState<string[]>([]);
@@ -51,14 +52,12 @@ function SessionsPage() {
     fetchChannelTypes();
   }, []);
 
-  // Filter effect
   useEffect(() => {
     let filtered: Session[] = sessions;
 
     if (filterUserId) {
-      filtered = filtered.filter(
-        (session: Session) =>
-          session.user_id?.toLowerCase().includes(filterUserId.toLowerCase()),
+      filtered = filtered.filter((session: Session) =>
+        session.user_id?.toLowerCase().includes(filterUserId.toLowerCase()),
       );
     }
 
@@ -73,7 +72,8 @@ function SessionsPage() {
 
   const handleEdit = (session: Session) => {
     setEditingSession(session);
-    form.setFieldsValue(session as any);
+    // Form model is a subset of runtime session; avoid strict meta typing clash.
+    form.setFieldsValue(session as never);
     setDrawerOpen(true);
   };
 
@@ -92,6 +92,12 @@ function SessionsPage() {
 
   const handleView = (session: Session) => {
     navigate(`/chat/${encodeURIComponent(session.id)}`);
+  };
+
+  const handleCardSelect = (id: string, checked: boolean) => {
+    setSelectedRowKeys((prev) =>
+      checked ? [...prev.filter((k) => k !== id), id] : prev.filter((k) => k !== id),
+    );
   };
 
   const handleBatchDelete = () => {
@@ -139,71 +145,85 @@ function SessionsPage() {
     }
   };
 
-  const columns = createColumns({
-    onEdit: handleEdit,
-    onDelete: handleDelete,
-    onView: handleView,
-    t,
-  });
+  let mainBody: ReactNode;
 
-  const rowSelection = {
-    fixed: true,
-    columnWidth: 50,
-    selectedRowKeys,
-    onChange: (newSelectedRowKeys: React.Key[]) => {
-      setSelectedRowKeys(newSelectedRowKeys);
-    },
-  };
+  if (loading) {
+    mainBody = (
+      <div className={styles.stateWrap}>
+        <Spin tip={t("sessions.loading")} />
+      </div>
+    );
+  } else if (sessions.length === 0) {
+    mainBody = (
+      <div className={styles.stateWrapMuted}>{t("sessions.noSessionsYet")}</div>
+    );
+  } else if (filteredSessions.length === 0) {
+    mainBody = (
+      <div className={styles.stateWrapMuted}>
+        {t("sessions.noSessionsMatchFilters")}
+      </div>
+    );
+  } else {
+    mainBody = (
+      <div className="cbc-agent-grid">
+        {filteredSessions.map((session, index) => (
+          <SessionCard
+            key={session.id}
+            session={session}
+            index={index}
+            selected={selectedRowKeys.includes(session.id)}
+            onSelect={handleCardSelect}
+            onEdit={handleEdit}
+            onView={handleView}
+            onDelete={handleDelete}
+            t={t}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.sessionsPage}>
-      <PageHeader
-        items={[{ title: t("nav.control") }, { title: t("sessions.title") }]}
-        extra={
-          <div className={styles.headerRight}>
-            <FilterBar
-              filterUserId={filterUserId}
-              filterChannel={filterChannel}
-              uniqueChannels={availableChannels}
-              onUserIdChange={setFilterUserId}
-              onChannelChange={setFilterChannel}
-            />
-            {selectedRowKeys.length > 0 && (
-              <Button type="primary" danger onClick={handleBatchDelete}>
-                {t("sessions.batchDeleteButton")} ({selectedRowKeys.length})
-              </Button>
-            )}
-          </div>
-        }
-      />
-
-      <Card className={styles.tableCard} bodyStyle={{ padding: 0 }}>
-        <Table
-          columns={columns}
-          dataSource={filteredSessions}
-          loading={loading}
-          rowKey="id"
-          rowSelection={rowSelection}
-          rowClassName={(record) =>
-            selectedRowKeys.includes(record.id) ? styles.selectedRow : ""
+    <CopawWorkbenchShell>
+      <div className={styles.sessionsPage}>
+        <PageHeader
+          parent={t("nav.control")}
+          current={t("sessions.title")}
+          subRow={
+            <p className="copaw-bench-page-desc">{t("sessions.description")}</p>
           }
-          scroll={{ x: 1500 }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: false,
-          }}
+          extra={
+            <div className={styles.headerRight}>
+              <FilterBar
+                filterUserId={filterUserId}
+                filterChannel={filterChannel}
+                uniqueChannels={availableChannels}
+                onUserIdChange={setFilterUserId}
+                onChannelChange={setFilterChannel}
+              />
+              {selectedRowKeys.length > 0 && (
+                <Button type="primary" danger onClick={handleBatchDelete}>
+                  {t("sessions.batchDeleteButton")} ({selectedRowKeys.length})
+                </Button>
+              )}
+            </div>
+          }
         />
-      </Card>
 
-      <SessionDrawer
-        open={drawerOpen}
-        editingSession={editingSession}
-        form={form}
-        saving={saving}
-        onClose={handleDrawerClose}
-        onSubmit={handleSubmit}
-      />
-    </div>
+        <div className="copaw-bench-main-section copaw-bench-main-section--scroll">
+          {mainBody}
+        </div>
+
+        <SessionDrawer
+          open={drawerOpen}
+          editingSession={editingSession}
+          form={form}
+          saving={saving}
+          onClose={handleDrawerClose}
+          onSubmit={handleSubmit}
+        />
+      </div>
+    </CopawWorkbenchShell>
   );
 }
 

@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+
 /**
  * Parse cron expression to form-friendly format and vice versa.
  * Supports: hourly, daily, weekly, custom
@@ -255,4 +257,42 @@ function serializeDaysOfWeek(daysOfWeek?: string[]): string {
   }
 
   return segments.join(",");
+}
+
+/** One-line human summary for cron job cards (aligned with table column logic). */
+export function formatCronHumanSummary(
+  cron: string | undefined,
+  t: TFunction,
+): string {
+  const cronParts = parseCron(cron || "0 9 * * *");
+  switch (cronParts.type) {
+    case "hourly":
+      return t("cronJobs.cronTypeHourly");
+    case "daily":
+      return `${t("cronJobs.cronTypeDaily")} ${String(
+        cronParts.hour ?? 9,
+      ).padStart(2, "0")}:${String(cronParts.minute ?? 0).padStart(2, "0")}`;
+    case "weekly": {
+      const dayNames = (cronParts.daysOfWeek || [])
+        .map((d) => {
+          const dayMap: Record<string, string> = {
+            mon: t("cronJobs.cronDayMon"),
+            tue: t("cronJobs.cronDayTue"),
+            wed: t("cronJobs.cronDayWed"),
+            thu: t("cronJobs.cronDayThu"),
+            fri: t("cronJobs.cronDayFri"),
+            sat: t("cronJobs.cronDaySat"),
+            sun: t("cronJobs.cronDaySun"),
+          };
+          return dayMap[d] || d;
+        })
+        .join(",");
+      return `${t("cronJobs.cronTypeWeekly")} ${dayNames} ${String(
+        cronParts.hour ?? 9,
+      ).padStart(2, "0")}:${String(cronParts.minute ?? 0).padStart(2, "0")}`;
+    }
+    case "custom":
+    default:
+      return cronParts.rawCron ?? cron ?? "—";
+  }
 }

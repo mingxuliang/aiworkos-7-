@@ -791,7 +791,7 @@ def ensure_qa_agent_exists() -> None:
 
     On **first creation** only, ``skills/`` is seeded from
     ``BUILTIN_QA_AGENT_SKILL_NAMES`` (e.g. ``guidance``,
-    ``qwenpaw_source_index``), and built-in tools are restricted (see
+    ``aiwork_source_index``), and built-in tools are restricted (see
     ``build_qa_agent_tools_config``).
     After that, the user may change skills and tools freely; we do not
     overwrite their choices on later startups.

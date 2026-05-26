@@ -153,7 +153,7 @@ export default function DebugPage() {
                   "debug.backend.notFound",
                   "Backend log file was not found yet.",
                 )}
-                type="warning"
+                type="info"
                 showIcon
               />
             ) : null}

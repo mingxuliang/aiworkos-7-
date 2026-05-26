@@ -1,0 +1,70 @@
+.topRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.iconSlot {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: rgba(38, 36, 76, 0.88);
+
+  img {
+    border-radius: 10px;
+    object-fit: cover;
+  }
+}
+
+.middle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(20, 20, 19, 0.88);
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.bottom {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(20, 20, 19, 0.65);
+}
+
+.bottomLine {
+  margin: 0 0 6px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+:global(.dark-mode) {
+  .iconSlot {
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .cardTitle {
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .bottom {
+    color: rgba(255, 255, 255, 0.65);
+  }
+}

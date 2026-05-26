@@ -39,8 +39,12 @@ export const KEY_TO_PATH: Record<string, string> = {
   "voice-transcription": "/voice-transcription",
   debug: "/debug",
   backups: "/backups",
-  "user-management": "/user-management",
-  "role-management": "/role-management",
+  workbench: "/workbench",
+  news: "/news",
+  "org-chart": "/org-chart",
+  "ai-okr": "/ai-okr",
+  "org-builder": "/org-builder",
+  users: "/users",
 };
 
 export const KEY_TO_LABEL: Record<string, string> = {
@@ -63,8 +67,12 @@ export const KEY_TO_LABEL: Record<string, string> = {
   agents: "nav.agents",
   debug: "nav.debug",
   backups: "nav.backups",
-  "user-management": "nav.userManagement",
-  "role-management": "nav.roleManagement",
+  workbench: "nav.workbench",
+  news: "nav.news",
+  "org-chart": "nav.orgChart",
+  "ai-okr": "nav.aiOkr",
+  "org-builder": "nav.orgBuilder",
+
 };
 
 // ── URL helpers ───────────────────────────────────────────────────────────

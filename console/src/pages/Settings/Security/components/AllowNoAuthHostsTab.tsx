@@ -145,7 +145,7 @@ export function AllowNoAuthHostsTab({ onSave }: AllowNoAuthHostsTabProps = {}) {
       <Alert
         message={t("security.allowNoAuthHosts.warningTitle")}
         description={t("security.allowNoAuthHosts.warningDescription")}
-        type="warning"
+        type="info"
         icon={<AlertTriangle size={16} />}
         showIcon
         style={{ marginBottom: 16 }}

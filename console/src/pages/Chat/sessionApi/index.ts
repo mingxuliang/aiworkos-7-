@@ -15,6 +15,7 @@ import { toDisplayUrl } from "../utils";
 // Constants
 // ---------------------------------------------------------------------------
 
+const DEFAULT_USER_ID = "default";
 const DEFAULT_CHANNEL = "console";
 const DEFAULT_SESSION_NAME = "New Chat";
 const ROLE_TOOL = "tool";
@@ -29,8 +30,8 @@ const CARD_RESPONSE = "AgentScopeRuntimeResponseCard";
 // ---------------------------------------------------------------------------
 
 interface CustomWindow extends Window {
-  currentUserId?: string;
   currentSessionId?: string;
+  currentUserId?: string;
   currentChannel?: string;
 }
 
@@ -61,6 +62,8 @@ interface OutputMessage extends Omit<Message, "role"> {
 interface ExtendedSession extends IAgentScopeRuntimeWebUISession {
   /** Session identifier (channel:user_id format) */
   sessionId: string;
+  /** User identifier */
+  userId: string;
   /** Channel name */
   channel: string;
   /** Additional metadata */
@@ -139,7 +142,7 @@ function contentToRequestParts(
 function normalizeOutputMessageContent(content: unknown): unknown {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return content;
-  return (content as ContentItem[]).map(resolveContentItemUrl);
+  return content as ContentItem[];
 }
 
 /**
@@ -253,6 +256,7 @@ const chatSpecToSession = (chat: ChatSpec): ExtendedSession =>
     id: chat.id,
     name: chat.name || DEFAULT_SESSION_NAME,
     sessionId: chat.session_id,
+    userId: chat.user_id,
     channel: chat.channel,
     messages: [],
     meta: chat.meta || {},
@@ -334,6 +338,35 @@ function clearPendingUserMessage(sessionId: string): void {
 
 class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
   private sessionList: IAgentScopeRuntimeWebUISession[] = [];
+
+  /**
+   * Pending resolvers waiting for a specific session's realId.
+   * Used to replace setTimeout-based busy-wait with event-driven notification.
+   */
+  private realIdResolvers: Map<string, Array<() => void>> = new Map();
+
+  /** Notify any pending waiters that a session's realId has been resolved. */
+  private notifyRealIdResolved(sessionId: string): void {
+    const resolvers = this.realIdResolvers.get(sessionId);
+    if (resolvers) {
+      this.realIdResolvers.delete(sessionId);
+      for (const resolve of resolvers) resolve();
+    }
+  }
+
+  /** Wait until a session's realId is available (set by updateSession). */
+  private waitForRealId(sessionId: string): Promise<void> {
+    const session = this.sessionList.find((x) => x.id === sessionId) as
+      | ExtendedSession
+      | undefined;
+    if (session?.realId) return Promise.resolve();
+
+    return new Promise<void>((resolve) => {
+      const existing = this.realIdResolvers.get(sessionId) || [];
+      existing.push(resolve);
+      this.realIdResolvers.set(sessionId, existing);
+    });
+  }
 
   /**
    * When set, getSessionList will move the matching session to the front on the first call,
@@ -439,11 +472,13 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
 
   private createEmptySession(sessionId: string): ExtendedSession {
     window.currentSessionId = sessionId;
+    window.currentUserId = DEFAULT_USER_ID;
     window.currentChannel = DEFAULT_CHANNEL;
     return {
       id: sessionId,
       name: DEFAULT_SESSION_NAME,
       sessionId,
+      userId: DEFAULT_USER_ID,
       channel: DEFAULT_CHANNEL,
       messages: [],
       meta: {},
@@ -452,6 +487,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
 
   private updateWindowVariables(session: ExtendedSession): void {
     window.currentSessionId = session.sessionId || "";
+    window.currentUserId = session.userId || DEFAULT_USER_ID;
     window.currentChannel = session.channel || DEFAULT_CHANNEL;
   }
 
@@ -571,6 +607,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
           id: sessionId,
           name: fromList.name || DEFAULT_SESSION_NAME,
           sessionId: fromList.sessionId || sessionId,
+          userId: fromList.userId || DEFAULT_USER_ID,
           channel: fromList.channel || DEFAULT_CHANNEL,
           messages,
           meta: fromList.meta || {},
@@ -583,19 +620,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
 
       // Pure local session (not yet sent to backend): wait until updateSession
       // resolves the realId, then fetch history with the real UUID.
-      await new Promise<void>((resolve) => {
-        const check = () => {
-          const s = this.sessionList.find((x) => x.id === sessionId) as
-            | ExtendedSession
-            | undefined;
-          if (s?.realId) {
-            resolve();
-          } else {
-            setTimeout(check, 100);
-          }
-        };
-        setTimeout(check, 100);
-      });
+      await this.waitForRealId(sessionId);
 
       const refreshed = this.sessionList.find((s) => s.id === sessionId) as
         | ExtendedSession
@@ -609,6 +634,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
           id: sessionId,
           name: refreshed.name || DEFAULT_SESSION_NAME,
           sessionId: refreshed.sessionId || sessionId,
+          userId: refreshed.userId || DEFAULT_USER_ID,
           channel: refreshed.channel || DEFAULT_CHANNEL,
           messages,
           meta: refreshed.meta || {},
@@ -640,6 +666,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
       id: sessionId,
       name: fromList?.name || sessionId,
       sessionId: fromList?.sessionId || sessionId,
+      userId: fromList?.userId || DEFAULT_USER_ID,
       channel: fromList?.channel || DEFAULT_CHANNEL,
       messages,
       meta: fromList?.meta || {},
@@ -664,6 +691,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
           const { list, realId } = resolveRealId(this.sessionList, tempId);
           this.sessionList = list;
           if (realId) {
+            this.notifyRealIdResolved(tempId);
             this.onSessionIdResolved?.(tempId, realId);
           }
         });
@@ -674,6 +702,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
         const { list, realId } = resolveRealId(this.sessionList, tempId);
         this.sessionList = list;
         if (realId) {
+          this.notifyRealIdResolved(tempId);
           this.onSessionIdResolved?.(tempId, realId);
         }
       });
@@ -688,6 +717,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
     const extended: ExtendedSession = {
       ...session,
       sessionId: session.id,
+      userId: DEFAULT_USER_ID,
       channel: DEFAULT_CHANNEL,
     } as ExtendedSession;
 

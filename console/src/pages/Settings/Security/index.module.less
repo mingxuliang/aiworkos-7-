@@ -117,17 +117,17 @@
     color: #666 !important;
 
     &:hover {
-      color: #ff7f16 !important;
+      color: #3b82f6 !important;
     }
   }
 
   :global(.qwenpaw-tabs-tab-active .qwenpaw-tabs-tab-btn) {
-    color: #ff7f16 !important;
+    color: #3b82f6 !important;
     font-weight: 600;
   }
 
   :global(.qwenpaw-tabs-ink-bar) {
-    background: #ff7f16 !important;
+    background: #3b82f6 !important;
     height: 3px;
     border-radius: 2px 2px 0 0;
   }
@@ -140,12 +140,12 @@
     }
 
     :global(.qwenpaw-tabs-tab-active .qwenpaw-tabs-tab-btn) {
-      color: #ff7f16 !important;
+      color: #3b82f6 !important;
       font-weight: 600;
     }
 
     :global(.qwenpaw-tabs-ink-bar) {
-      background: #ff7f16 !important;
+      background: #3b82f6 !important;
     }
   }
 
@@ -155,11 +155,11 @@
     }
 
     :global(.qwenpaw-tabs-tab-active .qwenpaw-tabs-tab-btn) {
-      color: #ff7f16 !important;
+      color: #3b82f6 !important;
     }
 
     :global(.qwenpaw-tabs-ink-bar) {
-      background: #ff7f16 !important;
+      background: #3b82f6 !important;
     }
   }
 
@@ -281,8 +281,47 @@
 }
 
 .sectionFileGuardContainer,
-.sectionSkillScannerContainer {
+.sectionSkillScannerContainer,
+.sectionExecutionSandboxContainer {
   padding: 0 16px;
+}
+
+.executionSandboxCard {
+  margin-top: 8px;
+}
+
+.executionSandboxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.executionSandboxAlert {
+  margin: 12px 0;
+}
+
+.executionSandboxStatus {
+  margin: 12px 0 16px;
+}
+
+.executionSandboxForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 /* ---- Inner Tabs (Scan Alerts / Whitelist) ---- */
@@ -303,16 +342,16 @@
     color: #666 !important;
 
     &:hover {
-      color: #ff7f16 !important;
+      color: #3b82f6 !important;
     }
   }
 
   :global(.qwenpaw-tabs-tab-active .qwenpaw-tabs-tab-btn) {
-    color: #ff7f16 !important;
+    color: #3b82f6 !important;
   }
 
   :global(.qwenpaw-tabs-ink-bar) {
-    background: #ff7f16 !important;
+    background: #3b82f6 !important;
   }
 }
 
@@ -611,7 +650,7 @@
 
 :global(.dark-mode) {
   .footerButtons {
-    background: #1f1f1f;
+    background: var(--copaw-dm-surface, #111827);
     border-top-color: rgba(255, 255, 255, 0.08);
   }
 }

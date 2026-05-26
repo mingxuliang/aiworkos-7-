@@ -1,0 +1,40 @@
+.root {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.canvas {
+  position: absolute !important;
+  inset: 0;
+  min-height: 100%;
+}
+
+/**
+ * Grainient renders a full-bleed WebGL canvas; this veil restores text/UI contrast
+ * without hiding the shader motion underneath.
+ */
+.veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    168deg,
+    rgba(255, 255, 255, 0.91) 0%,
+    rgba(248, 250, 252, 0.42) 42%,
+    rgba(255, 255, 255, 0.86) 100%
+  );
+}
+
+:global(html.dark-mode) {
+  .veil {
+    background: linear-gradient(
+      168deg,
+      rgba(15, 23, 42, 0.82) 0%,
+      rgba(15, 23, 42, 0.48) 48%,
+      rgba(17, 24, 39, 0.8) 100%
+    );
+  }
+}

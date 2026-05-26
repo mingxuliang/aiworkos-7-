@@ -1,5 +1,4 @@
 import {
-  Card,
   Button,
   Modal,
   Tooltip,
@@ -10,8 +9,9 @@ import {
 import { Spin } from "antd";
 import type { MCPClientInfo, MCPToolInfo } from "../../../../api/types";
 import { useTranslation } from "react-i18next";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, type KeyboardEvent } from "react";
 import { useTheme } from "../../../../contexts/ThemeContext";
+import { cbcCardStripeClass } from "../../../../utils/cbcCardTheme";
 import {
   EyeOutlined,
   EyeInvisibleOutlined,
@@ -35,6 +35,7 @@ interface MCPClientUpdate {
 
 interface MCPClientCardProps {
   client: MCPClientInfo;
+  cardIndex: number;
   onToggle: (client: MCPClientInfo, e: React.MouseEvent) => void;
   onDelete: (client: MCPClientInfo, e: React.MouseEvent) => void;
   onUpdate: (key: string, updates: MCPClientUpdate) => Promise<boolean>;
@@ -42,13 +43,13 @@ interface MCPClientCardProps {
 
 export const MCPClientCard = React.memo(function MCPClientCard({
   client,
+  cardIndex,
   onToggle,
   onDelete,
   onUpdate,
 }: MCPClientCardProps) {
   const { t } = useTranslation();
   const { isDark } = useTheme();
-  const [isHovered, setIsHovered] = useState(false);
   const [jsonModalOpen, setJsonModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [toolsModalOpen, setToolsModalOpen] = useState(false);
@@ -83,6 +84,13 @@ export const MCPClientCard = React.memo(function MCPClientCard({
     setEditedJson(jsonStr);
     setIsEditing(false);
     setJsonModalOpen(true);
+  };
+
+  const onCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleCardClick();
+    }
   };
 
   const handleSaveJson = async () => {
@@ -127,72 +135,104 @@ export const MCPClientCard = React.memo(function MCPClientCard({
 
   const clientJson = JSON.stringify(client, null, 2);
 
+  const stripe = cbcCardStripeClass(cardIndex);
+
   return (
     <>
-      <Card
-        hoverable
+      <div
+        role="button"
+        tabIndex={0}
+        className={`cbc-card ${stripe}`}
         onClick={handleCardClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={`${styles.mcpCard} ${
-          client.enabled ? styles.enabledCard : ""
-        } ${isHovered ? styles.hover : styles.normal}`}
+        onKeyDown={onCardKeyDown}
+        aria-label={client.name}
       >
-        <div className={styles.cardHeader}>
-          <Tooltip title={client.name}>
-            <h3 className={styles.mcpTitle}>
-              <span>{client.name}</span>
+        <div className="cbc-glow-layer" aria-hidden />
+        {client.enabled ? (
+          <>
+            <div className="cbc-enabled-ring" aria-hidden />
+            <div className="cbc-spectrum" aria-hidden>
+              <span />
+            </div>
+          </>
+        ) : null}
+        <div className="cbc-card-inner">
+          <div className={styles.mcpTopRow}>
+            <div className={styles.mcpTitleBlock}>
+              <Tooltip title={client.name}>
+                <h3
+                  className={`card-title ${styles.mcpTitle}`}
+                  style={{ margin: 0, fontSize: 16 }}
+                >
+                  <span className={styles.mcpName}>{client.name}</span>
+                  <span
+                    className={`${styles.typeBadge} ${
+                      isRemote ? styles.remote : styles.local
+                    }`}
+                  >
+                    {clientType}
+                  </span>
+                </h3>
+              </Tooltip>
+            </div>
+            <div className="cbc-status-pill">
               <span
-                className={`${styles.typeBadge} ${
-                  isRemote ? styles.remote : styles.local
-                }`}
+                className={`cbc-status-dot${client.enabled ? "" : " cbc-status-dot--off"}`}
+              />
+              <span
+                className={
+                  client.enabled
+                    ? "cbc-status-text-on"
+                    : "cbc-status-text-off"
+                }
               >
-                {clientType}
+                {client.enabled ? t("common.enabled") : t("common.disabled")}
               </span>
-            </h3>
-          </Tooltip>
-          <div className={styles.statusContainer}>
-            <span className={styles.statusDot} />
-            <span className={styles.statusText}>
-              {client.enabled ? t("common.enabled") : t("common.disabled")}
-            </span>
+            </div>
+          </div>
+
+          <div className="cbc-meta">
+            <p className={styles.mcpDescription}>
+              {client.description || "-"}
+            </p>
+          </div>
+
+          <div className="cbc-agent-card-actions">
+            <Button
+              size="small"
+              onClick={handleShowTools}
+              icon={<ToolOutlined />}
+              disabled={!client.enabled || toolsLoading}
+              loading={toolsLoading}
+            >
+              {t("mcp.tools")}
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleClick(e);
+              }}
+              icon={
+                client.enabled ? <EyeInvisibleOutlined /> : <EyeOutlined />
+              }
+            >
+              {client.enabled ? t("common.disable") : t("common.enable")}
+            </Button>
+            <Button
+              danger
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(e);
+              }}
+            >
+              {t("common.delete")}
+            </Button>
           </div>
         </div>
-
-        <p className={styles.mcpDescription}>{client.description || "-"}</p>
-
-        <div className={styles.cardFooter}>
-          <Button
-            className={styles.toolsButton}
-            onClick={handleShowTools}
-            icon={<ToolOutlined />}
-            disabled={!client.enabled || toolsLoading}
-            loading={toolsLoading}
-          >
-            {t("mcp.tools")}
-          </Button>
-          <Button
-            className={styles.toggleButton}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggleClick(e);
-            }}
-            icon={client.enabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-          >
-            {client.enabled ? t("common.disable") : t("common.enable")}
-          </Button>
-          <Button
-            className={styles.deleteButton}
-            danger
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(e);
-            }}
-          >
-            {t("common.delete")}
-          </Button>
-        </div>
-      </Card>
+      </div>
 
       <Modal
         title={t("common.confirm")}

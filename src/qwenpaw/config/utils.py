@@ -50,24 +50,26 @@ _agent_config_lock = threading.Lock()
 
 
 def _normalize_working_dir_bound_paths(data: object) -> object:
-    """Normalize legacy ~/.copaw-bound paths to current WORKING_DIR.
+    """Normalize legacy ~/.qwenpaw-bound paths to current WORKING_DIR.
 
     This keeps QWENPAW_WORKING_DIR effective even if user config files contain
-    older hard-coded paths like "~/.copaw/media" or
-    "/Users/x/.copaw/workspaces/...".
+    older hard-coded paths like "~/.qwenpaw/media" or
+    "/Users/x/.qwenpaw/workspaces/...".
     Only rewrites known working-dir-bound keys.
     """
-    legacy_root_tilde = "~/.copaw"
-    legacy_root_abs = str(Path(legacy_root_tilde).expanduser().resolve())
+    legacy_root_qwenpaw_tilde = "~/.qwenpaw"
+    legacy_root_qwenpaw_abs = str(
+        Path(legacy_root_qwenpaw_tilde).expanduser().resolve(),
+    )
     new_root_abs = str(WORKING_DIR)
 
     def _rewrite_path_value(v: object) -> object:
         if not isinstance(v, str) or not v:
             return v
-        if v.startswith(legacy_root_tilde):
-            return new_root_abs + v[len(legacy_root_tilde) :]
-        if v.startswith(legacy_root_abs):
-            return new_root_abs + v[len(legacy_root_abs) :]
+        if v.startswith(legacy_root_qwenpaw_tilde):
+            return new_root_abs + v[len(legacy_root_qwenpaw_tilde) :]
+        if v.startswith(legacy_root_qwenpaw_abs):   
+            return new_root_abs + v[len(legacy_root_qwenpaw_abs) :]
         return v
 
     def _walk(obj: object, key: str | None = None) -> object:
@@ -757,7 +759,7 @@ def get_plugins_dir() -> Path:
     return PLUGINS_DIR
 
 
-def is_qwenpaw_running() -> bool:
+def is_aiwork_running() -> bool:
     """Check if QwenPaw is currently running by checking API availability.
 
     Returns:

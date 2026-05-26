@@ -386,7 +386,7 @@
 
   .importHubModal {
     :global(.ant-modal-content) {
-      background: #1f1f1f;
+      background: var(--copaw-dm-surface-raised, #1a2235);
     }
 
     :global(.ant-modal-header) {
@@ -403,8 +403,8 @@
   }
 
   .inputWrapper {
-    background: #2a2a2a;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--copaw-dm-input, #1f2a42);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.08));
 
     &:hover,
     &:focus-within {
@@ -467,8 +467,8 @@
   }
 
   .sourceCard {
-    background: #1f1f1f;
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--copaw-dm-surface, #111827);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.08));
 
     &:hover {
       border-color: #615ced;
@@ -480,8 +480,8 @@
     }
 
     &.disabled:hover {
-      border-color: rgba(255, 255, 255, 0.1);
-      background: #1f1f1f;
+      border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.08));
+      background: var(--copaw-dm-surface, #111827);
     }
   }
 
@@ -512,8 +512,8 @@
   }
 
   .exampleItem {
-    background: #2a2a2a;
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--copaw-dm-input, #1f2a42);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.08));
     color: rgba(255, 255, 255, 0.85);
 
     &:hover {

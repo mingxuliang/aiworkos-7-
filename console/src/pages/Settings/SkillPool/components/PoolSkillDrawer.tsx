@@ -50,6 +50,7 @@ export function PoolSkillDrawer({
 
   return (
     <Drawer
+      rootClassName="copaw-ported-drawer"
       width={520}
       placement="right"
       title={

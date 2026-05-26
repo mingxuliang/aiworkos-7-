@@ -85,6 +85,8 @@ export function PoolSkillListItem({
       </div>
       <div className={styles.listItemRight}>
         <Button
+          type="primary"
+          size="small"
           className={styles.actionButton}
           disabled={batchModeEnabled}
           onClick={(e) => {

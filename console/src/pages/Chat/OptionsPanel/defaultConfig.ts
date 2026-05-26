@@ -2,12 +2,13 @@ import type { TFunction } from "i18next";
 
 const defaultConfig = {
   theme: {
-    colorPrimary: "#FF7F16",
+    /** Align with App.tsx ConfigProvider tokens so user bubbles / runtime accents match console blue. */
+    colorPrimary: "#3b82f6",
     darkMode: false,
     prefix: "qwenpaw",
     leftHeader: {
       logo: "",
-      title: "Work with QwenPaw",
+      title: "AI Work OS",
     },
   },
   sender: {

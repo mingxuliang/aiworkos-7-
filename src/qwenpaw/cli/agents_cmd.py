@@ -873,9 +873,9 @@ def chat_cmd(
 
     \b
     Prerequisites:
-      1. Use 'qwenpaw agents list' to discover available agents
+      1. Use 'aiwork agents list' to discover available agents
       2. Ensure target agent (--to-agent) is configured and running
-      3. Use 'qwenpaw chats list' to find existing sessions (optional)
+      3. Use 'aiwork chats list' to find existing sessions (optional)
 
     \b
     Returns:

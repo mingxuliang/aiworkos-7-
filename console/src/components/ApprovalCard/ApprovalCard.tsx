@@ -99,7 +99,7 @@ export function ApprovalCard({
   const getSeverityColor = (sev: string) => {
     const s = sev.toLowerCase();
     if (s === "critical" || s === "high") return "error";
-    if (s === "medium") return "warning";
+    if (s === "medium") return "processing";
     return "default";
   };
 

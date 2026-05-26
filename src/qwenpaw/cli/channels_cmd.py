@@ -1191,12 +1191,12 @@ def configure_cmd(agent_id: str) -> None:
 @click.option(
     "--target-user",
     required=True,
-    help=("Target user ID (REQUIRED, get from 'qwenpaw chats list' query)"),
+    help=("Target user ID (REQUIRED, get from 'aiwork chats list' query)"),
 )
 @click.option(
     "--target-session",
     required=True,
-    help=("Target session ID (REQUIRED, get from 'qwenpaw chats list' query)"),
+    help=("Target session ID (REQUIRED, get from 'aiwork chats list' query)"),
 )
 @click.option(
     "--text",
@@ -1243,7 +1243,7 @@ def send_cmd(
     \b
     Examples with jq automation:
       # Query and auto-extract parameters
-      SESSIONS=$(qwenpaw chats list --agent-id bot --channel console)
+      SESSIONS=$(aiwork chats list --agent-id bot --channel console)
       USER=$(echo "$SESSIONS" | jq -r '.[0].user_id')
       SESSION=$(echo "$SESSIONS" | jq -r '.[0].session_id')
 
@@ -1254,7 +1254,7 @@ def send_cmd(
 
     \b
     Prerequisites:
-      1. MUST use 'qwenpaw chats list' to get valid target-user and
+      1. MUST use 'aiwork chats list' to get valid target-user and
          target-session
       2. Ensure the channel is properly configured
       3. All 5 parameters are required (no defaults)

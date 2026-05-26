@@ -1,0 +1,363 @@
+/*
+ * Agent 团队项目视觉移植（全局）：滚动条、主内容底板、Modal/Drawer 蒙层与圆角表单。
+ * 在 layout.css 之后加载，必要时用 !important 覆盖历史 token。
+ */
+
+/* ── Scrollbar（index.css thin indigo track） ───────────────────────── */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #c7d2fe transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track:hover {
+  background: rgba(241, 245, 249, 0.65);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c7d2fe;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #93bbfc;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #2563eb;
+}
+
+/* ── 工作台底板（纯色灰，无网格） ───────────────────────────────────── */
+html.dark-mode {
+  scrollbar-color: rgba(34, 211, 238, 0.22) transparent;
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb {
+  background: rgba(34, 211, 238, 0.22);
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: rgba(45, 212, 191, 0.42);
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb:active {
+  background: rgba(6, 182, 212, 0.55);
+}
+
+.ant-layout-content.page-container,
+.qwenpaw-layout-content.page-container,
+.page-container {
+  background: #f5f7fa !important;
+}
+
+html.dark-mode .ant-layout-content.page-container,
+html.dark-mode .qwenpaw-layout-content.page-container,
+html.dark-mode .page-container {
+  background: var(--copaw-dm-canvas) !important;
+}
+
+.page-content {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 16px 18px !important;
+}
+
+.ant-layout,
+.qwenpaw-layout {
+  background: #f5f7fa !important;
+}
+
+html.dark-mode .ant-layout,
+html.dark-mode .qwenpaw-layout {
+  background: var(--copaw-dm-canvas) !important;
+}
+
+/* ── Modal（modal-overlay / modal-panel） ──────────────────────────── */
+@keyframes copaw-modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes copaw-modal-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ant-modal-mask,
+.qwenpaw-modal-mask {
+  background: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: copaw-modal-fade-in 0.28s ease-out;
+}
+
+html.dark-mode .ant-modal-mask,
+html.dark-mode .qwenpaw-modal-mask {
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+
+.ant-modal .ant-modal-content,
+.qwenpaw-modal .qwenpaw-modal-content {
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  border: none !important;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.03),
+    0 14px 32px rgba(0, 0, 0, 0.05),
+    0 36px 72px rgba(37, 99, 235, 0.1),
+    0 72px 120px rgba(0, 0, 0, 0.06) !important;
+  animation: copaw-modal-slide-up 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ant-modal-header,
+.qwenpaw-modal .qwenpaw-modal-header {
+  padding: 18px 22px 12px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.92) !important;
+  background: rgba(249, 250, 251, 0.65) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ant-modal-title,
+.qwenpaw-modal .qwenpaw-modal-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
+}
+
+.ant-modal-body,
+.qwenpaw-modal .qwenpaw-modal-body {
+  padding: 8px 22px 20px !important;
+}
+
+.ant-modal-footer,
+.qwenpaw-modal .qwenpaw-modal-footer {
+  padding: 14px 22px 18px !important;
+  margin: 0 !important;
+  border-top: 1px solid rgba(226, 232, 240, 0.92) !important;
+  background: rgba(249, 250, 251, 0.5) !important;
+}
+
+/* 弹窗内输入类控件浅底 — 对齐 AgentModal 主表单栏 */
+.ant-modal-body .ant-input:not([disabled]),
+.ant-modal-body .ant-input-affix-wrapper,
+.ant-modal-body textarea.ant-input,
+.ant-modal-body .ant-select .ant-select-selector,
+.ant-modal-body .ant-input-number,
+.ant-modal-body .ant-picker,
+.qwenpaw-modal-body .qwenpaw-input:not([disabled]),
+.qwenpaw-modal-body .qwenpaw-input-affix-wrapper,
+.qwenpaw-modal-body textarea.qwenpaw-input,
+.qwenpaw-modal-body .qwenpaw-select .qwenpaw-select-selector,
+.qwenpaw-modal-body .qwenpaw-input-number,
+.qwenpaw-modal-body .qwenpaw-picker {
+  background: rgba(249, 250, 251, 0.9) !important;
+}
+
+.ant-modal-body .ant-input[disabled],
+.qwenpaw-modal-body .qwenpaw-input[disabled] {
+  background: rgba(243, 244, 246, 0.85) !important;
+}
+
+html.dark-mode .ant-modal-header,
+html.dark-mode .qwenpaw-modal .qwenpaw-modal-header {
+  border-bottom-color: var(--copaw-dm-border-subtle, rgba(255, 255, 255, 0.05)) !important;
+  background: rgba(26, 34, 53, 0.94) !important;
+}
+
+html.dark-mode .ant-modal-title,
+html.dark-mode .qwenpaw-modal .qwenpaw-modal-title {
+  color: var(--copaw-dm-text-primary, #ffffff) !important;
+}
+
+html.dark-mode .ant-modal-footer,
+html.dark-mode .qwenpaw-modal .qwenpaw-modal-footer {
+  border-top-color: var(--copaw-dm-border-subtle, rgba(255, 255, 255, 0.05)) !important;
+  background: rgba(26, 34, 53, 0.88) !important;
+}
+
+html.dark-mode .ant-modal-body .ant-input:not([disabled]),
+html.dark-mode .ant-modal-body .ant-input-affix-wrapper,
+html.dark-mode .ant-modal-body textarea.ant-input,
+html.dark-mode .ant-modal-body .ant-select .ant-select-selector,
+html.dark-mode .ant-modal-body .ant-input-number,
+html.dark-mode .ant-modal-body .ant-picker,
+html.dark-mode .qwenpaw-modal-body .qwenpaw-input:not([disabled]),
+html.dark-mode .qwenpaw-modal-body .qwenpaw-input-affix-wrapper,
+html.dark-mode .qwenpaw-modal-body textarea.qwenpaw-input,
+html.dark-mode .qwenpaw-modal-body .qwenpaw-select .qwenpaw-select-selector,
+html.dark-mode .qwenpaw-modal-body .qwenpaw-input-number,
+html.dark-mode .qwenpaw-modal-body .qwenpaw-picker {
+  background: var(--copaw-dm-input, #1f2a42) !important;
+}
+
+/* 创建/编辑智能体：双栏布局，content 与 body 无内边距（由内层 agentModalBody 控制） */
+.copaw-agent-modal-shell.ant-modal-content,
+.copaw-agent-modal-shell.qwenpaw-modal-content {
+  padding: 0 !important;
+}
+
+.copaw-agent-modal-shell .ant-modal-body,
+.copaw-agent-modal-shell .qwenpaw-modal-body {
+  padding: 0 !important;
+}
+
+/* Modal.confirm：Ant Design 隐藏 header，标题在 body 内 — 与创建智能体标题/底栏观感对齐 */
+.ant-modal-confirm .ant-modal-body {
+  padding: 22px 22px 18px !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-content {
+  color: #475569 !important;
+}
+
+.ant-modal-confirm .ant-modal-confirm-btns {
+  margin-top: 18px !important;
+  padding-top: 14px !important;
+  border-top: 1px solid rgba(226, 232, 240, 0.92);
+  background: rgba(249, 250, 251, 0.35);
+}
+
+html.dark-mode .ant-modal-confirm .ant-modal-confirm-title {
+  color: var(--copaw-dm-text-primary, #ffffff) !important;
+}
+
+html.dark-mode .ant-modal-confirm .ant-modal-confirm-content {
+  color: var(--copaw-dm-text-secondary, #94a3b8) !important;
+}
+
+html.dark-mode .ant-modal-confirm .ant-modal-confirm-btns {
+  border-top-color: var(--copaw-dm-border-subtle, rgba(255, 255, 255, 0.05));
+  background: rgba(26, 34, 53, 0.72);
+}
+
+/* ── Drawer 蒙层与圆角 ─────────────────────────────────────────────── */
+.ant-drawer-mask,
+.qwenpaw-drawer-mask {
+  background: rgba(15, 23, 42, 0.38) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html.dark-mode .ant-drawer-mask,
+html.dark-mode .qwenpaw-drawer-mask {
+  background: rgba(0, 0, 0, 0.52) !important;
+}
+
+.ant-drawer-content-wrapper,
+.qwenpaw-drawer-content-wrapper {
+  border-radius: 16px 0 0 16px !important;
+  overflow: hidden !important;
+  box-shadow: -12px 0 48px rgba(15, 23, 42, 0.12) !important;
+}
+
+html.dark-mode .ant-drawer-content-wrapper,
+html.dark-mode .qwenpaw-drawer-content-wrapper {
+  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.45) !important;
+}
+
+.ant-drawer-right.ant-drawer-open .ant-drawer-content-wrapper,
+.ant-drawer .qwenpaw-drawer-content-wrapper {
+  border-radius: 16px 0 0 16px !important;
+}
+
+/* 显式挂载在业务 Drawer 上以统一内边距与分隔（与 Modal 对齐） */
+.copaw-ported-drawer.qwenpaw-drawer .qwenpaw-drawer-header,
+.copaw-ported-drawer.ant-drawer .ant-drawer-header {
+  padding: 18px 22px 12px !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25) !important;
+}
+
+html.dark-mode .copaw-ported-drawer.qwenpaw-drawer .qwenpaw-drawer-header,
+html.dark-mode .copaw-ported-drawer.ant-drawer .ant-drawer-header {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.copaw-ported-drawer.qwenpaw-drawer .qwenpaw-drawer-body,
+.copaw-ported-drawer.ant-drawer .ant-drawer-body {
+  padding: 16px 22px 20px !important;
+}
+
+.copaw-ported-drawer.qwenpaw-drawer .qwenpaw-drawer-footer,
+.copaw-ported-drawer.ant-drawer .ant-drawer-footer {
+  padding: 14px 22px 18px !important;
+  border-top: 1px solid rgba(148, 163, 184, 0.25) !important;
+}
+
+html.dark-mode .copaw-ported-drawer.qwenpaw-drawer .qwenpaw-drawer-footer,
+html.dark-mode .copaw-ported-drawer.ant-drawer .ant-drawer-footer {
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── 表单控件（更接近 TeamModal 大圆角白底字段） ───────────────────── */
+.qwenpaw-input,
+.ant-input {
+  border-radius: 12px !important;
+}
+
+.qwenpaw-input-affix-wrapper,
+.ant-input-affix-wrapper {
+  border-radius: 12px !important;
+}
+
+textarea.qwenpaw-input,
+textarea.ant-input {
+  border-radius: 14px !important;
+  padding: 10px 14px !important;
+}
+
+.qwenpaw-select-selector,
+.ant-select-selector {
+  border-radius: 12px !important;
+}
+
+.qwenpaw-input-number,
+.ant-input-number {
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.qwenpaw-picker,
+.ant-picker {
+  border-radius: 12px !important;
+}
+
+.qwenpaw-form-item,
+.ant-form-item {
+  margin-bottom: 18px !important;
+}
+
+.qwenpaw-form-item-label > label,
+.ant-form-item-label > label {
+  font-weight: 600 !important;
+  font-size: 13px !important;
+}

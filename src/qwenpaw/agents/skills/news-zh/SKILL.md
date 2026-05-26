@@ -3,7 +3,7 @@ name: news
 description: "为用户从指定新闻网站查找最新新闻。提供政治、财经、社会、国际、科技、体育和娱乐类别的权威 URL。使用 browser_use 打开每个 URL 并通过 snapshot 获取内容，然后为用户总结。"
 metadata:
   builtin_skill_version: "1.2"
-  qwenpaw:
+  aiwork:
     emoji: "📰"
     requires: {}
 ---

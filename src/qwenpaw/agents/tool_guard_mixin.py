@@ -227,6 +227,17 @@ class ToolGuardMixin:
                     tool_input,
                     only_always_run=False,
                 )
+                if (
+                    guard_result is not None
+                    and guard_result.findings
+                    and self._has_sandbox_path_jail_violation(guard_result)
+                ):
+                    return _GuardAction(
+                        "auto_denied",
+                        tool_name,
+                        tool_input,
+                        guard_result=guard_result,
+                    )
                 # If no findings, create INFO-level finding for STRICT mode
                 if guard_result is None or not guard_result.findings:
                     guard_result = self._create_info_guard_result(
@@ -256,6 +267,15 @@ class ToolGuardMixin:
 
         log_findings(tool_name, guard_result)
 
+        # Sandbox path jail violations are hard-blocked without approval.
+        if self._has_sandbox_path_jail_violation(guard_result):
+            return _GuardAction(
+                "auto_denied",
+                tool_name,
+                tool_input,
+                guard_result=guard_result,
+            )
+
         # SMART mode: auto-allow low-risk findings
         if exec_level.is_smart_mode():
             max_sev = guard_result.max_severity
@@ -278,6 +298,21 @@ class ToolGuardMixin:
             )
 
         return None
+
+    def _has_sandbox_path_jail_violation(
+        self,
+        guard_result: ToolGuardResult,
+    ) -> bool:
+        """Return True when findings include a sandbox path-jail violation."""
+        for finding in guard_result.findings:
+            if finding.guardian != "path_jail_guardian":
+                continue
+            if finding.severity in (
+                GuardSeverity.HIGH,
+                GuardSeverity.CRITICAL,
+            ):
+                return True
+        return False
 
     def _create_info_guard_result(
         self,

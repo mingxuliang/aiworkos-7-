@@ -1,6 +1,6 @@
-import { Card } from "@agentscope-ai/design";
 import { useTranslation } from "react-i18next";
-import React, { useState } from "react";
+import React, { type KeyboardEvent } from "react";
+import { cbcCardStripeClass } from "@/utils/cbcCardTheme";
 import { ChannelIcon } from "./ChannelIcon";
 import { getChannelLabel, type ChannelKey } from "./constants";
 import styles from "../index.module.less";
@@ -9,15 +9,17 @@ interface ChannelCardProps {
   channelKey: ChannelKey;
   config: Record<string, unknown>;
   onClick: () => void;
+  /** Rotates accent：蓝 / 绿交替 */
+  visualVariant?: number;
 }
 
 export const ChannelCard = React.memo(function ChannelCard({
   channelKey,
   config,
   onClick,
+  visualVariant = 0,
 }: ChannelCardProps) {
   const { t } = useTranslation();
-  const [isHover, setIsHover] = useState(false);
   const enabled = Boolean(config.enabled);
   const isBuiltin = Boolean(config.isBuiltin);
   const label = getChannelLabel(channelKey, t);
@@ -25,60 +27,67 @@ export const ChannelCard = React.memo(function ChannelCard({
     typeof config[key] === "string" ? config[key] : "";
   const botPrefix = getConfigString("bot_prefix");
 
-  const getChannelIcon = () => (
-    <ChannelIcon channelKey={channelKey} size={32} />
-  );
-
-  const getCardClassNames = () => {
-    if (isHover) return `${styles.channelCard} ${styles.hover}`;
-    if (enabled) return `${styles.channelCard} ${styles.enabled}`;
-    return `${styles.channelCard} ${styles.normal}`;
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
   };
 
   return (
-    <Card
-      hoverable
+    <div
+      role="button"
+      tabIndex={0}
+      className={`cbc-card ${cbcCardStripeClass(visualVariant)}`}
       onClick={onClick}
-      onMouseEnter={() => setIsHover(true)}
-      onMouseLeave={() => setIsHover(false)}
-      className={getCardClassNames()}
-      bodyStyle={{ padding: 24 }}
+      onKeyDown={onKeyDown}
+      aria-label={label}
     >
-      {/* Top section: Icon and Status */}
-      <div className={styles.cardTopSection}>
-        <div className={styles.channelIcon}>{getChannelIcon()}</div>
-        <div className={styles.statusIndicator}>
+      <div className="cbc-glow-layer" aria-hidden />
+      {enabled ? (
+        <>
+          <div className="cbc-enabled-ring" aria-hidden />
+          <div className="cbc-spectrum" aria-hidden>
+            <span />
+          </div>
+        </>
+      ) : null}
+      <div className="cbc-card-inner">
+        <div className={styles.cardTopSection}>
           <div
-            className={`${styles.statusDot} ${
-              enabled ? styles.enabled : styles.disabled
-            }`}
-          />
-          <span
-            className={`${styles.statusText} ${
-              enabled ? styles.enabled : styles.disabled
-            }`}
+            className={`cbc-icon3d cbc-icon3d--plain ${styles.channelCube}`}
           >
-            {enabled ? t("common.enabled") : t("common.disabled")}
+            <ChannelIcon channelKey={channelKey} size={26} />
+          </div>
+          <div className="cbc-status-pill">
+            <span
+              className={`cbc-status-dot${enabled ? "" : " cbc-status-dot--off"}`}
+            />
+            <span
+              className={
+                enabled
+                  ? "cbc-status-text-on"
+                  : "cbc-status-text-off"
+              }
+            >
+              {enabled ? t("common.enabled") : t("common.disabled")}
+            </span>
+          </div>
+        </div>
+
+        <div className={styles.cardMiddleSection}>
+          <h3 className={`card-title ${styles.cardTitle}`}>{label}</h3>
+          <span className="cbc-tag">
+            {isBuiltin ? t("channels.builtin") : t("channels.custom")}
           </span>
         </div>
-      </div>
 
-      {/* Middle section: Name and Tag */}
-      <div className={styles.cardMiddleSection}>
-        <div className={styles.cardTitle}>{label}</div>
-        {isBuiltin ? (
-          <span className={styles.builtinTag}>{t("channels.builtin")}</span>
-        ) : (
-          <span className={styles.customTag}>{t("channels.custom")}</span>
-        )}
-      </div>
-
-      {/* Bottom section: Bot Prefix */}
-      <div className={styles.cardBottomSection}>
-        <div className={styles.cardDescription}>
-          {t("channels.botPrefix")}: {botPrefix || t("channels.notSet")}
+        <div className={styles.cardBottomSection}>
+          <div className={`cbc-meta ${styles.cardDescription}`}>
+            {t("channels.botPrefix")}: {botPrefix || t("channels.notSet")}
+          </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 });

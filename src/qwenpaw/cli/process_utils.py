@@ -164,7 +164,7 @@ def _process_table() -> list[tuple[int, str]]:
     return rows
 
 
-def _matches_qwenpaw_cli_command(command: str, *subcommands: str) -> bool:
+def _matches_aiwork_cli_command(command: str, *subcommands: str) -> bool:
     """Return whether command line looks like a QwenPaw CLI invocation."""
     lowered = f" {command.lower()}"
     return any(
@@ -180,15 +180,15 @@ def _matches_qwenpaw_cli_command(command: str, *subcommands: str) -> bool:
     )
 
 
-def _is_qwenpaw_service_command(command: str) -> bool:
+def _is_aiwork_service_command(command: str) -> bool:
     """Return whether the command line looks like a local QwenPaw app."""
-    return _matches_qwenpaw_cli_command(command, "app")
+    return _matches_aiwork_cli_command(command, "app")
 
 
-def _is_qwenpaw_wrapper_process(name: str, command: str) -> bool:
+def _is_aiwork_wrapper_process(name: str, command: str) -> bool:
     """Return whether the process looks like a QwenPaw CLI wrapper."""
     lowered_name = name.lower().removesuffix(".exe")
-    return lowered_name == "qwenpaw" or _matches_qwenpaw_cli_command(
+    return lowered_name == "aiwork" or _matches_aiwork_cli_command(
         command,
         "app",
         "desktop",

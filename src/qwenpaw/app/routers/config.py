@@ -23,6 +23,7 @@ from ...config.config import (
     ConsoleConfig,
     DingTalkConfig,
     DiscordConfig,
+    ExecutionSandboxConfig,
     FeishuConfig,
     HeartbeatConfig,
     IMessageChannelConfig,
@@ -746,6 +747,60 @@ async def put_file_guard(
         enabled=fg.enabled,
         paths=fg.sensitive_files,
     )
+
+
+# ── Security / Execution Sandbox ─────────────────────────────────────
+
+
+class ExecutionSandboxStatusResponse(BaseModel):
+    effective_enabled: bool
+    effective_backend: str
+    docker_available: bool
+    docker_image_present: bool
+    docker_image: str
+    env_enabled: Optional[str] = None
+    env_backend: Optional[str] = None
+
+
+@router.get(
+    "/security/execution-sandbox",
+    response_model=ExecutionSandboxConfig,
+    summary="Get execution sandbox settings",
+)
+async def get_execution_sandbox() -> ExecutionSandboxConfig:
+    config = load_config()
+    return config.security.execution_sandbox
+
+
+@router.put(
+    "/security/execution-sandbox",
+    response_model=ExecutionSandboxConfig,
+    summary="Update execution sandbox settings",
+)
+async def put_execution_sandbox(
+    body: ExecutionSandboxConfig = Body(...),
+) -> ExecutionSandboxConfig:
+    if body.enabled and body.backend == "off":
+        raise HTTPException(
+            status_code=400,
+            detail="backend cannot be 'off' when execution sandbox is enabled",
+        )
+    config = load_config()
+    config.security.execution_sandbox = body
+    save_config(config)
+    return body
+
+
+@router.get(
+    "/security/execution-sandbox/status",
+    response_model=ExecutionSandboxStatusResponse,
+    summary="Get execution sandbox runtime status",
+)
+async def get_execution_sandbox_status() -> ExecutionSandboxStatusResponse:
+    from ...security.sandbox.status import get_execution_sandbox_status
+
+    status = await get_execution_sandbox_status()
+    return ExecutionSandboxStatusResponse(**status.to_dict())
 
 
 # ── Security / Skill Scanner ────────────────────────────────────────

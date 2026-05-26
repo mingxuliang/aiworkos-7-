@@ -1565,6 +1565,60 @@ class SkillScannerConfig(BaseModel):
     )
 
 
+class ExecutionSandboxConfig(BaseModel):
+    """Execution sandbox settings under ``security.execution_sandbox``."""
+
+    enabled: bool = Field(
+        default=False,
+        description="Enable path-jail sandbox enforcement for tool execution.",
+    )
+    backend: Literal["off", "local", "docker"] = Field(
+        default="local",
+        description="Sandbox backend: local path jail, docker per-call, or off.",
+    )
+    use_user_subdir: bool = Field(
+        default=True,
+        description=(
+            "When true, use workspaces/{agent_id}/users/{user_id}/ "
+            "as sandbox root for non-default users."
+        ),
+    )
+    fail_closed: bool = Field(
+        default=True,
+        description="When docker backend is unavailable, refuse shell execution.",
+    )
+    fallback_backend: Literal["off", "local"] = Field(
+        default="local",
+        description="Fallback when docker backend fails and fail_closed is false.",
+    )
+    docker_image: str = Field(
+        default="qwenpaw-sandbox:latest",
+        description="Docker image for per-call tool execution.",
+    )
+    docker_network: Literal["none", "bridge"] = Field(
+        default="none",
+        description="Docker network mode for sandbox containers.",
+    )
+    docker_memory: str = Field(
+        default="512m",
+        description="Memory limit for sandbox containers.",
+    )
+    docker_cpus: str = Field(
+        default="1",
+        description="CPU limit for sandbox containers.",
+    )
+    docker_pids_limit: int = Field(
+        default=64,
+        ge=1,
+        description="Process limit for sandbox containers.",
+    )
+    docker_timeout_seconds: int = Field(
+        default=120,
+        ge=1,
+        description="Default timeout for docker-backed shell execution.",
+    )
+
+
 class SecurityConfig(BaseModel):
     """Top-level ``security`` section in config.json."""
 
@@ -1572,6 +1626,9 @@ class SecurityConfig(BaseModel):
     file_guard: FileGuardConfig = Field(default_factory=FileGuardConfig)
     skill_scanner: SkillScannerConfig = Field(
         default_factory=SkillScannerConfig,
+    )
+    execution_sandbox: ExecutionSandboxConfig = Field(
+        default_factory=ExecutionSandboxConfig,
     )
     allow_no_auth_hosts: List[str] = Field(
         default_factory=lambda: ["127.0.0.1", "::1"],

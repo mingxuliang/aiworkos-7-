@@ -3,7 +3,7 @@ name: multi_agent_collaboration
 description: 当需要其他 agent 的专长、上下文或协作支持，或用户明确要求调用其他 agent 时，使用本 skill。先查询可用 agents，再用 qwenpaw agents chat 进行双向沟通。
 metadata:
   builtin_skill_version: "1.4"
-  qwenpaw:
+  aiwork:
     emoji: "🤝"
 ---
 
@@ -41,13 +41,13 @@ metadata:
 ### 1) 先查询可用 agents
 
 ```bash
-qwenpaw agents list
+aiwork agents list
 ```
 
 ### 2) 发起新对话（实时模式）
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --text "[Agent <your_agent> requesting] ..."
@@ -58,7 +58,7 @@ qwenpaw agents chat \
 **复杂任务**包括：数据分析、报告生成、批量处理、外部API调用等。
 
 ```bash
-qwenpaw agents chat --background \
+aiwork agents chat --background \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --text "[Agent <your_agent> requesting] ..."
@@ -73,7 +73,7 @@ qwenpaw agents chat --background \
 ### 4) 查询后台任务状态
 
 ```bash
-qwenpaw agents chat --background --task-id <task_id>
+aiwork agents chat --background --task-id <task_id>
 ```
 
 **重要**：不要频繁查询！提交任务后：
@@ -87,7 +87,7 @@ qwenpaw agents chat --background --task-id <task_id>
 ### 5) 继续已有对话
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --session-id "<session_id>" \
@@ -181,9 +181,9 @@ qwenpaw agents chat \
 ### 用户明确要求调用其他 agent
 
 ```bash
-qwenpaw agents list
+aiwork agents list
 
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent scheduler_bot \
   --to-agent finance_bot \
   --text "[Agent scheduler_bot requesting] User explicitly asked to consult finance_bot. 请回答当前待处理的财务任务。"
@@ -192,7 +192,7 @@ qwenpaw agents chat \
 ### 新对话
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent scheduler_bot \
   --to-agent finance_bot \
   --text "[Agent scheduler_bot requesting] 今天有哪些待处理的财务任务？"
@@ -201,7 +201,7 @@ qwenpaw agents chat \
 ### 续聊
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent scheduler_bot \
   --to-agent finance_bot \
   --session-id "scheduler_bot:to:finance_bot:1710912345:a1b2c3d4" \
@@ -217,7 +217,7 @@ qwenpaw agents chat \
 不要猜 agent ID，先执行：
 
 ```bash
-qwenpaw agents list
+aiwork agents list
 ```
 
 ### 错误 2：想续聊但没传 session-id
@@ -235,13 +235,13 @@ qwenpaw agents list
 ### 查看已有会话
 
 ```bash
-qwenpaw chats list --agent-id <your_agent>
+aiwork chats list --agent-id <your_agent>
 ```
 
 ### 流式输出
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --mode stream \
@@ -251,7 +251,7 @@ qwenpaw agents chat \
 ### JSON 输出
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --json-output \
@@ -312,7 +312,7 @@ qwenpaw agents chat \
 #### 提交复杂任务
 
 ```bash
-qwenpaw agents chat --background \
+aiwork agents chat --background \
   --from-agent scheduler \
   --to-agent data_analyst \
   --text "[Agent scheduler requesting] 分析 /data/logs/2026-03-26.log 中的用户行为，生成详细报告"
@@ -341,7 +341,7 @@ Check status with:
 # 方式 1：处理其他任务后再查（推荐）
 # 提交任务后，继续完成用户的其他请求
 # 在适当时机查询：
-qwenpaw agents chat --background \
+aiwork agents chat --background \
   --task-id 20802ea3-832d-4fb4-86f0-666ad79fcc80
 
 # 方式 2：如果必须等待，使用合理间隔
@@ -434,7 +434,7 @@ Error: （错误信息...）
 **方式 1：处理其他任务后再查**（推荐）
 ```bash
 # 1. 提交任务，记录 task_id
-qwenpaw agents chat --background ... 
+aiwork agents chat --background ... 
 # 返回 task_id
 
 # 2. 继续处理用户的其他请求或任务
@@ -442,7 +442,7 @@ qwenpaw agents chat --background ...
 
 # 3. 在适当时机查询结果
 # （比如处理完当前任务后，或用户询问进度时）
-qwenpaw agents chat --background --task-id <id>
+aiwork agents chat --background --task-id <id>
 ```
 
 **方式 2：定时轮询**（如果必须等待）
@@ -470,7 +470,7 @@ done
 随时使用 `-h` 查看详细帮助：
 
 ```bash
-qwenpaw agents -h
-qwenpaw agents list -h
-qwenpaw agents chat -h
+aiwork agents -h
+aiwork agents list -h
+aiwork agents chat -h
 ```

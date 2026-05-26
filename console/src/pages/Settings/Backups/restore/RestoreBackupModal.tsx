@@ -272,7 +272,7 @@ export default function RestoreBackupModal({
 
         {restoreMode === "full" && (
           <Alert
-            type="warning"
+            type="info"
             showIcon
             message={t("backup.restoreFullWarning")}
             className={styles.fullRestoreAlert}
@@ -336,7 +336,7 @@ export default function RestoreBackupModal({
 
         {restoreMode === "custom" && (
           <Alert
-            type="warning"
+            type="info"
             showIcon
             message={
               <ul className={styles.restoreWarningList}>

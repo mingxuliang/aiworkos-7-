@@ -85,12 +85,12 @@ export const RemoteProviderCard = React.memo(function RemoteProviderCard({
   const statusDotColor = isAvailable
     ? "rgba(20, 184, 166, 1)"
     : isConfigured
-    ? "#faad14"
+    ? "#3b82f6"
     : "#d9d9d9";
   const statusDotShadow = isAvailable
     ? "0 0 0 2px rgba(82, 196, 26, 0.2)"
     : isConfigured
-    ? "0 0 0 2px rgba(250, 173, 20, 0.2)"
+    ? "0 0 0 2px rgba(59, 130, 246, 0.25)"
     : "none";
 
   return (

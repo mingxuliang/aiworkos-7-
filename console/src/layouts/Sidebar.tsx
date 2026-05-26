@@ -1,20 +1,8 @@
-import {
-  Layout,
-  Menu,
-  Button,
-  Modal,
-  Input,
-  Form,
-  Tooltip,
-  type MenuProps,
-} from "antd";
-import { useState, useEffect } from "react";
+import { Layout, Menu, Button, Tooltip, type MenuProps } from "antd";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAppMessage } from "../hooks/useAppMessage";
-import AgentSelector from "../components/AgentSelector";
 import {
-  SparkChatTabFill,
   SparkWifiLine,
   SparkUserGroupLine,
   SparkDateLine,
@@ -31,7 +19,6 @@ import {
   SparkDataLine,
   SparkMicLine,
   SparkAgentLine,
-  SparkExitFullscreenLine,
   SparkSearchUserLine,
   SparkMenuExpandLine,
   SparkMenuFoldLine,
@@ -39,14 +26,13 @@ import {
   SparkBarChartLine,
   SparkDebugLine,
   SparkSaveLine,
+  SparkAdvancedMonitoringLine,
 } from "@agentscope-ai/icons";
-import { clearAuthToken } from "../api/config";
-import { authApi, jwtAuthApi } from "../api/modules/auth";
 import { usePlugins } from "../plugins/PluginContext";
 import styles from "./index.module.less";
 import { useTheme } from "../contexts/ThemeContext";
-import { useAuthStore } from "../stores/authStore";
 import { KEY_TO_PATH, DEFAULT_OPEN_KEYS } from "./constants";
+import { Bot } from "lucide-react";
 
 // ── Layout ────────────────────────────────────────────────────────────────
 
@@ -63,137 +49,40 @@ interface SidebarProps {
 export default function Sidebar({ selectedKey }: SidebarProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { message } = useAppMessage();
   const { isDark } = useTheme();
   const { pluginRoutes } = usePlugins();
-  const { user: authUser } = useAuthStore();
-  const isAdmin = authUser?.roles?.includes("admin") ?? false;
-  const [authEnabled, setAuthEnabled] = useState(false);
-  const [authMode, setLocalAuthMode] = useState<"legacy" | "jwt">("legacy");
-  const [accountModalOpen, setAccountModalOpen] = useState(false);
-  const [accountLoading, setAccountLoading] = useState(false);
-  const [accountForm] = Form.useForm();
   const [collapsed, setCollapsed] = useState(false);
-
-  // ── Effects ──────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    // Detect auth mode first
-    jwtAuthApi
-      .getStatus()
-      .then((res) => {
-        if (res.enabled) {
-          setLocalAuthMode("jwt");
-          setAuthEnabled(true);
-        } else {
-          setLocalAuthMode("legacy");
-          return authApi.getStatus();
-        }
-      })
-      .then((res) => {
-        if (res) setAuthEnabled(res.enabled);
-      })
-      .catch(() => {
-        authApi
-          .getStatus()
-          .then((res) => {
-            setLocalAuthMode("legacy");
-            setAuthEnabled(res.enabled);
-          })
-          .catch(() => {});
-      });
-  }, []);
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
-
-  const handleUpdateProfile = async (values: {
-    currentPassword: string;
-    newUsername?: string;
-    newPassword?: string;
-  }) => {
-    const trimmedUsername = values.newUsername?.trim() || undefined;
-    const trimmedPassword = values.newPassword?.trim() || undefined;
-
-    if (values.newPassword && !trimmedPassword) {
-      message.error(t("account.passwordEmpty"));
-      return;
-    }
-
-    if (values.newUsername && !trimmedUsername) {
-      message.error(t("account.usernameEmpty"));
-      return;
-    }
-
-    if (authMode === "jwt") {
-      // JWT mode: only password change is supported
-      if (!trimmedPassword) {
-        message.warning(t("account.nothingToUpdate"));
-        return;
-      }
-      setAccountLoading(true);
-      try {
-        await jwtAuthApi.changePassword(values.currentPassword, trimmedPassword);
-        message.success(t("account.updateSuccess"));
-        setAccountModalOpen(false);
-        accountForm.resetFields();
-        // JWT password change doesn't require re-login
-      } catch (err: unknown) {
-        const raw = err instanceof Error ? err.message : "";
-        let msg = t("account.updateFailed");
-        if (raw.includes("password is incorrect") || raw.includes("Current password is incorrect")) {
-          msg = t("account.wrongPassword");
-        } else if (raw) {
-          msg = raw;
-        }
-        message.error(msg);
-      } finally {
-        setAccountLoading(false);
-      }
-      return;
-    }
-
-    // Legacy mode
-    if (!trimmedUsername && !trimmedPassword) {
-      message.warning(t("account.nothingToUpdate"));
-      return;
-    }
-
-    setAccountLoading(true);
-    try {
-      await authApi.updateProfile(
-        values.currentPassword,
-        trimmedUsername,
-        trimmedPassword,
-      );
-      message.success(t("account.updateSuccess"));
-      setAccountModalOpen(false);
-      accountForm.resetFields();
-      clearAuthToken();
-      window.location.href = "/login";
-    } catch (err: unknown) {
-      const raw = err instanceof Error ? err.message : "";
-      let msg = t("account.updateFailed");
-      if (raw.includes("password is incorrect")) {
-        msg = t("account.wrongPassword");
-      } else if (raw.includes("Nothing to update")) {
-        msg = t("account.nothingToUpdate");
-      } else if (raw.includes("cannot be empty")) {
-        msg = t("account.nothingToUpdate");
-      } else if (raw) {
-        msg = raw;
-      }
-      message.error(msg);
-    } finally {
-      setAccountLoading(false);
-    }
-  };
 
   // ── Collapsed nav items (all leaf pages) ──────────────────────────────
 
   const collapsedNavItems = [
     {
+      key: "workbench",
+      icon: <SparkAdvancedMonitoringLine size={18} />,
+      path: "/workbench",
+      label: t("nav.workbench", "岗位工作台"),
+    },
+    {
+      key: "news",
+      icon: <SparkBarChartLine size={18} />,
+      path: "/news",
+      label: t("nav.news", "新闻中心"),
+    },
+    {
+      key: "org-chart",
+      icon: <SparkSearchUserLine size={18} />,
+      path: "/org-chart",
+      label: t("nav.orgChart", "AI数字化看板"),
+    },
+    {
+      key: "ai-okr",
+      icon: <SparkBarChartLine size={18} />,
+      path: "/ai-okr",
+      label: t("nav.aiOkr", "AI-OKR 考核"),
+    },
+    {
       key: "chat",
-      icon: <SparkChatTabFill size={18} />,
+      icon: <Bot size={18} strokeWidth={1.85} aria-hidden />,
       path: "/chat",
       label: t("nav.chat"),
     },
@@ -312,27 +201,23 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       label: t("nav.voiceTranscription"),
     },
     {
+      key: "users",
+      icon: <SparkUserGroupLine size={18} />,
+      path: "/users",
+      label: t("nav.users", "用户管理"),
+    },
+    {
+      key: "org-builder",
+      icon: <SparkModifyLine size={18} />,
+      path: "/org-builder",
+      label: t("nav.orgBuilder", "组织架构"),
+    },
+    {
       key: "debug",
       icon: <SparkDebugLine size={18} />,
       path: "/debug",
       label: t("nav.debug", "Debug"),
     },
-    ...(isAdmin
-      ? [
-          {
-            key: "user-management",
-            icon: <SparkSearchUserLine size={18} />,
-            path: "/user-management",
-            label: t("nav.userManagement"),
-          },
-          {
-            key: "role-management",
-            icon: <SparkAgentLine size={18} />,
-            path: "/role-management",
-            label: t("nav.roleManagement"),
-          },
-        ]
-      : []),
     // Append plugin nav items dynamically
     ...pluginRoutes.map((route) => ({
       key: route.path.replace(/^\//, ""),
@@ -346,9 +231,29 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
 
   const agentMenuItems: MenuProps["items"] = [
     {
+      key: "workbench",
+      label: collapsed ? null : t("nav.workbench", "岗位工作台"),
+      icon: <SparkAdvancedMonitoringLine size={16} />,
+    },
+    {
+      key: "news",
+      label: collapsed ? null : t("nav.news", "新闻中心"),
+      icon: <SparkBarChartLine size={16} />,
+    },
+    {
+      key: "org-chart",
+      label: collapsed ? null : t("nav.orgChart", "AI数字化看板"),
+      icon: <SparkSearchUserLine size={16} />,
+    },
+    {
+      key: "ai-okr",
+      label: collapsed ? null : t("nav.aiOkr", "AI-OKR 考核"),
+      icon: <SparkBarChartLine size={16} />,
+    },
+    {
       key: "chat",
       label: collapsed ? null : t("nav.chat"),
-      icon: <SparkChatTabFill size={16} />,
+      icon: <Bot size={16} strokeWidth={1.85} aria-hidden />,
     },
     {
       key: "control-group",
@@ -427,6 +332,16 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       label: collapsed ? null : t("nav.settings"),
       children: [
         {
+          key: "users",
+          label: collapsed ? null : t("nav.users", "用户管理"),
+          icon: <SparkUserGroupLine size={16} />,
+        },
+        {
+          key: "org-builder",
+          label: collapsed ? null : t("nav.orgBuilder", "组织架构"),
+          icon: <SparkModifyLine size={16} />,
+        },
+        {
           key: "agents",
           label: collapsed ? null : t("nav.agents"),
           icon: <SparkAgentLine size={16} />,
@@ -471,20 +386,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
           label: collapsed ? null : t("nav.debug", "Debug"),
           icon: <SparkDebugLine size={16} />,
         },
-        ...(isAdmin
-          ? [
-              {
-                key: "user-management",
-                label: collapsed ? null : t("nav.userManagement"),
-                icon: <SparkSearchUserLine size={16} />,
-              },
-              {
-                key: "role-management",
-                label: collapsed ? null : t("nav.roleManagement"),
-                icon: <SparkAgentLine size={16} />,
-              },
-            ]
-          : []),
       ],
     },
   ];
@@ -511,6 +412,8 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
         collapsed ? ` ${styles.siderCollapsed}` : ""
       }${isDark ? ` ${styles.siderDark}` : ""}`}
     >
+      <span className={styles.siderAmbientOrbA} aria-hidden />
+      <span className={styles.siderAmbientOrbB} aria-hidden />
       {collapsed ? (
         <nav className={styles.collapsedNav}>
           {collapsedNavItems.map((item) => {
@@ -538,27 +441,19 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
           })}
         </nav>
       ) : (
-        <>
-          {/* Agent-scoped section: selector + Chat + Control + Workspace */}
-          <div className={styles.agentScopedSection}>
-            <div className={styles.agentSelectorContainer}>
-              <AgentSelector collapsed={collapsed} />
-            </div>
-            <Menu
-              mode="inline"
-              selectedKeys={[selectedKey]}
-              openKeys={DEFAULT_OPEN_KEYS}
-              onClick={({ key }) => {
-                const path = KEY_TO_PATH[String(key)];
-                if (path) navigate(path);
-              }}
-              items={agentMenuItems}
-              theme={isDark ? "dark" : "light"}
-              className={styles.sideMenu}
-            />
-          </div>
-
-          {/* Global settings section */}
+        <div className={styles.sidebarNavCard}>
+          <Menu
+            mode="inline"
+            selectedKeys={[selectedKey]}
+            openKeys={DEFAULT_OPEN_KEYS}
+            onClick={({ key }) => {
+              const path = KEY_TO_PATH[String(key)];
+              if (path) navigate(path);
+            }}
+            items={agentMenuItems}
+            theme={isDark ? "dark" : "light"}
+            className={styles.sideMenu}
+          />
           <Menu
             mode="inline"
             selectedKeys={[selectedKey]}
@@ -574,46 +469,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
             theme={isDark ? "dark" : "light"}
             className={styles.sideMenu}
           />
-        </>
-      )}
-
-      {authEnabled && !collapsed && (
-        <div className={styles.authActions}>
-          <Button
-            type="text"
-            icon={<SparkSearchUserLine size={16} />}
-            onClick={() => {
-              accountForm.resetFields();
-              setAccountModalOpen(true);
-            }}
-            block
-            className={`${styles.authBtn} ${
-              collapsed ? styles.authBtnCollapsed : ""
-            }`}
-          >
-            {!collapsed && t("account.title")}
-          </Button>
-          <Button
-            type="text"
-            icon={<SparkExitFullscreenLine size={16} />}
-            onClick={async () => {
-              if (authMode === "jwt") {
-                try {
-                  await jwtAuthApi.logout();
-                } catch {
-                  // ignore logout API errors
-                }
-              }
-              clearAuthToken();
-              window.location.href = "/login";
-            }}
-            block
-            className={`${styles.authBtn} ${
-              collapsed ? styles.authBtnCollapsed : ""
-            }`}
-          >
-            {!collapsed && t("login.logout")}
-          </Button>
         </div>
       )}
 
@@ -632,72 +487,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
         />
       </div>
 
-      <Modal
-        open={accountModalOpen}
-        onCancel={() => setAccountModalOpen(false)}
-        title={t("account.title")}
-        footer={null}
-        destroyOnHidden
-        centered
-      >
-        <Form
-          form={accountForm}
-          layout="vertical"
-          onFinish={handleUpdateProfile}
-        >
-          <Form.Item
-            name="currentPassword"
-            label={t("account.currentPassword")}
-            rules={[
-              { required: true, message: t("account.currentPasswordRequired") },
-            ]}
-          >
-            <Input.Password />
-          </Form.Item>
-          {authMode !== "jwt" && (
-            <Form.Item name="newUsername" label={t("account.newUsername")}>
-              <Input placeholder={t("account.newUsernamePlaceholder")} />
-            </Form.Item>
-          )}
-          <Form.Item name="newPassword" label={t("account.newPasswordJwt", t("account.newPassword"))}>
-            <Input.Password placeholder={t("account.newPasswordPlaceholder")} />
-          </Form.Item>
-          <Form.Item
-            name="confirmPassword"
-            label={t("account.confirmPassword")}
-            dependencies={["newPassword"]}
-            rules={[
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value && !getFieldValue("newPassword")) {
-                    return Promise.resolve();
-                  }
-                  if (value === getFieldValue("newPassword")) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error(t("account.passwordMismatch")),
-                  );
-                },
-              }),
-            ]}
-          >
-            <Input.Password
-              placeholder={t("account.confirmPasswordPlaceholder")}
-            />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={accountLoading}
-              block
-            >
-              {t("account.save")}
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
     </Sider>
   );
 }

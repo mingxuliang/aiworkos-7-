@@ -23,6 +23,18 @@ function getErrorMessageFromBody(
     if (typeof payload.detail === "string" && payload.detail) {
       return payload.detail;
     }
+    if (Array.isArray(payload.detail) && payload.detail.length > 0) {
+      const first = payload.detail[0] as { msg?: string; type?: string };
+      if (first && typeof first.msg === "string" && first.msg) {
+        return first.msg;
+      }
+      try {
+        return JSON.stringify(payload.detail);
+      } catch {
+        return String(payload.detail);
+      }
+    }
+
     if (typeof payload.message === "string" && payload.message) {
       return payload.message;
     }
@@ -82,11 +94,13 @@ export async function request<T = unknown>(
     const text = await response.text().catch(() => "");
     const contentType = response.headers.get("content-type") || "";
     const errorMessage = getErrorMessageFromBody(text, contentType);
-
-    // Preserve raw body for parseErrorDetail() to extract structured fields
-    const finalMessage = errorMessage
-      ? `${errorMessage} - ${text}`
-      : `Request failed: ${response.status} ${response.statusText}`;
+    let finalMessage =
+      errorMessage?.trim() ||
+      `Request failed: ${response.status} ${response.statusText}`;
+    if (!errorMessage?.trim() && text?.trim()) {
+      const snippet = text.trim().slice(0, 400);
+      finalMessage = `${finalMessage}: ${snippet}`;
+    }
 
     throw new Error(finalMessage);
   }

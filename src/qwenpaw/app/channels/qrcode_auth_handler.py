@@ -267,7 +267,7 @@ class WecomQRCodeAuthHandler(QRCodeAuthHandler):
 # ---------------------------------------------------------------------------
 
 _DINGTALK_API_BASE = "https://oapi.dingtalk.com"
-_DINGTALK_SOURCE = "QWENPAW"
+_DINGTALK_SOURCE = "AIWORK"
 
 
 class DingtalkQRCodeAuthHandler(QRCodeAuthHandler):

@@ -579,7 +579,7 @@ PROVIDER_ZHIPU_INTL_CODINGPLAN = OpenAIProvider(
     support_connection_check=False,
 )
 
-PROVIDER_QWENPAW = OpenAIProvider(
+PROVIDER_AIWORK = OpenAIProvider(
     id="qwenpaw-local",
     name="QwenPaw Local",
     is_local=True,
@@ -772,7 +772,7 @@ class ProviderManager:  # pylint: disable=too-many-public-methods
                 pass
 
     def _init_builtins(self):
-        self._add_builtin(PROVIDER_QWENPAW)
+        self._add_builtin(PROVIDER_AIWORK)
         self._add_builtin(PROVIDER_OLLAMA)
         self._add_builtin(PROVIDER_LMSTUDIO)
         self._add_builtin(PROVIDER_OPENROUTER)
@@ -1402,7 +1402,7 @@ class ProviderManager:  # pylint: disable=too-many-public-methods
             return None
 
     def _migrate_copaw_config(self) -> None:
-        """Migrate copaw-local provider config to qwenpaw-local."""
+        """Migrate copaw-local provider config to aiwork-local."""
         # 1. Migrate active model configuration (only provider_id)
         if (
             self.active_model
@@ -1570,7 +1570,7 @@ class ProviderManager:  # pylint: disable=too-many-public-methods
         if active_model:
             self.active_model = active_model
 
-        # Migrate copaw-local to qwenpaw-local for backwards compatibility
+        # Migrate copaw-local to aiwork-local for backwards compatibility
         self._migrate_copaw_config()
 
     def _apply_default_annotations(self):

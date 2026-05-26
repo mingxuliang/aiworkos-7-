@@ -7,10 +7,10 @@ no server).
 
 ``rebuild-console-npm`` runs ``npm ci && npm run build`` under ``console/``
 in a source checkout and copies ``console/dist`` into
-``src/qwenpaw/console/`` (needs network for npm).
+``src/aiwork/console/`` (needs network for npm).
 
 ``validate-all-jobs-json`` reuses
-:func:`~qwenpaw.cli.doctor_checks.check_cron_jobs_files` (read-only); exits
+:func:`~aiwork.cli.doctor_checks.check_cron_jobs_files` (read-only); exits
 non-zero on FAIL (for CI).
 
 ``doctor fix --non-interactive`` allows only :data:`NONINTERACTIVE_FIX_IDS`
@@ -49,7 +49,7 @@ from ..config.utils import (
     strict_validate_config_file,
 )
 from ..constant import JOBS_FILE, WORKING_DIR
-from ..utils.console_static import find_qwenpaw_source_repo_root
+from ..utils.console_static import find_aiwork_source_repo_root
 from .doctor_checks import check_cron_jobs_files
 
 SAFE_FIX_IDS = frozenset({"ensure-working-dir", "ensure-workspace-dirs"})
@@ -227,7 +227,7 @@ def _write_meta(
     cfg = load_config()
     ch, cp = _effective_cli_api_host_port(cli_api_host, cli_api_port)
     meta = {
-        "qwenpaw_version": __version__,
+        "aiwork_version": __version__,
         "utc": datetime.now(timezone.utc).isoformat(),
         "argv": argv,
         "fix_ids": fix_ids,
@@ -595,19 +595,19 @@ def _plan_fixes(
             )
 
     if "rebuild-console-npm" in fix_ids:
-        repo = find_qwenpaw_source_repo_root()
+        repo = find_aiwork_source_repo_root()
         if repo is None:
             skip_msgs.append(
                 "rebuild-console-npm: only in a QwenPaw source checkout "
                 "(./console/package.json + ./console/package-lock.json + "
-                "./src/qwenpaw/)",
+                "./src/aiwork/)",
             )
         elif not shutil.which("npm"):
             skip_msgs.append("rebuild-console-npm: npm not found on PATH")
         else:
             console = repo / "console"
             dist = console / "dist"
-            dst = repo / "src" / "qwenpaw" / "console"
+            dst = repo / "src" / "aiwork" / "console"
             desc = (
                 f"npm ci + npm run build in {console}, then copy {dist} -> "
                 f"{dst} (bundles web UI for editable installs)"
@@ -632,7 +632,7 @@ def _plan_fixes(
                     and target.exists()
                     and any(target.iterdir())
                 ):
-                    bkp_root = r / ".qwenpaw-doctor-fix-backups"
+                    bkp_root = r / ".aiwork-doctor-fix-backups"
                     sid = _utc_session_id()
                     bkp = bkp_root / sid
                     prev = bkp / "previous-console-bundle"
@@ -642,7 +642,7 @@ def _plan_fixes(
                     shutil.copytree(target, prev)
                     bkp.mkdir(parents=True, exist_ok=True)
                     meta = {
-                        "qwenpaw_version": __version__,
+                        "aiwork_version": __version__,
                         "previous_bundle": str(prev),
                     }
                     (bkp / "meta.json").write_text(

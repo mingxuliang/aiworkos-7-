@@ -8,6 +8,7 @@ import {
   SkillScannerSection,
   FileGuardSection,
   AllowNoAuthHostsTab,
+  ExecutionSandboxSection,
 } from "./components";
 import { PageHeader } from "@/components/PageHeader";
 import styles from "./index.module.less";
@@ -30,6 +31,7 @@ function SecurityPage() {
     builtinRules,
     customRules,
     toggleRule,
+    toggleAutoDeny,
     deleteCustomRule,
     openAddRule,
     openEditRule,
@@ -46,6 +48,8 @@ function SecurityPage() {
     onFileGuardHandlersReady,
     allowNoAuthHostsHandlers,
     onAllowNoAuthHostsHandlersReady,
+    executionSandboxHandlers,
+    onExecutionSandboxHandlersReady,
     loading,
     error,
     fetchAll,
@@ -105,6 +109,7 @@ function SecurityPage() {
                   toolOptions={toolOptions}
                   mergedRules={mergedRules}
                   toggleRule={toggleRule}
+                  toggleAutoDeny={toggleAutoDeny}
                   onPreviewRule={setPreviewRule}
                   onEditRule={openEditRule}
                   onDeleteRule={deleteCustomRule}
@@ -147,6 +152,21 @@ function SecurityPage() {
                     </p>
                     <SkillScannerSection />
                   </div>
+                </div>
+              ),
+            },
+            {
+              key: "executionSandbox",
+              label: (
+                <span className={styles.tabLabel}>
+                  {t("security.executionSandbox.title")}
+                </span>
+              ),
+              children: (
+                <div className={styles.tabContent}>
+                  <ExecutionSandboxSection
+                    onSave={onExecutionSandboxHandlersReady}
+                  />
                 </div>
               ),
             },
@@ -212,6 +232,25 @@ function SecurityPage() {
             type="primary"
             onClick={allowNoAuthHostsHandlers.save}
             loading={allowNoAuthHostsHandlers.saving}
+          >
+            {t("common.save")}
+          </Button>
+        </div>
+      )}
+
+      {activeTab === "executionSandbox" && executionSandboxHandlers && (
+        <div className={styles.footerButtons}>
+          <Button
+            onClick={executionSandboxHandlers.reset}
+            disabled={executionSandboxHandlers.saving}
+            style={{ marginRight: 8 }}
+          >
+            {t("common.reset")}
+          </Button>
+          <Button
+            type="primary"
+            onClick={executionSandboxHandlers.save}
+            loading={executionSandboxHandlers.saving}
           >
             {t("common.save")}
           </Button>

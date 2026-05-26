@@ -27,7 +27,7 @@ export function ProviderSelectCard({
 
       {availableProviders.length === 0 ? (
         <Alert
-          type="warning"
+          type="info"
           showIcon
           message={t("voiceTranscription.noProvidersWarning")}
         />

@@ -1,17 +1,23 @@
-import { useState, useEffect, useRef } from "react";
-import { Button, Card, Form, Modal, Table } from "@agentscope-ai/design";
+import { useState, useEffect, useRef, type ReactNode } from "react";
+import { Button, Form, Modal } from "@agentscope-ai/design";
+import { Spin } from "antd";
 import dayjs from "dayjs";
 import type { CronJobSpecOutput } from "../../../api/types";
 import { useTranslation } from "react-i18next";
 import api from "../../../api";
 import {
-  createColumns,
+  CronJobCard,
   JobDrawer,
   useCronJobs,
   DEFAULT_FORM_VALUES,
 } from "./components";
-import { parseCron, serializeCron } from "./components/parseCron";
+import {
+  parseCron,
+  serializeCron,
+  type CronParts,
+} from "./components/parseCron";
 import { PageHeader } from "@/components/PageHeader";
+import { CopawWorkbenchShell } from "@/components/CopawWorkbenchShell";
 import styles from "./index.module.less";
 
 type CronJob = CronJobSpecOutput;
@@ -58,10 +64,9 @@ function CronJobsPage() {
   const handleEdit = (job: CronJob) => {
     setEditingJob(job);
 
-    // Parse cron expression to form fields
     const cronParts = parseCron(job.schedule?.cron || "0 9 * * *");
 
-    const formValues: any = {
+    const formValues: Record<string, unknown> = {
       ...job,
       request: {
         ...job.request,
@@ -72,19 +77,16 @@ function CronJobsPage() {
       cronType: cronParts.type,
     };
 
-    // Set time picker value
     if (cronParts.type === "daily" || cronParts.type === "weekly") {
       const h = cronParts.hour ?? 9;
       const m = cronParts.minute ?? 0;
       formValues.cronTime = dayjs().hour(h).minute(m);
     }
 
-    // Set days of week
     if (cronParts.type === "weekly" && cronParts.daysOfWeek) {
       formValues.cronDaysOfWeek = cronParts.daysOfWeek;
     }
 
-    // Set custom cron
     if (cronParts.type === "custom" && cronParts.rawCron) {
       formValues.cronCustom = cronParts.rawCron;
     }
@@ -128,55 +130,58 @@ function CronJobsPage() {
     setEditingJob(null);
   };
 
-  const handleSubmit = async (values: any) => {
-    // Serialize cron from form fields
-    const cronParts: any = {
-      type: values.cronType || "daily",
+  const handleSubmit = async (
+    values: CronJob & Record<string, unknown>,
+  ): Promise<void> => {
+    const cronParts: CronParts = {
+      type:
+        typeof values.cronType === "string"
+          ? (values.cronType as CronParts["type"]) || "daily"
+          : ("daily" as CronParts["type"]),
     };
 
-    if (values.cronType === "daily" || values.cronType === "weekly") {
-      if (values.cronTime) {
-        cronParts.hour = values.cronTime.hour();
-        cronParts.minute = values.cronTime.minute();
+    if (
+      values.cronType === "daily" ||
+      values.cronType === "weekly"
+    ) {
+      const ct = values.cronTime;
+      if (dayjs.isDayjs(ct)) {
+        cronParts.hour = ct.hour();
+        cronParts.minute = ct.minute();
       }
     }
 
     if (values.cronType === "weekly" && values.cronDaysOfWeek) {
-      cronParts.daysOfWeek = values.cronDaysOfWeek;
+      cronParts.daysOfWeek = values.cronDaysOfWeek as string[];
     }
 
     if (values.cronType === "custom" && values.cronCustom) {
-      cronParts.rawCron = values.cronCustom;
+      cronParts.rawCron = String(values.cronCustom);
     }
 
     const cronExpression = serializeCron(cronParts);
 
-    let processedValues = {
+    const processedValues = {
       ...values,
       schedule: {
         ...values.schedule,
         cron: cronExpression,
       },
-    };
+    } as CronJob;
 
     if (processedValues.task_type === "text") {
-      // Remove request object entirely for text tasks
-      delete processedValues.request;
+      delete (processedValues as unknown as Record<string, unknown>).request;
     } else if (processedValues.task_type === "agent") {
-      //Ensure request object exists
-      if (!processedValues.request) {
-        processedValues.request = {};
+      const pv = processedValues as CronJob & {
+        request?: { input?: unknown; session_id?: string; user_id?: string };
+      };
+      if (!pv.request) {
+        pv.request = { input: "" };
       }
-
-      // Parse request input JSON
-      if (
-        processedValues.request?.input &&
-        typeof processedValues.request.input === "string"
-      ) {
+      const req = pv.request;
+      if (req.input && typeof req.input === "string") {
         try {
-          processedValues.request.input = JSON.parse(
-            processedValues.request.input,
-          );
+          req.input = JSON.parse(req.input);
         } catch (error) {
           console.error("❌ Failed to parse request.input JSON:", error);
         }
@@ -187,9 +192,12 @@ function CronJobsPage() {
     setSaving(true);
     try {
       if (editingJob) {
-        success = await updateJob(editingJob.id, processedValues);
+        success = await updateJob(
+          editingJob.id,
+          processedValues as unknown as CronJob,
+        );
       } else {
-        success = await createJob(processedValues);
+        success = await createJob(processedValues as unknown as CronJob);
       }
     } finally {
       setSaving(false);
@@ -199,48 +207,67 @@ function CronJobsPage() {
     }
   };
 
-  const columns = createColumns({
-    onToggleEnabled: handleToggleEnabled,
-    onExecuteNow: handleExecuteNow,
-    onEdit: handleEdit,
-    onDelete: handleDelete,
-    t,
-  });
+  let mainBody: ReactNode;
+
+  if (loading) {
+    mainBody = (
+      <div className={styles.stateWrap}>
+        <Spin tip={t("common.loading")} />
+      </div>
+    );
+  } else if (jobs.length === 0) {
+    mainBody = (
+      <div className={styles.stateWrapMuted}>{t("cronJobs.cardEmptyHint")}</div>
+    );
+  } else {
+    mainBody = (
+      <div className="cbc-agent-grid">
+        {jobs.map((job, index) => (
+          <CronJobCard
+            key={job.id}
+            job={job}
+            index={index}
+            onEdit={handleEdit}
+            onToggleEnabled={handleToggleEnabled}
+            onExecuteNow={handleExecuteNow}
+            onDelete={handleDelete}
+            t={t}
+          />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.cronJobsPage}>
-      <PageHeader
-        items={[{ title: t("nav.control") }, { title: t("cronJobs.title") }]}
-        extra={
-          <Button type="primary" onClick={handleCreate}>
-            + {t("cronJobs.createJob")}
-          </Button>
-        }
-      />
-
-      <Card className={styles.tableCard} bodyStyle={{ padding: 0 }}>
-        <Table
-          columns={columns}
-          dataSource={jobs}
-          loading={loading}
-          rowKey="id"
-          scroll={{ x: 2840 }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: false,
-          }}
+    <CopawWorkbenchShell>
+      <div className={styles.cronJobsPage}>
+        <PageHeader
+          parent={t("nav.control")}
+          current={t("cronJobs.title")}
+          subRow={
+            <p className="copaw-bench-page-desc">{t("cronJobs.description")}</p>
+          }
+          extra={
+            <Button type="primary" onClick={handleCreate}>
+              + {t("cronJobs.createJob")}
+            </Button>
+          }
         />
-      </Card>
 
-      <JobDrawer
-        open={drawerOpen}
-        editingJob={editingJob}
-        form={form}
-        saving={saving}
-        onClose={handleDrawerClose}
-        onSubmit={handleSubmit}
-      />
-    </div>
+        <div className="copaw-bench-main-section copaw-bench-main-section--scroll">
+          {mainBody}
+        </div>
+
+        <JobDrawer
+          open={drawerOpen}
+          editingJob={editingJob}
+          form={form}
+          saving={saving}
+          onClose={handleDrawerClose}
+          onSubmit={handleSubmit}
+        />
+      </div>
+    </CopawWorkbenchShell>
   );
 }
 

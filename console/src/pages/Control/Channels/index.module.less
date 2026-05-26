@@ -160,6 +160,12 @@
   }
 }
 
+.channelCube {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+}
+
 .statusIndicator {
   display: flex;
   align-items: center;
@@ -203,16 +209,20 @@
 .cardMiddleSection {
   display: flex;
   align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-top: 6px;
 }
 
 .cardTitle {
   color: rgba(20, 20, 19, 0.88);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
   letter-spacing: normal;
-  margin: 12px 0;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .builtinTag {
@@ -345,20 +355,25 @@
   }
 
   .filterTabActive {
-    background: #2a2a2a;
-    color: #ff7f16;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+    color: #93c5fd;
+    font-weight: 500;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 4px 14px rgba(0, 0, 0, 0.42);
   }
 
   .loadingText {
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.45);
   }
 
   /* Card background and text */
   .channelCard {
     &.normal {
-      border-color: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.04) inset,
+        0 10px 32px rgba(0, 0, 0, 0.42);
     }
   }
 
@@ -402,11 +417,11 @@
   }
 
   .cardDescription {
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.62);
   }
 
   .cardHint {
-    color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.42);
   }
 
   .drawerHeaderActions {

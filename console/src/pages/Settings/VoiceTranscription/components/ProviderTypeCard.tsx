@@ -68,7 +68,7 @@ export function ProviderTypeCard({
             />
           ) : (
             <Alert
-              type="warning"
+              type="info"
               showIcon
               message={t("voiceTranscription.localWhisperMissing")}
               description={t("voiceTranscription.localWhisperMissingDesc", {

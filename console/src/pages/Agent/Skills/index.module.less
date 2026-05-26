@@ -1,4 +1,5 @@
 .skillsPage {
+  min-height: calc(100vh - 128px);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -292,6 +293,72 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* Inside Agent Team cbc-icon3d cube — drop flat tile background */
+.skillIconCube {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+
+  .fileIcon {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border-radius: 0;
+    font-size: 28px;
+  }
+
+  .skillEmoji {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border-radius: 0;
+    font-size: 26px;
+  }
+}
+
+/* ─── Agent Team–style Hero layout ───────────────────────────────────────── */
+.cardSelectRow {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 8;
+}
+
+.skillCardHero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 36px;
+}
+
+.skillCardTitles {
+  min-width: 0;
+  flex: 1;
+}
+
+.skillCardName {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  margin: 0 0 5px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skillCardLines {
+  margin-top: 10px;
+}
+
+.skillCardLine {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 13px;
 }
 
 .skillEmoji {
@@ -727,7 +794,7 @@
   min-width: 0;
 
   &:hover {
-    border-color: #ff7f16;
+    border-color: #3b82f6;
   }
 
   &.pickerAllCard {
@@ -748,7 +815,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #ff7f16;
+  background: #3b82f6;
   color: #fff;
   display: flex;
   align-items: center;
@@ -838,7 +905,7 @@
   }
 
   &:focus {
-    border-color: #ff7f16;
+    border-color: #3b82f6;
   }
 }
 
@@ -998,6 +1065,15 @@
   }
 }
 
+.listItemLeft .fileIcon {
+  background: transparent;
+  border-radius: 8px;
+
+  img {
+    display: block;
+  }
+}
+
 .listItemLeft {
   display: flex;
   align-items: center;
@@ -1075,12 +1151,38 @@
 
 /* ─── Dark mode ─────────────────────────────────────────────────────────────── */
 :global(.dark-mode) {
+  /* standalone list-view icon tile: subtle frosted surface */
   .fileIcon {
-    background: rgba(26, 23, 22, 0.88);
+    background: rgba(255, 255, 255, 0.08);
   }
 
   .skillEmoji {
-    background: rgba(26, 23, 22, 0.88);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* inside cbc-icon3d cube the container provides the visual separation */
+  .skillIconCube .fileIcon,
+  .skillIconCube .skillEmoji,
+  .skillIconCube [data-skill-emoji] {
+    background: transparent !important;
+  }
+
+  /* list-view: icon sits inline, no tile needed */
+  .listItemLeft .fileIcon {
+    background: transparent !important;
+  }
+
+  /* Agent Team–style hero layout — dark overrides */
+  .skillCardName {
+    color: var(--copaw-dm-text-primary, rgba(255, 255, 255, 0.92));
+  }
+
+  .skillCardLine {
+    color: var(--copaw-dm-text-secondary, rgba(203, 213, 225, 0.75));
+  }
+
+  .skillCardLine span {
+    color: var(--copaw-dm-text-primary, rgba(255, 255, 255, 0.88));
   }
 
   .pageHeader {
@@ -1140,12 +1242,12 @@
 
   /* Skill card */
   .skillCard {
-    background: #1f1f1f;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--copaw-dm-surface-raised, #1a2235);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
 
     &:hover {
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      border-color: rgba(59, 130, 246, 0.35);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
     }
   }
 
@@ -1168,7 +1270,7 @@
   }
 
   .cardFooter {
-    background: #1f1f1f;
+    background: var(--copaw-dm-surface, #111827);
   }
 
   .skillTitle {
@@ -1264,8 +1366,8 @@
 
   /* Search input - dark mode */
   .searchInput {
-    background: #2a2a2a;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--copaw-dm-input, #1f2a42);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
     color: rgba(255, 255, 255, 0.88);
 
     &::placeholder {
@@ -1273,7 +1375,7 @@
     }
 
     &:focus {
-      border-color: #ff7f16;
+      border-color: #3b82f6;
     }
   }
 
@@ -1281,8 +1383,8 @@
   .tagSelect {
     :global {
       .ant-select-selector {
-        background: #2a2a2a;
-        border-color: rgba(255, 255, 255, 0.15);
+        background: var(--copaw-dm-input, #1f2a42);
+        border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
       }
 
       .ant-select-selection-item {
@@ -1320,32 +1422,28 @@
     color: #4da3ff;
   }
 
-  /* Action button */
+  /* Skill card footer: layout only — primary fills from design system */
   .actionButton {
-    background-color: #4a4a4a !important;
-    color: #fff !important;
-    border-color: #5a5a5a !important;
-
-    &:hover {
-      border-color: #777 !important;
-      background-color: #555 !important;
-    }
+    flex: 1;
+    height: 34px;
+    font-size: 14px;
+    border-radius: 8px;
   }
 
   .deleteButton {
-    background-color: #4a4a4a !important;
-    color: rgba(255, 100, 100, 0.85) !important;
-    border-color: #5a5a5a !important;
+    background-color: var(--copaw-dm-surface, #111827) !important;
+    color: #f87171 !important;
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06)) !important;
 
     &:hover {
-      background-color: rgba(255, 77, 79, 0.15) !important;
-      border-color: rgba(255, 77, 79, 0.4) !important;
+      background-color: rgba(239, 68, 68, 0.15) !important;
+      border-color: rgba(248, 113, 113, 0.45) !important;
       color: #ff4d4f !important;
     }
   }
 
   .selectedCard {
-    border-color: #ff7f16 !important;
+    border-color: #3b82f6 !important;
     box-shadow: 0 0 0 1px rgba(255, 127, 22, 0.3) !important;
   }
 
@@ -1382,7 +1480,7 @@
   .poolTransferModal {
     :global {
       .ant-modal-body {
-        background: #2d2d2d;
+        background: var(--copaw-dm-surface-raised, #1a2235);
       }
     }
   }
@@ -1404,11 +1502,11 @@
 
   /* List mode - dark mode */
   .skillListItem {
-    background: #1f1f1f;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--copaw-dm-surface-raised, #1a2235);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
 
     &:hover {
-      background: #2a2a2a;
+      background: var(--copaw-dm-input, #1f2a42);
     }
   }
 

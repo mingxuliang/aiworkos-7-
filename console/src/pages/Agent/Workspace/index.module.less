@@ -368,7 +368,7 @@
   }
 
   &.selected {
-    border: 1px solid #ff7f16;
+    border: 1px solid #3b82f6;
   }
 }
 
@@ -408,13 +408,13 @@
   }
 
   &:hover {
-    color: #ff7f16;
+    color: #3b82f6;
   }
 }
 
 .dragging {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  border-color: #ff7f16 !important;
+  border-color: #3b82f6 !important;
 }
 
 .enabledBadge {
@@ -468,7 +468,7 @@
   }
 
   &.selected {
-    border: 1px solid #ff7f16;
+    border: 1px solid #3b82f6;
   }
 }
 
@@ -494,162 +494,206 @@
 /* ─── Dark mode ─────────────────────────────────────────────────────────────── */
 :global(.dark-mode) {
   .pageHeader {
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+  }
+
+  /* 左侧整块 Card：较文件行略深的 surface，拉出层级 */
+  .fileListPanel {
+    :global(.qwenpaw-card),
+    :global(.ant-card) {
+      background: var(--copaw-dm-surface, #111827) !important;
+      border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06)) !important;
+      box-shadow: none !important;
+    }
+
+    :global(.qwenpaw-card-body),
+    :global(.ant-card-body) {
+      background: transparent !important;
+    }
+
+    :global(.qwenpaw-card-head),
+    :global(.ant-card-head) {
+      border-bottom-color: var(--copaw-dm-border-subtle, rgba(255, 255, 255, 0.05)) !important;
+    }
+  }
+
+  .editorCard {
+    :global(.qwenpaw-card),
+    :global(.ant-card) {
+      background: var(--copaw-dm-surface, #111827) !important;
+      border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06)) !important;
+    }
+
+    :global(.qwenpaw-card-body),
+    :global(.ant-card-body) {
+      background: transparent !important;
+    }
   }
 
   .breadcrumbParent {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--copaw-dm-text-secondary, #94a3b8);
   }
 
   .breadcrumbSeparator {
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
   }
 
   .breadcrumbCurrent {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--copaw-dm-text-primary, #ffffff);
+  }
+
+  .workspacePath {
+    color: var(--copaw-dm-text-secondary, #94a3b8);
+    background: var(--copaw-dm-surface-raised, #1a2235);
+    border: 1px solid var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
   }
 
   .infoText {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--copaw-dm-text-secondary, #94a3b8);
   }
 
   .divider {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: var(--copaw-dm-border-subtle, rgba(255, 255, 255, 0.05));
   }
 
-  /* File list items */
+  /* File list items — opt-style card surface (#1a2235)，避免暖灰 #2a2a2a */
   .fileItem {
-    background-color: #2a2a2a;
-    border-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--copaw-dm-surface-raised, #1a2235);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
 
     &:hover:not(.selected) {
-      border-color: rgba(255, 255, 255, 0.2);
-      background-color: #333;
+      border-color: rgba(59, 130, 246, 0.25);
+      background-color: var(--copaw-dm-input, #1f2a42);
     }
 
     &.selected {
-      border-color: #ff7f16;
-      background-color: rgba(97, 92, 237, 0.15);
+      border-color: #3b82f6;
+      background-color: rgba(59, 130, 246, 0.14);
     }
   }
 
   .fileItemName {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--copaw-dm-text-primary, #ffffff);
   }
 
   .fileItemMeta {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--copaw-dm-text-secondary, #94a3b8);
   }
 
   .expandIcon {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--copaw-dm-text-secondary, #94a3b8);
+    opacity: 0.85;
   }
 
   .dragHandle {
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--copaw-dm-text-muted, #475569);
 
     &:hover {
-      color: #ff7f16;
+      color: #3b82f6;
     }
   }
 
   .dragging {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    border-color: #ff7f16 !important;
-    background-color: rgba(97, 92, 237, 0.15) !important;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(59, 130, 246, 0.35);
+    border-color: #3b82f6 !important;
+    background-color: rgba(59, 130, 246, 0.12) !important;
   }
 
   /* Daily memory items */
   .dailyMemoryItem {
-    background-color: #2a2a2a;
-    border-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--copaw-dm-surface-raised, #1a2235);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset;
 
     &:hover:not(.selected) {
-      border-color: rgba(255, 255, 255, 0.2);
-      background-color: #333;
+      border-color: rgba(59, 130, 246, 0.22);
+      background-color: var(--copaw-dm-input, #1f2a42);
     }
 
     &.selected {
-      border-color: #ff7f16;
-      background-color: rgba(97, 92, 237, 0.15);
+      border-color: #3b82f6;
+      background-color: rgba(59, 130, 246, 0.14);
     }
   }
 
   .dailyMemoryName {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--copaw-dm-text-primary, #ffffff);
   }
 
   .dailyMemoryMeta {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--copaw-dm-text-secondary, #94a3b8);
   }
 
   /* Editor area */
   .editorHeader {
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: var(--copaw-dm-border-subtle, rgba(255, 255, 255, 0.05));
   }
 
   .fileName {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--copaw-dm-text-primary, #ffffff);
   }
 
   .filePath {
-    color: rgba(255, 255, 255, 0.35);
+    color: var(--copaw-dm-text-secondary, #94a3b8);
   }
 
   .markdownViewer {
-    border-color: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.85);
-    background: #1f1f1f;
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+    color: var(--copaw-dm-text-primary, #ffffff);
+    background: var(--copaw-dm-surface, #111827);
 
     :global {
       pre {
-        background: #2a2a2a;
-        border-color: rgba(255, 255, 255, 0.1);
+        background: var(--copaw-dm-input, #1f2a42);
+        border: 1px solid var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
 
         code {
-          color: rgba(255, 255, 255, 0.85);
+          color: var(--copaw-dm-text-primary, #ffffff);
         }
       }
 
       table {
         th,
         td {
-          border-color: rgba(255, 255, 255, 0.15);
+          border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
         }
 
         th {
-          background: #2a2a2a;
-          color: rgba(255, 255, 255, 0.85);
+          background: var(--copaw-dm-surface-raised, #1a2235);
+          color: var(--copaw-dm-text-primary, #ffffff);
         }
 
         tr:nth-child(2n) {
-          background: rgba(255, 255, 255, 0.04);
+          background: rgba(255, 255, 255, 0.03);
         }
       }
     }
   }
 
   .toggleLabel {
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--copaw-dm-text-secondary, #94a3b8);
   }
 
   .emptyState {
-    color: rgba(255, 255, 255, 0.3);
+    color: var(--copaw-dm-text-muted, #475569);
   }
 
   .sectionTitle {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--copaw-dm-text-primary, #ffffff);
   }
 
   .attribution {
-    color: rgba(255, 255, 255, 0.2);
+    color: var(--copaw-dm-text-muted, #475569);
   }
 
   /* Textarea inside editor */
   .textarea,
   .editorContent textarea {
-    background: #2a2a2a !important;
-    color: rgba(255, 255, 255, 0.85) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
+    background: var(--copaw-dm-input, #1f2a42) !important;
+    color: var(--copaw-dm-text-primary, #ffffff) !important;
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06)) !important;
   }
 }

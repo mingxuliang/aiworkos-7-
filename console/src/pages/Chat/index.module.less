@@ -22,24 +22,25 @@
   cursor: not-allowed !important;
 }
 
+.chatPage {
+  position: relative;
+  overflow: hidden;
+  background: transparent;
+}
+
 /* Chat messages scrollable area */
 .chatMessagesArea {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 0;
   height: 100%;
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.28) transparent;
 
-  :global {
-    [class*="chat-anywhere-default-header-right"] {
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-  }
-
-  /* Custom scrollbar */
   &::-webkit-scrollbar {
     width: 8px;
   }
@@ -49,31 +50,138 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+    background: rgba(59, 130, 246, 0.28);
+    border-radius: 999px;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(59, 130, 246, 0.38);
     }
   }
 
-  /* Dark mode scrollbar */
-  :global(.dark-mode) & {
-    &::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
+  :global {
+    [class*="chat-anywhere-default-header-right"] {
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
 
-      &:hover {
-        background: rgba(255, 255, 255, 0.3);
+    .qwenpaw-chat-anywhere-default-header {
+      max-width: 1120px;
+      margin: 12px auto 0;
+      padding: 10px 14px;
+      border: 1px solid rgba(219, 234, 254, 0.86);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 14px 38px rgba(15, 23, 42, 0.07);
+      backdrop-filter: blur(16px);
+    }
+
+    .qwenpaw-chat-anywhere-default-header-inner {
+      align-items: center;
+      gap: 12px;
+    }
+
+    .qwenpaw-chat-anywhere-chat {
+      padding-top: 4px;
+    }
+
+    .qwenpaw-chat-anywhere-chat-welcome {
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+
+    .qwenpaw-bubble-list {
+      max-width: 920px;
+      padding: 22px 20px 10px;
+    }
+
+    .qwenpaw-bubble {
+      margin: 10px 0;
+    }
+
+    .qwenpaw-bubble-content-filled {
+      border-radius: 18px 18px 6px 18px !important;
+      background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+      color: #ffffff !important;
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
+    }
+
+    .qwenpaw-bubble-start .qwenpaw-bubble-content-wrapper-card,
+    .qwenpaw-bubble-assistant .qwenpaw-bubble-content-wrapper-card {
+      border-radius: 18px 18px 18px 6px;
+    }
+
+    .qwenpaw-chat-anywhere-sender-wrapper {
+      max-width: 920px;
+      padding: 0 20px 28px;
+    }
+
+    .qwenpaw-sender {
+      border-width: 1px !important;
+      border-style: solid !important;
+      border-color: rgba(191, 219, 254, 0.95) !important;
+      border-radius: 22px !important;
+      background: rgba(255, 255, 255, 0.94) !important;
+      box-shadow: 0 24px 58px rgba(15, 23, 42, 0.14) !important;
+      backdrop-filter: blur(16px);
+    }
+
+    .qwenpaw-sender-content {
+      padding: 12px !important;
+    }
+
+    .qwenpaw-sender-input {
+      min-height: 34px !important;
+      color: #0f172a;
+      font-size: 14px;
+    }
+
+    .qwenpaw-sender:focus-within {
+      border-color: rgba(59, 130, 246, 0.55) !important;
+      box-shadow:
+        0 24px 58px rgba(37, 99, 235, 0.15),
+        0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+    }
+  }
+}
+
+:global(html.dark-mode) {
+  .chatMessagesArea {
+    scrollbar-color: rgba(96, 165, 250, 0.3) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(96, 165, 250, 0.28);
+    }
+
+    :global {
+      .qwenpaw-chat-anywhere-default-header {
+        border-color: rgba(96, 165, 250, 0.18);
+        background: rgba(15, 23, 42, 0.72);
+        box-shadow: 0 14px 38px rgba(0, 0, 0, 0.28);
+      }
+
+      .qwenpaw-bubble-content-filled {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+      }
+
+      .qwenpaw-sender {
+        border-color: rgba(96, 165, 250, 0.2) !important;
+        background: rgba(15, 23, 42, 0.9) !important;
+        box-shadow: 0 24px 58px rgba(0, 0, 0, 0.38) !important;
+      }
+
+      .qwenpaw-sender-input {
+        color: #f8fafc;
+      }
+
+      .qwenpaw-sender:focus-within {
+        border-color: rgba(96, 165, 250, 0.55) !important;
+        box-shadow:
+          0 24px 58px rgba(0, 0, 0, 0.38),
+          0 0 0 3px rgba(96, 165, 250, 0.18) !important;
       }
     }
-  }
-
-  /* Firefox scrollbar */
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-
-  :global(.dark-mode) & {
-    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   }
 }
 
@@ -88,7 +196,7 @@
 
 .suggestionCommand {
   flex: 0 0 88px;
-  color: #ff7f16;
+  color: #3b82f6;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -105,7 +213,7 @@
 
 :global(.dark-mode) {
   .suggestionCommand {
-    color: #ff7f16;
+    color: #60a5fa;
   }
 
   .suggestionDescription {
@@ -113,12 +221,12 @@
   }
 }
 
-/* Prompt star icon - use theme color */
+/* Prompt icon — use blue brand color */
 :global {
   .chat-anywhere-prompt-icon,
   [class*="prompt-icon"],
   [class*="PromptIcon"] {
-    color: #ff7f16 !important;
+    color: #3b82f6 !important;
   }
 }
 
@@ -128,6 +236,6 @@
   .chatDisabledOverlay :global([class*="chat-input"]),
   .chatDisabledOverlay :global(textarea),
   .chatDisabledOverlay :global(input[type="text"]) {
-    background-color: #2a2a2a !important;
+    background-color: var(--copaw-dm-input, #1f2a42) !important;
   }
 }

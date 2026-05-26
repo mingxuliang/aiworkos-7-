@@ -3,7 +3,7 @@ name: cron
 description: 仅在需要未来定时执行或周期执行任务时，使用本 skill。使用 qwenpaw cron list/create/get/state/pause/resume/delete/run 管理任务，并始终显式传入 --agent-id。
 metadata:
   builtin_skill_version: "1.4"
-  qwenpaw:
+  aiwork:
     emoji: "⏰"
 ---
 
@@ -53,26 +53,26 @@ metadata:
 
 ```bash
 # 列出任务
-qwenpaw cron list --agent-id <agent_id>
+aiwork cron list --agent-id <agent_id>
 
 # 查看任务详情
-qwenpaw cron get <job_id> --agent-id <agent_id>
+aiwork cron get <job_id> --agent-id <agent_id>
 
 # 查看任务状态
-qwenpaw cron state <job_id> --agent-id <agent_id>
+aiwork cron state <job_id> --agent-id <agent_id>
 
 # 创建任务
-qwenpaw cron create --agent-id <agent_id> ...
+aiwork cron create --agent-id <agent_id> ...
 
 # 删除任务
-qwenpaw cron delete <job_id> --agent-id <agent_id>
+aiwork cron delete <job_id> --agent-id <agent_id>
 
 # 暂停 / 恢复任务
-qwenpaw cron pause <job_id> --agent-id <agent_id>
-qwenpaw cron resume <job_id> --agent-id <agent_id>
+aiwork cron pause <job_id> --agent-id <agent_id>
+aiwork cron resume <job_id> --agent-id <agent_id>
 
 # 立即执行一次已有任务
-qwenpaw cron run <job_id> --agent-id <agent_id>
+aiwork cron run <job_id> --agent-id <agent_id>
 ```
 
 ---
@@ -98,7 +98,7 @@ qwenpaw cron run <job_id> --agent-id <agent_id>
 ### 创建示例
 
 ```bash
-qwenpaw cron create \
+aiwork cron create \
   --agent-id <agent_id> \
   --type text \
   --name "每日早安" \
@@ -110,7 +110,7 @@ qwenpaw cron create \
 ```
 
 ```bash
-qwenpaw cron create \
+aiwork cron create \
   --agent-id <agent_id> \
   --type agent \
   --name "检查待办" \
@@ -124,7 +124,7 @@ qwenpaw cron create \
 ### 从 JSON 创建
 
 ```bash
-qwenpaw cron create --agent-id <agent_id> -f job_spec.json
+aiwork cron create --agent-id <agent_id> -f job_spec.json
 ```
 
 ---
@@ -173,7 +173,7 @@ qwenpaw cron create --agent-id <agent_id> -f job_spec.json
 暂停、恢复、删除前，先用：
 
 ```bash
-qwenpaw cron list --agent-id <agent_id>
+aiwork cron list --agent-id <agent_id>
 ```
 
 找到正确的 `job_id`。
@@ -192,13 +192,13 @@ qwenpaw cron list --agent-id <agent_id>
 ## 帮助信息
 
 ```bash
-qwenpaw cron -h
-qwenpaw cron list -h
-qwenpaw cron create -h
-qwenpaw cron get -h
-qwenpaw cron state -h
-qwenpaw cron pause -h
-qwenpaw cron resume -h
-qwenpaw cron delete -h
-qwenpaw cron run -h
+aiwork cron -h
+aiwork cron list -h
+aiwork cron create -h
+aiwork cron get -h
+aiwork cron state -h
+aiwork cron pause -h
+aiwork cron resume -h
+aiwork cron delete -h
+aiwork cron run -h
 ```

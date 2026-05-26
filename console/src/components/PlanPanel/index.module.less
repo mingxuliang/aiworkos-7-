@@ -142,8 +142,8 @@
 }
 
 .stateInProgress {
-  background: var(--colorWarningBg, #fffbe6);
-  color: var(--colorWarningText, #faad14);
+  background: var(--colorInfoBg, #e6f4ff);
+  color: var(--colorInfoText, #1677ff);
 }
 
 .stateDone {
@@ -154,4 +154,96 @@
 .stateAbandoned {
   background: var(--colorErrorBg, #fff2f0);
   color: var(--colorErrorText, #ff4d4f);
+}
+
+/* ─── Dark mode (Copaw / QwenPaw black theme) ─────────────────────────────── */
+:global(.dark-mode) {
+  .drawer {
+    :global {
+      .qwenpaw-drawer-body {
+        background-color: var(--copaw-dm-surface, #111827);
+      }
+
+      .ant-drawer-body {
+        background-color: var(--copaw-dm-surface, #111827);
+      }
+    }
+  }
+
+  .headerTitle {
+    color: var(--copaw-dm-text-primary, #ffffff);
+  }
+
+  .planName {
+    color: var(--copaw-dm-text-primary, #ffffff);
+  }
+
+  .planDesc {
+    color: var(--copaw-dm-text-secondary, #94a3b8);
+  }
+
+  .progressLabel {
+    color: var(--copaw-dm-text-secondary, #94a3b8);
+  }
+
+  .progressSection {
+    :global {
+      .ant-progress-inner {
+        background: rgba(255, 255, 255, 0.08);
+      }
+    }
+  }
+
+  .subtaskItem {
+    border-bottom-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+  }
+
+  .subtaskName {
+    color: var(--copaw-dm-text-primary, #ffffff);
+  }
+
+  .subtaskDesc {
+    color: var(--copaw-dm-text-secondary, #94a3b8);
+  }
+
+  .subtaskOutcome {
+    color: #4ade80;
+  }
+
+  .emptyState {
+    color: var(--copaw-dm-text-secondary, #94a3b8);
+  }
+
+  .emptyIcon {
+    opacity: 0.55;
+    filter: grayscale(0.15);
+  }
+
+  .stateTodo,
+  .stateInProgress {
+    background: rgba(59, 130, 246, 0.18);
+    color: #93c5fd;
+  }
+
+  .stateDone {
+    background: rgba(74, 222, 128, 0.14);
+    color: #4ade80;
+  }
+
+  .stateAbandoned {
+    background: rgba(248, 113, 113, 0.14);
+    color: #fca5a5;
+  }
+
+  .content {
+    :global {
+      .ant-spin-dot-item {
+        background-color: #93c5fd;
+      }
+
+      strong {
+        color: var(--copaw-dm-text-primary, #ffffff);
+      }
+    }
+  }
 }

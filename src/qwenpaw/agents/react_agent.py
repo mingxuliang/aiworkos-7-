@@ -623,7 +623,7 @@ class QwenPawAgent(ToolGuardMixin, ReActAgent):
     @staticmethod
     def _rebuild_mcp_client(client: Any) -> Any | None:
         """Rebuild a fresh MCP client instance from stored config metadata."""
-        rebuild_info = getattr(client, "_qwenpaw_rebuild_info", None)
+        rebuild_info = getattr(client, "_aiwork_rebuild_info", None)
         if not isinstance(rebuild_info, dict):
             return None
 
@@ -639,7 +639,7 @@ class QwenPawAgent(ToolGuardMixin, ReActAgent):
                     env=rebuild_info.get("env", {}),
                     cwd=rebuild_info.get("cwd"),
                 )
-                setattr(rebuilt_client, "_qwenpaw_rebuild_info", rebuild_info)
+                setattr(rebuilt_client, "_aiwork_rebuild_info", rebuild_info)
                 return rebuilt_client
 
             raw_headers = rebuild_info.get("headers") or {}
@@ -654,7 +654,7 @@ class QwenPawAgent(ToolGuardMixin, ReActAgent):
                 url=rebuild_info.get("url"),
                 headers=headers,
             )
-            setattr(rebuilt_client, "_qwenpaw_rebuild_info", rebuild_info)
+            setattr(rebuilt_client, "_aiwork_rebuild_info", rebuild_info)
             return rebuilt_client
         except Exception:  # pylint: disable=broad-except
             return None
@@ -882,7 +882,7 @@ class QwenPawAgent(ToolGuardMixin, ReActAgent):
         formatter = getattr(self, "formatter", None)
         if formatter is None:
             return
-        setattr(formatter, "_qwenpaw_force_strip_media", enabled)
+        setattr(formatter, "_aiwork_force_strip_media", enabled)
 
     # pylint: disable=too-many-branches
     async def _reasoning(
@@ -1299,6 +1299,21 @@ class QwenPawAgent(ToolGuardMixin, ReActAgent):
             self._agent_config.running.shell_command_timeout,
         )
 
+        request_context = getattr(self, "_request_context", {}) or {}
+        from ..security.sandbox import (
+            load_use_user_subdir,
+            resolve_sandbox_root,
+            set_current_sandbox_root,
+        )
+
+        user_id = str(request_context.get("user_id") or "")
+        sandbox_root = resolve_sandbox_root(
+            Path(self._workspace_dir or WORKING_DIR),
+            user_id,
+            use_user_subdir=load_use_user_subdir(),
+        )
+        set_current_sandbox_root(sandbox_root)
+
         # Process file and media blocks in messages
         if msg is not None:
             await process_file_and_media_blocks_in_message(msg)
@@ -1318,7 +1333,6 @@ class QwenPawAgent(ToolGuardMixin, ReActAgent):
         # Normal message processing
         logger.info("QwenPawAgent.reply: max_iters=%s", self.max_iters)
 
-        request_context = getattr(self, "_request_context", {}) or {}
         channel_name = request_context.get("channel", "console")
         workspace_dir = Path(self._workspace_dir or WORKING_DIR)
         with apply_skill_config_env_overrides(workspace_dir, channel_name):

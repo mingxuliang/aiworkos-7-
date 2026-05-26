@@ -19,7 +19,7 @@ PREFIX_SKILL_POOL = "data/skill_pool/"
 PREFIX_CONFIG = "data/config.json"
 
 # Allowed characters for a backup ID. Accepts both the new human-readable
-# format (qwenpaw-{ver}-{ts}-{short8}) and legacy UUID strings.
+# format (aiwork-{ver}-{ts}-{short8}) and legacy UUID strings.
 # Forbids path-traversal characters: '/', '\', '..', NUL, etc.
 BACKUP_ID_RE = re.compile(r"^[a-zA-Z0-9._-]{1,200}$")
 

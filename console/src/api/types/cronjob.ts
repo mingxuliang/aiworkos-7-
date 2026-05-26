@@ -41,7 +41,6 @@ export interface CronJobSpecInput {
   dispatch: CronJobDispatch;
   runtime?: CronJobRuntime;
   meta?: Record<string, unknown>;
-  owner_user_id?: string;
 }
 
 export type CronJobSpecOutput = CronJobSpecInput;
@@ -51,7 +50,6 @@ export interface CronJobView extends CronJobSpecOutput {
   state?: unknown;
   next_run_time?: number;
   last_run_time?: number;
-  owner_user_id?: string;
 }
 
 export type CronJobSpecInputLegacy = Record<string, unknown>;

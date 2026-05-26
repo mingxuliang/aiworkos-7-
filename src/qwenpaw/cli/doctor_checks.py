@@ -57,7 +57,7 @@ from ..utils.system_info import summarize_python_environment
 from ..providers.provider import Provider
 
 
-# Log file opened on app startup (see ``qwenpaw.app._app`` lifespan).
+# Log file opened on app startup (see ``aiwork.app._app`` lifespan).
 APP_LOG_BASENAME = LOG_FILE_BASENAME
 
 # Built-in local llama.cpp provider id; legacy configs may still use
@@ -197,17 +197,17 @@ def environment_summary_lines(
     doctor_env = summarize_python_environment()
     lines = [
         f"python version: {py_ver}",
-        f"qwenpaw version: {__version__}",
+        f"aiwork version: {__version__}",
         f"platform: {platform.system()} {platform.machine()}",
         f"doctor_python_environment: {doctor_env}",
     ]
     if server_python_environment is not None:
         lines.append(
-            f"qwenpaw_python_environment: {server_python_environment}",
+            f"aiwork_python_environment: {server_python_environment}",
         )
     else:
         lines.append(
-            "qwenpaw_python_environment: "
+            "aiwork_python_environment: "
             + (server_python_note or "(unknown)"),
         )
     lines.append(f"working_dir: {WORKING_DIR}")
@@ -702,7 +702,7 @@ def check_agent_json_profiles(cfg: Config) -> tuple[bool, str]:
 
 
 def check_enabled_agents_load_agent_config(cfg: Config) -> tuple[bool, str]:
-    """Dry-run :func:`~qwenpaw.config.config.load_agent_config` for enabled.
+    """Dry-run :func:`~aiwork.config.config.load_agent_config` for enabled.
 
     Matches ``MultiAgentManager.start_all_configured_agents``. When
     ``agent.json`` is missing, we do **not** call ``load_agent_config`` (that
@@ -1038,7 +1038,7 @@ def active_llm_local_failure_hint(provider: Provider, provider_id: str) -> str:
     return ""
 
 
-def qwenpaw_local_llm_deep_notes() -> list[str]:
+def aiwork_local_llm_deep_notes() -> list[str]:
     """Read-only llama.cpp install + server snapshot (``--deep`` / local)."""
     try:
         from ..local_models.manager import LocalModelManager
@@ -1180,7 +1180,7 @@ async def check_enabled_agents_model_connections(
         if deep and pid in _QWENPAW_LOCAL_PROVIDER_IDS:
             # Only add once (same underlying llama.cpp runtime).
             if not any("llama.cpp" in n for n in notes):
-                notes.extend(qwenpaw_local_llm_deep_notes())
+                notes.extend(aiwork_local_llm_deep_notes())
 
         if not getattr(provider, "support_connection_check", True):
             lines.append(
@@ -1224,7 +1224,7 @@ def console_static_diagnostic_notes() -> list[str]:
 
     from ..utils.console_static import (
         CONSOLE_STATIC_ENV,
-        find_qwenpaw_source_repo_root,
+        find_aiwork_source_repo_root,
         resolve_console_static_dir,
     )
 
@@ -1261,7 +1261,7 @@ def console_static_diagnostic_notes() -> list[str]:
         + (npm if npm else "not found (install Node.js or fix PATH)"),
     )
 
-    repo = find_qwenpaw_source_repo_root()
+    repo = find_aiwork_source_repo_root()
     if repo is not None:
         notes.append(
             f"source checkout detected at {repo} — if you changed the web "

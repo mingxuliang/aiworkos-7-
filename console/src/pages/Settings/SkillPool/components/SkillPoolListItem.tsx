@@ -78,6 +78,8 @@ export function SkillPoolListItem({
       </div>
       <div className={styles.listItemRight}>
         <Button
+          type="primary"
+          size="small"
           className={styles.actionButton}
           disabled={batchMode}
           onClick={(e) => {

@@ -18,6 +18,7 @@ export interface ToolGuardConfig {
   denied_tools: string[];
   custom_rules: ToolGuardRule[];
   disabled_rules: string[];
+  auto_denied_rules: string[];
   shell_evasion_checks: Record<string, boolean>;
 }
 
@@ -83,6 +84,34 @@ export interface AllowNoAuthHostsResponse {
 
 export interface AllowNoAuthHostsUpdateBody {
   hosts: string[];
+}
+
+export type ExecutionSandboxBackend = "off" | "local" | "docker";
+export type ExecutionSandboxFallbackBackend = "off" | "local";
+export type ExecutionSandboxDockerNetwork = "none" | "bridge";
+
+export interface ExecutionSandboxConfig {
+  enabled: boolean;
+  backend: ExecutionSandboxBackend;
+  use_user_subdir: boolean;
+  fail_closed: boolean;
+  fallback_backend: ExecutionSandboxFallbackBackend;
+  docker_image: string;
+  docker_network: ExecutionSandboxDockerNetwork;
+  docker_memory: string;
+  docker_cpus: string;
+  docker_pids_limit: number;
+  docker_timeout_seconds: number;
+}
+
+export interface ExecutionSandboxStatus {
+  effective_enabled: boolean;
+  effective_backend: string;
+  docker_available: boolean;
+  docker_image_present: boolean;
+  docker_image: string;
+  env_enabled: string | null;
+  env_backend: string | null;
 }
 
 export const securityApi = {
@@ -167,4 +196,20 @@ export const securityApi = {
       method: "PUT",
       body: JSON.stringify(body),
     }),
+
+  // ── Execution Sandbox ───────────────────────────────────────────
+
+  getExecutionSandbox: () =>
+    request<ExecutionSandboxConfig>("/config/security/execution-sandbox"),
+
+  updateExecutionSandbox: (body: ExecutionSandboxConfig) =>
+    request<ExecutionSandboxConfig>("/config/security/execution-sandbox", {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+
+  getExecutionSandboxStatus: () =>
+    request<ExecutionSandboxStatus>(
+      "/config/security/execution-sandbox/status",
+    ),
 };

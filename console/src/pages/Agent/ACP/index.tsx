@@ -17,6 +17,7 @@ import {
   stringifyArgs,
   stringifyEnv,
 } from "./components/ACPDrawer";
+import { CopawWorkbenchShell } from "@/components/CopawWorkbenchShell";
 import styles from "../../Control/Channels/index.module.less";
 
 const BUILTIN_ACP_ORDER = [
@@ -218,6 +219,7 @@ function ACPPage() {
   ];
 
   return (
+    <CopawWorkbenchShell>
     <div className={styles.channelsPage}>
       <PageHeader
         items={[{ title: t("nav.agent") }, { title: t("acp.title") }]}
@@ -242,19 +244,20 @@ function ACPPage() {
           </Button>
         }
       />
-      <div className={styles.channelsContainer}>
+      <div className={`${styles.channelsContainer} copaw-bench-main-section copaw-bench-main-section--scroll`}>
         {loading ? (
           <div className={styles.loading}>
             <span className={styles.loadingText}>{t("acp.loading")}</span>
           </div>
         ) : (
-          <div className={styles.channelsGrid}>
-            {cards.map(({ key, config }) => (
+          <div className="cbc-agent-grid">
+            {cards.map(({ key, config }, index) => (
               <ACPCard
                 key={key}
                 agentKey={key}
                 config={config}
                 isBuiltin={isBuiltinACPAgent(key)}
+                cardIndex={index}
                 onClick={() => handleCardClick(key)}
               />
             ))}
@@ -275,6 +278,7 @@ function ACPPage() {
         onDelete={handleDelete}
       />
     </div>
+    </CopawWorkbenchShell>
   );
 }
 

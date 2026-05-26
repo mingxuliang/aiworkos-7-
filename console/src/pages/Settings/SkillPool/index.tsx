@@ -26,6 +26,7 @@ import { getBuiltinNoticeLines } from "./builtinNotice";
 import { useSkillPool } from "./useSkillPool";
 import { useProgressiveRender } from "../../../hooks/useProgressiveRender";
 import { PageHeader } from "@/components/PageHeader";
+import { CopawWorkbenchShell } from "@/components/CopawWorkbenchShell";
 import type { PoolSkillSpec } from "../../../api/types";
 import styles from "./index.module.less";
 
@@ -40,136 +41,144 @@ function SkillPoolPage() {
   } = useProgressiveRender(pool.sortedSkills);
 
   return (
-    <div className={styles.skillsPage}>
-      <PageHeader
-        items={[{ title: t("nav.settings") }, { title: t("nav.skillPool") }]}
-        extra={
-          <div className={styles.headerRight}>
-            <input
-              type="file"
-              accept=".zip"
-              ref={pool.zipInputRef}
-              onChange={pool.handleZipImport}
-              style={{ display: "none" }}
-            />
-            {pool.batchModeEnabled ? (
-              <div className={styles.batchActions}>
-                <span className={styles.batchCount}>
-                  {t("skills.selectedCount", {
-                    count: pool.selectedPoolSkills.size,
-                  })}
-                </span>
-                <Button type="default" onClick={pool.selectAllPool}>
-                  {t("skills.selectAll")}
-                </Button>
-                <Button
-                  type="default"
-                  onClick={pool.clearPoolSelection}
-                  icon={<CloseOutlined />}
-                >
-                  {t("skills.clearSelection")}
-                </Button>
-                <Button
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={pool.handleBatchDeletePool}
-                >
-                  {t("common.delete")} ({pool.selectedPoolSkills.size})
-                </Button>
-                <Button type="primary" onClick={pool.toggleBatchMode}>
-                  {t("skills.exitBatch")}
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className={styles.headerActionsLeft}>
-                  <Tooltip title={t("skillPool.refreshHint")}>
-                    <Button
-                      type="default"
-                      icon={<ReloadOutlined spin={pool.loading} />}
-                      onClick={pool.handleRefresh}
-                      disabled={pool.loading}
-                    />
-                  </Tooltip>
-                  <Tooltip title={t("skillPool.broadcastHint")}>
-                    <Button
-                      type="default"
-                      className={styles.primaryTransferButton}
-                      icon={<SendOutlined />}
-                      onClick={() => pool.openBroadcast()}
-                    >
-                      {t("skillPool.broadcast")}
-                    </Button>
-                  </Tooltip>
-                  <Tooltip
-                    title={
-                      pool.hasUnseenBuiltinNotice
-                        ? builtinNoticeLines.length > 0
-                          ? builtinNoticeLines.map((line) => (
-                              <div key={line}>{line}</div>
-                            ))
-                          : t("skillPool.importBuiltinAlertHint", {
-                              count: pool.builtinNoticeTotal,
-                            })
-                        : t("skillPool.importBuiltinHint")
-                    }
+    <CopawWorkbenchShell>
+      <div className={styles.skillsPage}>
+        <PageHeader
+          parent={t("nav.settings")}
+          current={t("nav.skillPool")}
+          subRow={
+            <p className="copaw-bench-page-desc">
+              {t("skillPool.description")}
+            </p>
+          }
+          extra={
+            <div className={styles.headerRight}>
+              <input
+                type="file"
+                accept=".zip"
+                ref={pool.zipInputRef}
+                onChange={pool.handleZipImport}
+                style={{ display: "none" }}
+              />
+              {pool.batchModeEnabled ? (
+                <div className={styles.batchActions}>
+                  <span className={styles.batchCount}>
+                    {t("skills.selectedCount", {
+                      count: pool.selectedPoolSkills.size,
+                    })}
+                  </span>
+                  <Button type="default" onClick={pool.selectAllPool}>
+                    {t("skills.selectAll")}
+                  </Button>
+                  <Button
+                    type="default"
+                    onClick={pool.clearPoolSelection}
+                    icon={<CloseOutlined />}
                   >
-                    <Badge
-                      dot={pool.hasUnseenBuiltinNotice}
-                      color="rgba(255, 157, 77, 1)"
-                      offset={[-4, 4]}
-                    >
+                    {t("skills.clearSelection")}
+                  </Button>
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={pool.handleBatchDeletePool}
+                  >
+                    {t("common.delete")} ({pool.selectedPoolSkills.size})
+                  </Button>
+                  <Button type="primary" onClick={pool.toggleBatchMode}>
+                    {t("skills.exitBatch")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className={styles.headerActionsLeft}>
+                    <Tooltip title={t("skillPool.refreshHint")}>
                       <Button
                         type="default"
-                        icon={<SyncOutlined />}
-                        onClick={() => void pool.openImportBuiltin()}
+                        icon={<ReloadOutlined spin={pool.loading} />}
+                        onClick={pool.handleRefresh}
+                        disabled={pool.loading}
+                      />
+                    </Tooltip>
+                    <Tooltip title={t("skillPool.broadcastHint")}>
+                      <Button
+                        type="default"
+                        className={styles.primaryTransferButton}
+                        icon={<SendOutlined />}
+                        onClick={() => pool.openBroadcast()}
                       >
-                        {t("skillPool.importBuiltin")}
+                        {t("skillPool.broadcast")}
                       </Button>
-                    </Badge>
-                  </Tooltip>
-                </div>
-                <div className={styles.headerActionsRight}>
-                  <Tooltip title={t("skillPool.uploadZipHint")}>
-                    <Button
-                      type="default"
-                      icon={<UploadOutlined />}
-                      onClick={() => pool.zipInputRef.current?.click()}
+                    </Tooltip>
+                    <Tooltip
+                      title={
+                        pool.hasUnseenBuiltinNotice
+                          ? builtinNoticeLines.length > 0
+                            ? builtinNoticeLines.map((line) => (
+                                <div key={line}>{line}</div>
+                              ))
+                            : t("skillPool.importBuiltinAlertHint", {
+                                count: pool.builtinNoticeTotal,
+                              })
+                          : t("skillPool.importBuiltinHint")
+                      }
                     >
-                      {t("skills.uploadZip")}
+                      <Badge
+                        dot={pool.hasUnseenBuiltinNotice}
+                        color="rgba(255, 157, 77, 1)"
+                        offset={[-4, 4]}
+                      >
+                        <Button
+                          type="default"
+                          icon={<SyncOutlined />}
+                          onClick={() => void pool.openImportBuiltin()}
+                        >
+                          {t("skillPool.importBuiltin")}
+                        </Button>
+                      </Badge>
+                    </Tooltip>
+                  </div>
+                  <div className={styles.headerActionsRight}>
+                    <Tooltip title={t("skillPool.uploadZipHint")}>
+                      <Button
+                        type="default"
+                        icon={<UploadOutlined />}
+                        onClick={() => pool.zipInputRef.current?.click()}
+                      >
+                        {t("skills.uploadZip")}
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title={t("skillPool.importHubHint")}>
+                      <Button
+                        type="default"
+                        icon={<ImportOutlined />}
+                        onClick={() => pool.setImportModalOpen(true)}
+                      >
+                        {t("skills.importHub")}
+                      </Button>
+                    </Tooltip>
+                    <Button type="primary" onClick={pool.toggleBatchMode}>
+                      {t("skills.batchOperation")}
                     </Button>
-                  </Tooltip>
-                  <Tooltip title={t("skillPool.importHubHint")}>
-                    <Button
-                      type="default"
-                      icon={<ImportOutlined />}
-                      onClick={() => pool.setImportModalOpen(true)}
-                    >
-                      {t("skills.importHub")}
-                    </Button>
-                  </Tooltip>
-                  <Button type="primary" onClick={pool.toggleBatchMode}>
-                    {t("skills.batchOperation")}
-                  </Button>
-                  <Tooltip title={t("skills.createSkillHint")}>
-                    <Button
-                      type="primary"
-                      className={styles.primaryActionButton}
-                      icon={<PlusOutlined />}
-                      onClick={pool.openCreate}
-                    >
-                      {t("skills.createSkill")}
-                    </Button>
-                  </Tooltip>
-                </div>
-              </>
-            )}
-          </div>
-        }
-      />
+                    <Tooltip title={t("skills.createSkillHint")}>
+                      <Button
+                        type="primary"
+                        className={styles.primaryActionButton}
+                        icon={<PlusOutlined />}
+                        onClick={pool.openCreate}
+                      >
+                        {t("skills.createSkill")}
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </>
+              )}
+            </div>
+          }
+        />
 
-      {/* ---- Scrollable Content ---- */}
-      <div className={styles.content}>
+      <div className="copaw-bench-main-section copaw-bench-main-section--scroll">
+        {/* ---- Scrollable Content ---- */}
+        <div className={styles.content}>
         {/* Toolbar */}
         {!pool.loading && pool.skills.length > 0 && (
           <div className={styles.toolbar}>
@@ -245,10 +254,11 @@ function SkillPoolPage() {
             </span>
           </div>
         ) : pool.viewMode === "card" ? (
-          <div className={styles.skillsGrid}>
-            {visibleSkills.map((skill: PoolSkillSpec) => (
+          <div className="cbc-agent-grid">
+            {visibleSkills.map((skill: PoolSkillSpec, index: number) => (
               <PoolSkillCard
                 key={skill.name}
+                cardIndex={index}
                 skill={skill}
                 isSelected={pool.selectedPoolSkills.has(skill.name)}
                 batchModeEnabled={pool.batchModeEnabled}
@@ -277,6 +287,7 @@ function SkillPoolPage() {
             {hasMore && <div ref={sentinelRef} style={{ height: 1 }} />}
           </div>
         )}
+      </div>
       </div>
 
       <ImportHubModal
@@ -326,6 +337,7 @@ function SkillPoolPage() {
 
       {pool.conflictRenameModal}
     </div>
+    </CopawWorkbenchShell>
   );
 }
 

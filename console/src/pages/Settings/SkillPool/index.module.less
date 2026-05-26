@@ -2,6 +2,7 @@
 
 /* ─── Page Layout ─────────────────────────────────────────────────────────── */
 .skillsPage {
+  min-height: calc(100vh - 128px);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -186,7 +187,7 @@
   }
 
   &:focus {
-    border-color: #ff7f16;
+    border-color: #3b82f6;
   }
 }
 
@@ -355,6 +356,11 @@
   min-width: 0;
 }
 
+.listItemLeft .fileIcon {
+  background: transparent;
+  border-radius: 8px;
+}
+
 .listItemInfo {
   flex: 1;
   min-width: 0;
@@ -431,14 +437,25 @@
   gap: 12px;
   flex-shrink: 0;
   margin-left: 24px;
-}
 
-/* ─── Skills Grid ─────────────────────────────────────────────────────────── */
-.skillsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 16px;
-  padding: 16px;
+  :global(.qwenpaw-btn-primary),
+  :global(.ant-btn-primary) {
+    color: #fff !important;
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      color: #fff !important;
+    }
+
+    &:disabled {
+      color: rgba(255, 255, 255, 0.65) !important;
+    }
+
+    :global(.anticon),
+    svg {
+      color: inherit !important;
+    }
+  }
 }
 
 /* ─── Status with Select (batch selection) ───────────────────────────────── */
@@ -453,10 +470,6 @@
   background: rgba(255, 127, 22, 0.02);
 }
 
-.selectedCard {
-  box-shadow: 0 0 0 1px rgba(255, 127, 22, 0.2) !important;
-}
-
 .batchActions {
   display: flex;
   align-items: center;
@@ -469,38 +482,7 @@
   margin-right: 4px;
 }
 
-/* ─── Skill Card ──────────────────────────────────────────────────────────── */
-.skillCard {
-  min-height: 240px;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border-radius: var(--border-radius, 12px);
-  background: var(--color-bg-base, #ffffff);
-  border: 1px solid var(--color-border-secondary, #eae8e7);
-  box-sizing: border-box;
-  transition: all 0.2s ease-in-out;
-  position: relative;
-  overflow: hidden;
-
-  :global {
-    .ant-card-body {
-      padding: 0 !important;
-    }
-
-    .qwenpaw-spark-card-wrapper {
-      padding: 16px !important;
-    }
-  }
-
-  &:hover {
-    border-color: var(--color-border, #d9d9d9);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  }
-}
-
-/* Top row: large icon (left) + status badge + checkbox (right) */
+/* ─── Skill pool grid card：壳层用全局 cbc-card，以下为内层排版（对齐工作区技能） ─── */
 .cardTopRow {
   display: flex;
   justify-content: space-between;
@@ -517,7 +499,87 @@
   flex-shrink: 0;
 }
 
-/* Status badge: dot + text */
+/* 与工作区 SkillCard：无底色图标容器 */
+.skillIconCube {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+
+  .fileIcon {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border-radius: 0;
+    font-size: 28px;
+  }
+
+  .fileIcon [data-skill-emoji] {
+    background: transparent !important;
+    border-radius: 8px;
+    width: auto;
+    height: auto;
+    min-width: unset;
+    min-height: unset;
+    font-size: 26px;
+  }
+}
+
+/* ─── Agent Team–style Hero layout ───────────────────────────────────────── */
+.cardSelectRow {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 8;
+}
+
+.skillCardHero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 36px;
+}
+
+.skillCardTitles {
+  min-width: 0;
+  flex: 1;
+}
+
+.skillCardName {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 1.3 !important;
+  margin: 0 0 5px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skillCardLines {
+  margin-top: 10px;
+}
+
+.skillCardLine {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+/* 池中同步状态 — 与工作台胶囊搭配 */
+.poolSyncDotOutdated {
+  background: #f59e0b !important;
+  animation: none !important;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.28) !important;
+}
+
+.poolSyncTextOutdated {
+  color: #c2410c !important;
+  font-weight: 600;
+}
+
+/* Status badge: dot + text (列表等仍可使用) */
 .statusBadge {
   display: inline-flex;
   align-items: center;
@@ -836,10 +898,6 @@
   flex: 1;
   height: 34px;
   font-size: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
-  color: rgba(20, 20, 19, 0.88);
-  cursor: pointer;
   border-radius: 8px;
 }
 
@@ -856,8 +914,42 @@
 
 /* ─── Dark Mode ───────────────────────────────────────────────────────────── */
 :global(.dark-mode) {
+  /* standalone list-view icon tile: subtle frosted surface */
   .fileIcon {
-    background: rgba(26, 23, 22, 0.88);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* inside cbc-icon3d cube the container provides the visual separation */
+  .skillIconCube .fileIcon,
+  .skillIconCube [data-skill-emoji] {
+    background: transparent !important;
+  }
+
+  /* list-view: icon sits inline, no tile needed */
+  .listItemLeft .fileIcon {
+    background: transparent !important;
+  }
+
+  /* Agent Team–style hero layout — dark overrides */
+  .skillCardName {
+    color: var(--copaw-dm-text-primary, rgba(255, 255, 255, 0.92));
+  }
+
+  .skillCardLine {
+    color: var(--copaw-dm-text-secondary, rgba(203, 213, 225, 0.75));
+  }
+
+  .skillCardLine span {
+    color: var(--copaw-dm-text-primary, rgba(255, 255, 255, 0.88));
+  }
+
+  .poolSyncDotOutdated {
+    background: #fbbf24 !important;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.38) !important;
+  }
+
+  .poolSyncTextOutdated {
+    color: #fcd34d !important;
   }
 
   .pageHeader {
@@ -890,8 +982,8 @@
 
   /* Search input - dark mode */
   .searchInput {
-    background: #2a2a2a;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--copaw-dm-input, #1f2a42);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
     color: rgba(255, 255, 255, 0.88);
 
     &::placeholder {
@@ -899,7 +991,7 @@
     }
 
     &:focus {
-      border-color: #ff7f16;
+      border-color: #3b82f6;
     }
   }
 
@@ -907,8 +999,8 @@
   .tagSelect {
     :global {
       .ant-select-selector {
-        background: #2a2a2a;
-        border-color: rgba(255, 255, 255, 0.15);
+        background: var(--copaw-dm-input, #1f2a42);
+        border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
       }
 
       .ant-select-selection-item {
@@ -946,23 +1038,10 @@
     color: #4da3ff;
   }
 
-  .selectedCard {
-    border-color: #ff7f16 !important;
-    box-shadow: 0 0 0 1px rgba(255, 127, 22, 0.3) !important;
-  }
+  /* 网格卡片由全局 cbc-card / cbc-card--selected 负责深色样式 */
 
   .batchCount {
     color: rgba(255, 255, 255, 0.65);
-  }
-
-  .skillCard {
-    background: #1f1f1f;
-    border-color: rgba(255, 255, 255, 0.15);
-
-    &:hover {
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    }
   }
 
   .skillTitle {
@@ -1059,20 +1138,22 @@
   }
 
   .cardFooter {
-    background: #1f1f1f;
+    background: var(--copaw-dm-surface, #111827);
   }
 
-  /* Action button */
+  /* Action buttons: rely on Button type (primary / danger) for colors */
   .actionButton {
-    background-color: #3a3a3a !important;
-    color: rgba(255, 255, 255, 0.88) !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
+    flex: 1;
+    height: 34px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 8px;
   }
 
   .deleteButton {
-    background-color: #3a3a3a !important;
-    color: rgba(255, 255, 255, 0.55) !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
+    background-color: var(--copaw-dm-surface, #111827) !important;
+    color: var(--copaw-dm-text-secondary, #94a3b8) !important;
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06)) !important;
   }
 
   .viewToggleBtn {
@@ -1090,11 +1171,11 @@
   }
 
   .skillListItem {
-    background: #1f1f1f;
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--copaw-dm-surface-raised, #1a2235);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
 
     &:hover {
-      background: #2a2a2a;
+      background: var(--copaw-dm-input, #1f2a42);
     }
   }
 

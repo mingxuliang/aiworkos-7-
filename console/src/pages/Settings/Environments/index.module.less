@@ -203,7 +203,7 @@
   transition: all 0.2s ease-in-out;
 
   &:focus-within {
-    border-color: #ff7f16;
+    border-color: #3b82f6;
     box-shadow: 0 0 0 2px rgba(97, 92, 237, 0.2);
     transform: translateY(-1px);
   }
@@ -250,7 +250,7 @@
   transition: all 0.2s ease-in-out;
 
   .inputGroup:focus-within & {
-    color: #ff7f16;
+    color: #3b82f6;
     background: #f0f0ff;
   }
 }
@@ -304,7 +304,7 @@
   border-radius: 4px;
 
   &:hover {
-    color: #ff7f16;
+    color: #3b82f6;
     background: #f0f0ff;
   }
 }
@@ -333,7 +333,7 @@
   transition: all 0.2s ease-in-out;
 
   &:hover {
-    color: #ff7f16;
+    color: #3b82f6;
     background: #f0f0ff;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(97, 92, 237, 0.15);
@@ -388,8 +388,8 @@
   transition: all 0.2s ease-in-out;
 
   &:hover {
-    color: #ff7f16;
-    border-color: #ff7f16;
+    color: #3b82f6;
+    border-color: #3b82f6;
     background: #f0f0ff;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(97, 92, 237, 0.15);
@@ -445,13 +445,13 @@
 
   /* Main card */
   .tableCard {
-    background: #1f1f1f;
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--copaw-dm-surface-raised, #1a2235);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
     &:hover {
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-      border-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.12);
     }
   }
 
@@ -489,11 +489,11 @@
 
   /* Input group (Key / Value 外框) */
   .inputGroup {
-    border-color: rgba(255, 255, 255, 0.12);
-    background: #2a2a2a;
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+    background: var(--copaw-dm-input, #1f2a42);
 
     &:focus-within {
-      border-color: #ff7f16;
+      border-color: #3b82f6;
       box-shadow: 0 0 0 2px rgba(97, 92, 237, 0.2);
     }
   }
@@ -505,7 +505,7 @@
     background: rgba(255, 255, 255, 0.04);
 
     .inputGroup:focus-within & {
-      color: #ff7f16;
+      color: #3b82f6;
       background: rgba(97, 92, 237, 0.1);
     }
   }
@@ -534,7 +534,7 @@
     color: rgba(255, 255, 255, 0.3);
 
     &:hover {
-      color: #ff7f16;
+      color: #3b82f6;
       background: rgba(97, 92, 237, 0.12);
     }
   }
@@ -544,7 +544,7 @@
     color: rgba(255, 255, 255, 0.2);
 
     &:hover {
-      color: #ff7f16;
+      color: #3b82f6;
       background: rgba(97, 92, 237, 0.12);
     }
   }
@@ -571,8 +571,8 @@
     color: rgba(255, 255, 255, 0.35);
 
     &:hover {
-      color: #ff7f16;
-      border-color: #ff7f16;
+      color: #3b82f6;
+      border-color: #3b82f6;
       background: rgba(97, 92, 237, 0.1);
     }
   }

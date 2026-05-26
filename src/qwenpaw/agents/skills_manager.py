@@ -61,7 +61,7 @@ ALL_SKILL_ROUTING_CHANNELS = [
 
 _RegistryResult = TypeVar("_RegistryResult")
 _MAX_ZIP_BYTES = 200 * 1024 * 1024
-_REQUIREMENTS_METADATA_NAMESPACES = ("openclaw", "qwenpaw", "clawdbot")
+_REQUIREMENTS_METADATA_NAMESPACES = ("openclaw", "aiwork", "clawdbot")
 _BUILTIN_SKILL_LANGUAGES = ("en", "zh")
 _BUILTIN_SKILL_DIR_RE = re.compile(
     r"^(?P<name>.+)-(?P<language>en|zh)$",
@@ -2034,9 +2034,9 @@ def _extract_emoji_from_metadata(metadata: Any) -> str:
     """Extract emoji from metadata.qwenpaw.emoji."""
     if not isinstance(metadata, dict):
         return ""
-    qwenpaw = metadata.get("qwenpaw")
-    if isinstance(qwenpaw, dict):
-        return str(qwenpaw.get("emoji", "") or "")
+    qwenpaw = metadata.get("aiwork")
+    if isinstance(aiwork, dict):
+        return str(aiwork.get("emoji", "") or "")
     return ""
 
 
@@ -2161,7 +2161,7 @@ def _extract_zip_skills(data: bytes) -> tuple[Path, list[tuple[Path, str]]]:
         raise SkillsError(
             message="Uploaded file is not a valid zip archive",
         )
-    tmp_dir = Path(tempfile.mkdtemp(prefix="qwenpaw_skill_upload_"))
+    tmp_dir = Path(tempfile.mkdtemp(prefix="aiwork_skill_upload_"))
     _extract_and_validate_zip(data, tmp_dir)
     real_entries = [
         path for path in tmp_dir.iterdir() if not _is_hidden(path.name)
@@ -2197,7 +2197,7 @@ def _scan_skill_dir_or_raise(skill_dir: Path, skill_name: str) -> None:
 def _staged_skill_dir(skill_name: str) -> Iterator[Path]:
     """Create a temporary skill directory used for staged writes."""
     temp_root = Path(
-        tempfile.mkdtemp(prefix=f"qwenpaw_skill_stage_{skill_name}_"),
+        tempfile.mkdtemp(prefix=f"aiwork_skill_stage_{skill_name}_"),
     )
     stage_dir = temp_root / skill_name
     try:

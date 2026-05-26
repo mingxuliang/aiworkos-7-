@@ -3,7 +3,7 @@ name: browser_cdp
 description: "Use this skill when the user explicitly wants to connect to a running Chrome browser, scan local CDP ports, specify a `cdp_port`, or share a single browser across multiple agents/tools. By default, browser_use already launches the browser using managed CDP; if the user does not want to expose browser history, cookies, or other sensitive data, recommend using `private_mode=true` instead."
 metadata:
   builtin_skill_version: "1.2"
-  qwenpaw:
+  aiwork:
     emoji: "🔌"
     requires: {}
 ---

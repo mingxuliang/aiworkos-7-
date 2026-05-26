@@ -167,7 +167,7 @@ function AgentStatsPage() {
             label: t("agentStats.assistantMessages"),
           },
         ],
-        ["#3b82f6", "#f97316"],
+        ["#3b82f6", "#10b981"],
         isDarkMode,
       ),
     [chartData, t, isDarkMode],
@@ -181,7 +181,7 @@ function AgentStatsPage() {
           { key: "chats", label: t("agentStats.newSessions") },
           { key: "activeSessions", label: t("agentStats.activeSessions") },
         ],
-        ["#ff7f16", "#3b82f6"],
+        ["#3b82f6", "#3b82f6"],
         isDarkMode,
       ),
     [chartData, t, isDarkMode],
@@ -225,7 +225,7 @@ function AgentStatsPage() {
       autoFit: true,
       angleField: "value" as const,
       colorField: "channel" as const,
-      color: ["#1890ff", "#52c41a", "#faad14", "#f5222d"],
+      color: ["#1890ff", "#52c41a", "#6366f1", "#f5222d"],
       padding: 40,
       label: {
         text: (d: { channel: string; value: number }) =>

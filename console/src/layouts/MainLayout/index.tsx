@@ -38,8 +38,12 @@ const VoiceTranscriptionPage = lazyImportWithRetry(
 const AgentsPage = lazyImportWithRetry("../../pages/Settings/Agents");
 const DebugPage = lazyImportWithRetry("../../pages/Settings/Debug");
 const BackupsPage = lazyImportWithRetry("../../pages/Settings/Backups");
-const UserManagementPage = lazyImportWithRetry("../../pages/UserManagement");
-const RoleManagementPage = lazyImportWithRetry("../../pages/RoleManagement");
+const WorkbenchPage = lazyImportWithRetry("../../pages/Workbench");
+const NewsPage = lazyImportWithRetry("../../pages/News");
+const OrgChartPage = lazyImportWithRetry("../../pages/OrgChart");
+const AiOkrPage = lazyImportWithRetry("../../pages/AiOkr");
+const OrgBuilderPage = lazyImportWithRetry("../../pages/OrgBuilder");
+const UsersPage = lazyImportWithRetry("../../pages/Settings/Users");
 
 const { Content } = Layout;
 
@@ -65,8 +69,12 @@ const pathToKey: Record<string, string> = {
   "/voice-transcription": "voice-transcription",
   "/debug": "debug",
   "/backups": "backups",
-  "/user-management": "user-management",
-  "/role-management": "role-management",
+  "/workbench": "workbench",
+  "/news": "news",
+  "/org-chart": "org-chart",
+  "/ai-okr": "ai-okr",
+  "/org-builder": "org-builder",
+  "/users": "users",
 };
 
 export default function MainLayout() {
@@ -74,7 +82,6 @@ export default function MainLayout() {
   const location = useLocation();
   const currentPath = location.pathname;
   const { pluginRoutes } = usePlugins();
-
   // Resolve selected key: check static routes first, then plugin routes
   let selectedKey = pathToKey[currentPath] || "";
   if (!selectedKey) {
@@ -130,10 +137,12 @@ export default function MainLayout() {
                   />
                   <Route path="/debug" element={<DebugPage />} />
                   <Route path="/backups" element={<BackupsPage />} />
-                  <Route path="/user-management" element={<UserManagementPage />} />
-                  <Route path="/role-management" element={<RoleManagementPage />} />
-
-                  {/* Plugin routes — dynamically injected at runtime */}
+                  <Route path="/workbench" element={<WorkbenchPage />} />
+                  <Route path="/news" element={<NewsPage />} />
+                  <Route path="/org-chart" element={<OrgChartPage />} />
+                  <Route path="/ai-okr" element={<AiOkrPage />} />
+                  <Route path="/org-builder" element={<OrgBuilderPage />} />
+                  <Route path="/users" element={<UsersPage />} />
                   {pluginRoutes.map((route) => (
                     <Route
                       key={route.path}

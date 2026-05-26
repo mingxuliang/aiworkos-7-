@@ -3,7 +3,7 @@
 
 Failures are reported as non-fatal notes (firewalls and offline use are
 common). Built-in probes live here; custom channels can override
-:class:`~qwenpaw.app.channels.base.BaseChannel`.doctor_connectivity_notes.
+:class:`~aiwork.app.channels.base.BaseChannel`.doctor_connectivity_notes.
 """
 from __future__ import annotations
 

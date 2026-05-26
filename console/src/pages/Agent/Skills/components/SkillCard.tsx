@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Card, Button, Checkbox, Tooltip } from "@agentscope-ai/design";
+import React from "react";
+import { Button, Checkbox, Tooltip } from "@agentscope-ai/design";
 import {
   CalendarFilled,
   FileTextFilled,
@@ -16,10 +16,13 @@ import {
 import dayjs from "dayjs";
 import type { SkillSpec } from "../../../../api/types";
 import { useTranslation } from "react-i18next";
+import { cbcCardStripeClass } from "@/utils/cbcCardTheme";
 import styles from "../index.module.less";
 
 interface SkillCardProps {
   skill: SkillSpec;
+  /** Rotating accent stripe (Agent Team card grid). */
+  cardIndex?: number;
   selected?: boolean;
   onSelect?: (e: React.MouseEvent) => void;
   onClick: () => void;
@@ -78,7 +81,7 @@ export const getFileIcon = (filePath: string) => {
     case "7z":
     case "tar":
     case "gz":
-      return <FileZipFilled style={{ color: "#fa8c16" }} />;
+      return <FileZipFilled style={{ color: "#3b82f6" }} />;
     case "pdf":
       return <FilePdfFilled style={{ color: "#F04B57" }} />;
     case "doc":
@@ -117,13 +120,18 @@ export const getFileIcon = (filePath: string) => {
 
 export const getSkillVisual = (name: string, emoji?: string) => {
   if (emoji) {
-    return <span className={styles.skillEmoji}>{emoji}</span>;
+    return (
+      <span data-skill-emoji className={styles.skillEmoji}>
+        {emoji}
+      </span>
+    );
   }
   return getFileIcon(name);
 };
 
 export const SkillCard = React.memo(function SkillCard({
   skill,
+  cardIndex = 0,
   selected,
   onSelect,
   onClick,
@@ -134,7 +142,6 @@ export const SkillCard = React.memo(function SkillCard({
 }: SkillCardProps) {
   const { t } = useTranslation();
   const batchMode = selected !== undefined;
-  const [isHover, setIsHover] = useState(false);
 
   const handleToggleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -164,107 +171,106 @@ export const SkillCard = React.memo(function SkillCard({
     skill.source?.startsWith("builtin:") ||
     skill.source === "system";
 
+  const themeCls = cbcCardStripeClass(cardIndex);
+  const selectedCls = selected ? "cbc-card--selected" : "";
+
   return (
-    <Card
-      hoverable
+    <div
+      role="button"
+      tabIndex={0}
+      className={`cbc-card ${themeCls} ${selectedCls}`}
       onClick={handleCardClick}
-      onMouseEnter={() => {
-        setIsHover(true);
-        onMouseEnter?.();
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (batchMode && onSelect) {
+            onSelect(e as unknown as React.MouseEvent<Element, MouseEvent>);
+          } else {
+            onClick();
+          }
+        }
       }}
-      onMouseLeave={() => {
-        setIsHover(false);
-        onMouseLeave?.();
-      }}
-      className={`${styles.skillCard} ${selected ? styles.selectedCard : ""}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       style={{ cursor: "pointer" }}
     >
-      {/* Top row: Icon (left) + Status badge + Checkbox (right) */}
-      <div className={styles.cardTopRow}>
-        <span className={styles.fileIcon}>
-          {getSkillVisual(skill.name, skill.emoji)}
-        </span>
-        <div className={styles.cardTopRight}>
-          <span
-            className={`${styles.statusBadge} ${
-              skill.enabled ? styles.status_enabled : styles.status_disabled
-            }`}
-          >
-            <span className={styles.statusDot} />
-            {skill.enabled ? t("common.enabled") : t("common.disabled")}
-          </span>
-          {batchMode && (
-            <Checkbox checked={selected} onClick={handleSelectClick} />
-          )}
-        </div>
-      </div>
-
-      {/* Title + Built-in/Custom tag */}
-      <div className={styles.titleRow}>
-        <Tooltip title={skill.name}>
-          <h3 className={styles.skillTitle}>
-            {skill.name}{" "}
-            {isBuiltin ? (
-              <span className={styles.builtinTag}>{t("skills.builtin")}</span>
-            ) : (
-              <span className={styles.customTag}>{t("skills.custom")}</span>
-            )}
-          </h3>
-        </Tooltip>
-      </div>
-
-      {/* Channels row */}
-      <div className={styles.metaInfoRow}>
-        <span className={styles.metaInfoLabel}>{t("skills.channels")}</span>
-        <span className={styles.metaInfoValue}>
-          {(skill.channels || ["all"])
-            .map((ch) => (ch === "all" ? t("skills.allChannels") : ch))
-            .join(", ")}
-        </span>
-      </div>
-
-      {/* Updated row */}
-      {skill.last_updated && (
-        <div className={styles.metaInfoRow}>
-          <span className={styles.metaInfoLabel}>
-            {t("skills.lastUpdated")}
-          </span>
-          <span className={styles.metaInfoValue}>
-            {dayjs(skill.last_updated).fromNow()}
-          </span>
-        </div>
-      )}
-
-      {/* Tags row */}
-      <div className={styles.metaInfoRow}>
-        <span className={styles.metaInfoLabel}>{t("skills.tags")}</span>
-        {!!skill.tags?.length ? (
-          <div className={styles.tagChips}>
-            {skill.tags.map((tag) => (
-              <span key={tag} className={styles.tagChip}>
-                {tag}
-              </span>
-            ))}
+      <div className="cbc-glow-layer" aria-hidden />
+      {skill.enabled ? (
+        <>
+          <div className="cbc-enabled-ring" aria-hidden />
+          <div className="cbc-spectrum" aria-hidden>
+            <span />
           </div>
-        ) : (
-          <span style={{ color: "rgba(20,20,19,0.35)" }}>-</span>
+        </>
+      ) : null}
+      <div className="cbc-card-inner">
+        {/* Batch-mode checkbox — top-right corner */}
+        {batchMode && (
+          <div className={styles.cardSelectRow}>
+            <Checkbox checked={selected} onClick={handleSelectClick} />
+          </div>
         )}
-      </div>
 
-      {/* Description */}
-      <div className={styles.descriptionSection}>
-        <span className={styles.descriptionSectionLabel}>
-          {t("skills.skillDescription")}
-        </span>
-        <p className={styles.descriptionText}>{skill.description || "-"}</p>
-      </div>
+        {/* ── Hero: icon cube + name/type (Agent Team layout) ── */}
+        <div className={styles.skillCardHero}>
+          <div className={`cbc-icon3d cbc-icon3d--plain ${styles.skillIconCube}`}>
+            <span className={styles.fileIcon}>{getSkillVisual(skill.name, skill.emoji)}</span>
+          </div>
+          <div className={styles.skillCardTitles}>
+            <Tooltip title={skill.name}>
+              <div className={`card-title ${styles.skillCardName}`}>{skill.name}</div>
+            </Tooltip>
+            <span className="cbc-meta" style={{ fontSize: 12 }}>
+              {isBuiltin ? (
+                <span className="cbc-tag">{t("skills.builtin")}</span>
+              ) : (
+                <span className="cbc-tag">{t("skills.custom")}</span>
+              )}
+            </span>
+          </div>
+        </div>
 
-      {/* Footer - only show on hover or batch mode */}
-      {(isHover || batchMode) && (
-        <div className={styles.cardFooter}>
+        {/* ── Status pill ── */}
+        <div style={{ marginTop: 10 }} className="cbc-meta">
+          <div className="cbc-status-pill">
+            <span className={`cbc-status-dot${skill.enabled ? "" : " cbc-status-dot--off"}`} />
+            <span className={skill.enabled ? "cbc-status-text-on" : "cbc-status-text-off"}>
+              {skill.enabled ? t("common.enabled") : t("common.disabled")}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Meta + description lines ── */}
+        <div className={`cbc-meta ${styles.skillCardLines}`}>
+          <div className={styles.skillCardLine}>
+            {t("skills.channels")}:{" "}
+            <span>
+              {(skill.channels || ["all"])
+                .map((ch) => (ch === "all" ? t("skills.allChannels") : ch))
+                .join(", ")}
+            </span>
+          </div>
+          {skill.last_updated && (
+            <div className={styles.skillCardLine}>
+              {t("skills.lastUpdated")}:{" "}
+              <span>{dayjs(skill.last_updated).fromNow()}</span>
+            </div>
+          )}
+          {!!skill.tags?.length && (
+            <div className={styles.tagChips} style={{ marginTop: 4 }}>
+              {skill.tags.map((tag) => (
+                <span key={tag} className={styles.tagChip}>{tag}</span>
+              ))}
+            </div>
+          )}
+          <div className={styles.skillCardLine}>{skill.description || "—"}</div>
+        </div>
+
+        {/* ── Actions — always visible (Agent Team style) ── */}
+        <div className="cbc-agent-card-actions">
           <Button
-            type="default"
-            className={styles.actionButton}
+            type="primary"
+            size="small"
             disabled={batchMode}
             onClick={handleToggleClick}
             icon={skill.enabled ? <EyeInvisibleOutlined /> : <EyeOutlined />}
@@ -274,7 +280,7 @@ export const SkillCard = React.memo(function SkillCard({
           {onDelete && (
             <Button
               danger
-              className={styles.deleteButton}
+              size="small"
               disabled={batchMode}
               onClick={handleDeleteClick}
             >
@@ -282,7 +288,7 @@ export const SkillCard = React.memo(function SkillCard({
             </Button>
           )}
         </div>
-      )}
-    </Card>
+      </div>
+    </div>
   );
 });

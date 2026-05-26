@@ -202,7 +202,7 @@ export function ReactAgentCard({
         </Form.Item>
       </div>
       <Alert
-        type="warning"
+        type="info"
         showIcon
         message={t("agentConfig.backendRestartWarning")}
         style={{ marginBottom: 16 }}

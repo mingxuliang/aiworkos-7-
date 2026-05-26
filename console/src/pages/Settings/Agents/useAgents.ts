@@ -39,7 +39,11 @@ export function useAgents(): UseAgentsReturn {
       const errorMsg =
         err instanceof Error ? err : new Error(t("agent.loadFailed"));
       setError(errorMsg);
-      message.error(t("agent.loadFailed"));
+      message.error(
+        errorMsg.message && errorMsg.message !== t("agent.loadFailed")
+          ? `${t("agent.loadFailed")}: ${errorMsg.message}`
+          : t("agent.loadFailed"),
+      );
     } finally {
       setLoading(false);
     }

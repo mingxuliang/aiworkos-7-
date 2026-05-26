@@ -13,7 +13,7 @@ export type BackendLevelFilter = "all" | "debug" | "info" | "warning" | "error";
 
 export function backendLevelColor(level: BackendLevelFilter): string {
   if (level === "error") return "red";
-  if (level === "warning") return "gold";
+  if (level === "warning") return "cyan";
   if (level === "info") return "blue";
   if (level === "debug") return "geekblue";
   return "default";

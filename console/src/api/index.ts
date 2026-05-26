@@ -2,7 +2,7 @@ export * from "./types";
 
 export { request } from "./request";
 
-export { getApiUrl, getApiToken, getAuthMode, setAuthMode, clearAuthMode } from "./config";
+export { getApiUrl, getApiToken } from "./config";
 
 import { rootApi } from "./modules/root";
 import { acpApi } from "./modules/acp";
@@ -25,7 +25,9 @@ import { securityApi } from "./modules/security";
 import { userTimezoneApi } from "./modules/userTimezone";
 import { languageApi } from "./modules/language";
 import { backupApi } from "./modules/backup";
-import { jwtAuthApi } from "./modules/auth";
+import { departmentApi } from "./modules/department";
+import { usersApi } from "./modules/users";
+import { jwtRolesApi } from "./modules/jwtRoles";
 
 export const api = {
   // Root
@@ -89,11 +91,12 @@ export const api = {
   // Backups
   ...backupApi,
 
-  // JWT Auth
-  ...jwtAuthApi,
+  // Departments (组织架构)
+  ...departmentApi,
 };
 
 export default api;
 
 // Export individual APIs for direct access
 export { agentsApi };
+export { usersApi, jwtRolesApi };

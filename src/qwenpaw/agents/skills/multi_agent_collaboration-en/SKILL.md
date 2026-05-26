@@ -3,7 +3,7 @@ name: multi_agent_collaboration
 description: Use this skill when another agent's expertise or context is needed, or when the user explicitly asks to involve another agent. First list agents, then use qwenpaw agents chat for two-way communication with replies.
 metadata:
   builtin_skill_version: "1.4"
-  qwenpaw:
+  aiwork:
     emoji: "🤝"
 ---
 
@@ -41,13 +41,13 @@ If the **user explicitly asks a specific agent to participate/assist/answer**, y
 ### 1) First Query Available Agents
 
 ```bash
-qwenpaw agents list
+aiwork agents list
 ```
 
 ### 2) Start a New Conversation (Real-time Mode)
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --text "[Agent <your_agent> requesting] ..."
@@ -58,7 +58,7 @@ qwenpaw agents chat \
 **Complex tasks** include: data analysis, report generation, batch processing, external API calls, etc.
 
 ```bash
-qwenpaw agents chat --background \
+aiwork agents chat --background \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --text "[Agent <your_agent> requesting] ..."
@@ -73,7 +73,7 @@ qwenpaw agents chat --background \
 ### 4) Query Background Task Status
 
 ```bash
-qwenpaw agents chat --background --task-id <task_id>
+aiwork agents chat --background --task-id <task_id>
 ```
 
 **Important**: Do not query frequently! After submitting a task:
@@ -87,7 +87,7 @@ qwenpaw agents chat --background --task-id <task_id>
 ### 5) Continue an Existing Conversation
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --session-id "<session_id>" \
@@ -181,9 +181,9 @@ For subsequent follow-ups, you must copy this session_id and pass it via `--sess
 ### User Explicitly Requests Invoking Another Agent
 
 ```bash
-qwenpaw agents list
+aiwork agents list
 
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent scheduler_bot \
   --to-agent finance_bot \
   --text "[Agent scheduler_bot requesting] User explicitly asked to consult finance_bot. Please answer what pending financial tasks are there."
@@ -192,7 +192,7 @@ qwenpaw agents chat \
 ### New Conversation
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent scheduler_bot \
   --to-agent finance_bot \
   --text "[Agent scheduler_bot requesting] What pending financial tasks are there today?"
@@ -201,7 +201,7 @@ qwenpaw agents chat \
 ### Continue Conversation
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent scheduler_bot \
   --to-agent finance_bot \
   --session-id "scheduler_bot:to:finance_bot:1710912345:a1b2c3d4" \
@@ -217,7 +217,7 @@ qwenpaw agents chat \
 Do not guess agent IDs. First run:
 
 ```bash
-qwenpaw agents list
+aiwork agents list
 ```
 
 ### Mistake 2: Wanting to continue a conversation but not passing session-id
@@ -235,13 +235,13 @@ If you just received a message from Agent B, do not call Agent B again.
 ### View Existing Sessions
 
 ```bash
-qwenpaw chats list --agent-id <your_agent>
+aiwork chats list --agent-id <your_agent>
 ```
 
 ### Streaming Output
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --mode stream \
@@ -251,7 +251,7 @@ qwenpaw agents chat \
 ### JSON Output
 
 ```bash
-qwenpaw agents chat \
+aiwork agents chat \
   --from-agent <your_agent> \
   --to-agent <target_agent> \
   --json-output \
@@ -312,7 +312,7 @@ When the task is a **complex task**, use `--background` to submit it to the back
 #### Submitting a Complex Task
 
 ```bash
-qwenpaw agents chat --background \
+aiwork agents chat --background \
   --from-agent scheduler \
   --to-agent data_analyst \
   --text "[Agent scheduler requesting] Analyze user behavior in /data/logs/2026-03-26.log and generate a detailed report"
@@ -341,7 +341,7 @@ Check status with:
 # Method 1: Query after handling other tasks (recommended)
 # After submitting the task, continue with the user's other requests
 # Query at an appropriate time:
-qwenpaw agents chat --background \
+aiwork agents chat --background \
   --task-id 20802ea3-832d-4fb4-86f0-666ad79fcc80
 
 # Method 2: If you must wait, use a reasonable interval
@@ -434,7 +434,7 @@ Error: (Error message...)
 **Method 1: Query after handling other tasks** (recommended)
 ```bash
 # 1. Submit the task, record the task_id
-qwenpaw agents chat --background ...
+aiwork agents chat --background ...
 # Returns task_id
 
 # 2. Continue handling the user's other requests or tasks
@@ -442,7 +442,7 @@ qwenpaw agents chat --background ...
 
 # 3. Query the result at an appropriate time
 # (e.g., after finishing the current task, or when the user asks about progress)
-qwenpaw agents chat --background --task-id <id>
+aiwork agents chat --background --task-id <id>
 ```
 
 **Method 2: Timed polling** (if you must wait)
@@ -470,7 +470,7 @@ done
 Use `-h` at any time to view detailed help:
 
 ```bash
-qwenpaw agents -h
-qwenpaw agents list -h
-qwenpaw agents chat -h
+aiwork agents -h
+aiwork agents list -h
+aiwork agents chat -h
 ```

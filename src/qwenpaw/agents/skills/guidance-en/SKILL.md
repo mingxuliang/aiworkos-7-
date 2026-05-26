@@ -3,7 +3,7 @@ name: guidance
 description: "Answer user questions about QwenPaw installation and configuration: first locate and read local documentation, then distill the answer; if local information is insufficient, fall back to the official website documentation."
 metadata:
   builtin_skill_version: "1.2"
-  qwenpaw:
+  aiwork:
     emoji: "🧭"
     requires: {}
 ---
@@ -41,10 +41,10 @@ Run the following script logic to obtain the variable $QWENPAW_ROOT:
 # Get the absolute path of the binary
 COP_PATH=$(which qwenpaw 2>/dev/null || whereis qwenpaw | awk '{print $2}')
 
-# Logical deduction: if the path contains .qwenpaw/bin/qwenpaw, the root is three levels up
-# Example: /path/to/QwenPaw/.qwenpaw/bin/qwenpaw -> /path/to/QwenPaw
-if [[ "$COP_PATH" == *".qwenpaw/bin/qwenpaw" ]]; then
-    QWENPAW_ROOT=$(echo "$COP_PATH" | sed 's/\/\.qwenpaw\/bin\/qwenpaw//')
+# Logical deduction: if the path contains .aiwork/bin/aiwork, the root is three levels up
+# Example: /path/to/QwenPaw/.qwenpaw/bin/aiwork -> /path/to/QwenPaw
+if [[ "$COP_PATH" == *".aiwork/bin/aiwork" ]]; then
+    QWENPAW_ROOT=$(echo "$COP_PATH" | sed 's/\/\.aiwork\/bin\/aiwork//')
 else
     # Fallback: try to get the parent of the parent directory
     QWENPAW_ROOT=$(dirname $(dirname "$COP_PATH") 2>/dev/null || echo ".")

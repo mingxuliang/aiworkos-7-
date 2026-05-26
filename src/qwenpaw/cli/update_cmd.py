@@ -25,11 +25,11 @@ from .process_utils import (
     _base_url,
     _candidate_hosts,
     _extract_port_from_command,
-    _is_qwenpaw_service_command,
+    _is_aiwork_service_command,
     _process_table,
 )
 
-_PYPI_JSON_URL = "https://pypi.org/pypi/qwenpaw/json"
+_PYPI_JSON_URL = "https://pypi.org/pypi/aiwork/json"
 
 
 def _subprocess_text_kwargs() -> dict[str, Any]:
@@ -137,7 +137,7 @@ def _detect_source_type(
 
 def _detect_installation() -> InstallInfo:
     """Inspect the current Python environment and installation style."""
-    dist = metadata.distribution("qwenpaw")
+    dist = metadata.distribution("aiwork")
     # if installed through uv, installer will be `uv`
     installer = (dist.read_text("INSTALLER") or "pip").strip() or "pip"
 
@@ -194,7 +194,7 @@ def _process_candidate_ports() -> list[int]:
     """Infer candidate local QwenPaw service ports from running processes."""
     ports: list[int] = []
     for _pid, command in _process_table():
-        if not _is_qwenpaw_service_command(command):
+        if not _is_aiwork_service_command(command):
             continue
 
         port = _extract_port_from_command(command)
@@ -278,7 +278,7 @@ def _confirm_force_shutdown(running: RunningServiceInfo) -> bool:
     click.echo("")
     click.secho("!" * 72, fg="yellow", bold=True)
     click.secho(
-        "WARNING: RUNNING QWENPAW SERVICE DETECTED",
+        "WARNING: RUNNING AIWORK SERVICE DETECTED",
         fg="yellow",
         bold=True,
     )
@@ -312,7 +312,7 @@ def _run_shutdown_for_update(
     running: RunningServiceInfo,
 ) -> None:
     """Run `qwenpaw shutdown` in the current environment before updating."""
-    command = [info.python_executable, "-m", "qwenpaw"]
+    command = [info.python_executable, "-m", "aiwork"]
     parsed = urlparse(running.base_url or "")
     if parsed.port is not None:
         command.extend(["--port", str(parsed.port)])
@@ -350,7 +350,7 @@ def _build_upgrade_command(
     latest_version: str,
 ) -> tuple[list[str], str]:
     """Build the installer command used by the detached update worker."""
-    package_spec = f"qwenpaw=={latest_version}"
+    package_spec = f"aiwork=={latest_version}"
     installer = info.installer.lower()
     if installer.startswith("uv") and shutil.which("uv"):
         return (
@@ -517,7 +517,7 @@ def _run_update_worker_foreground(plan_path: Path) -> int:
             return proc.wait()
     except KeyboardInterrupt:
         click.echo("")
-        click.echo("[qwenpaw] Update interrupted. Stopping installer...")
+        click.echo("[aiwork] Update interrupted. Stopping installer...")
         _terminate_update_worker(proc)
         return 130
 
@@ -547,10 +547,10 @@ def run_update_worker(plan_path: str | Path) -> int:
 
     click.echo("")
     click.echo(
-        "[qwenpaw] Updating QwenPaw "
+        "[aiwork] Updating QwenPaw "
         f"{plan['current_version']} -> {plan['latest_version']}...",
     )
-    click.echo(f"[qwenpaw] Using installer: {plan['installer_label']}")
+    click.echo(f"[aiwork] Using installer: {plan['installer_label']}")
 
     try:
         with subprocess.Popen(
@@ -565,7 +565,7 @@ def run_update_worker(plan_path: str | Path) -> int:
                     click.echo(line.rstrip())
             return_code = proc.wait()
     except FileNotFoundError as exc:
-        click.echo(f"[qwenpaw] Update failed: {exc}")
+        click.echo(f"[aiwork] Update failed: {exc}")
         return_code = 1
     finally:
         try:
@@ -574,15 +574,15 @@ def run_update_worker(plan_path: str | Path) -> int:
             pass
 
     if return_code == 0:
-        click.echo("[qwenpaw] Update completed successfully.")
+        click.echo("[aiwork] Update completed successfully.")
         click.echo(
-            "[qwenpaw] Please restart any running QwenPaw service "
+            "[aiwork] Please restart any running QwenPaw service "
             "to use the new version.",
         )
     else:
-        click.echo(f"[qwenpaw] Update failed with exit code {return_code}.")
+        click.echo(f"[aiwork] Update failed with exit code {return_code}.")
         click.echo(
-            "[qwenpaw] Please fix the error above and run "
+            "[aiwork] Please fix the error above and run "
             "`qwenpaw update` again.",
         )
 
@@ -719,7 +719,7 @@ def update_cmd(ctx: click.Context, yes: bool) -> None:
         _run_update_worker_detached(plan_path)
         click.echo(
             "On Windows, the update will continue after this command exits "
-            "to avoid locking `qwenpaw.exe`.",
+            "to avoid locking `aiwork.exe`.",
         )
         click.echo("Keep this terminal open until the update completes.")
         return

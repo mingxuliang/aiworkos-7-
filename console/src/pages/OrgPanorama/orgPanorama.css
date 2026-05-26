@@ -1,0 +1,237 @@
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  /* 3D 卡片效果 */
+  .card-3d {
+    transform-style: preserve-3d;
+    perspective: 600px;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+  }
+  .card-3d:hover {
+    transform: translateY(-6px) rotateX(2deg) scale(1.02);
+    box-shadow:
+      0 4px 6px -1px rgba(59, 130, 246, 0.08),
+      0 10px 20px -4px rgba(59, 130, 246, 0.12),
+      0 25px 50px -8px rgba(30, 64, 175, 0.08);
+  }
+
+  /* 霓虹悬浮 glow — 多层叠加 */
+  .card-neon-blue {
+    transition: box-shadow 0.35s ease;
+  }
+  .card-neon-blue:hover {
+    box-shadow:
+      0 0 20px rgba(59,130,246,0.15),
+      0 0 60px rgba(37,99,235,0.08),
+      inset 0 0 20px rgba(59,130,246,0.03);
+  }
+  .card-neon-sky {
+    transition: box-shadow 0.35s ease;
+  }
+  .card-neon-sky:hover {
+    box-shadow:
+      0 0 20px rgba(14,165,233,0.12),
+      0 0 50px rgba(14,165,233,0.06),
+      inset 0 0 20px rgba(14,165,233,0.02);
+  }
+  .card-neon-slate {
+    transition: box-shadow 0.35s ease;
+  }
+  .card-neon-slate:hover {
+    box-shadow:
+      0 0 20px rgba(148,163,184,0.1),
+      0 0 40px rgba(100,116,139,0.05),
+      inset 0 0 20px rgba(148,163,184,0.02);
+  }
+
+  /* 卡片内部微光呼吸 */
+  .card-breathe {
+    position: relative;
+  }
+  .card-breathe::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at 50% 0%, rgba(59,130,246,0.04) 0%, transparent 70%);
+    opacity: 0.5;
+    transition: opacity 0.4s;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .card-breathe:hover::before {
+    opacity: 1;
+  }
+
+  /* 占比条流动光效 */
+  .bar-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-shine::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: bar-sweep 2.5s ease-in-out infinite;
+  }
+  @keyframes bar-sweep {
+    0% { left: -100%; }
+    100% { left: 200%; }
+  }
+
+  /* 数字弹跳 */
+  .number-pop {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: inline-block;
+  }
+  .number-pop:hover {
+    transform: scale(1.15);
+  }
+
+  /* 步骤小卡片 hover 抬升 */
+  .step-card-hover {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .step-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  /* 立体边框光效 */
+  .card-glow-border {
+    position: relative;
+    background: white;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .card-glow-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    padding: 1.5px;
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.4) 0%,
+      rgba(14, 165, 233, 0.15) 35%,
+      rgba(148, 163, 184, 0.05) 65%,
+      rgba(59, 130, 246, 0.2) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+  }
+  .card-glow-border:hover::before {
+    opacity: 1;
+  }
+
+  /* 顶部金属光泽条 */
+  .card-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-shine::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.25) 40%,
+      rgba(255, 255, 255, 0.1) 60%,
+      transparent 100%
+    );
+    transition: left 0.6s ease;
+    pointer-events: none;
+  }
+  .card-shine:hover::after {
+    left: 100%;
+  }
+}
+
+@keyframes node-pulse-blue {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.3); }
+  50% { box-shadow: 0 0 0 16px rgba(37, 99, 235, 0); }
+}
+@keyframes node-pulse-sky {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.25); }
+  50% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0); }
+}
+@keyframes flow-dash {
+  to { stroke-dashoffset: -24; }
+}
+@keyframes float-up {
+  0% { transform: translateY(0); opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { transform: translateY(-8px); opacity: 0.6; }
+}
+@keyframes shimmer-in {
+  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 弹窗进入动画 */
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 卡片内部箭头虚线向下流动 */
+@keyframes flow-down {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 14px; }
+}
+/* 箭头轻微弹跳 */
+@keyframes arrow-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(2.5px); }
+}
+/* 小数据粒子沿管道下落 */
+@keyframes particle-drop {
+  0% { top: -2px; opacity: 0; transform: translateX(-50%) scale(0.5); }
+  15% { opacity: 1; transform: translateX(-50%) scale(1); }
+  85% { opacity: 1; }
+  100% { top: calc(100% + 2px); opacity: 0; transform: translateX(-50%) scale(0.5); }
+}
+
+.animate-node-pulse-blue {
+  animation: node-pulse-blue 2.5s ease-in-out infinite;
+}
+.animate-node-pulse-sky {
+  animation: node-pulse-sky 3s ease-in-out infinite;
+}
+.animate-flow-dash {
+  animation: flow-dash 1s linear infinite;
+}
+.animate-float-up {
+  animation: float-up 3s ease-in-out infinite;
+}
+.animate-shimmer-in {
+  animation: shimmer-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

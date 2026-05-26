@@ -1,357 +1,252 @@
-import { Layout, Space, Badge, Spin, Tooltip, Dropdown, Avatar } from "antd";
+import { useMemo, useState } from "react";
+import { Layout, Space, Dropdown, Avatar, Modal, Form, Input, Button } from "antd";
+import type { MenuProps } from "antd";
 import LanguageSwitcher from "../components/LanguageSwitcher/index";
 import ThemeToggleButton from "../components/ThemeToggleButton";
 import { useTranslation } from "react-i18next";
-import { Button, Modal } from "@agentscope-ai/design";
-import styles from "./index.module.less";
-import api from "../api";
-import {
-  GITHUB_URL,
-  getDocsUrl,
-  getFaqUrl,
-  getReleaseNotesUrl,
-  PYPI_URL,
-  ONE_HOUR_MS,
-  UPDATE_MD,
-  isStableVersion,
-  compareVersions,
-} from "./constants";
-import { useTheme } from "../contexts/ThemeContext";
-import { useState, useEffect } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import {
-  CopyOutlined,
-  CheckOutlined,
-  TagOutlined,
-  LogoutOutlined,
-  KeyOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
-import { useAuthStore } from "../stores/authStore";
-import { clearAuthToken } from "../api/config";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
+import { getDisplayUsernameFromToken } from "../utils/authUsername";
+import { useAccountProfile } from "../hooks/useAccountProfile";
+import { useLogout } from "../hooks/useLogout";
+import styles from "./index.module.less";
 
 const { Header: AntHeader } = Layout;
 
-// ── Code block with copy button ───────────────────────────────────────────
-function UpdateCodeBlock({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-  return (
-    <div className={styles.codeBlock}>
-      <code className={styles.codeBlockInner}>{code}</code>
-      <button
-        className={`${styles.copyBtn} ${
-          copied ? styles.copyBtnCopied : styles.copyBtnDefault
-        }`}
-        onClick={handleCopy}
-        title="Copy"
-      >
-        {copied ? <CheckOutlined /> : <CopyOutlined />}
-      </button>
-    </div>
-  );
-}
-
 export default function Header() {
-  const { t, i18n } = useTranslation();
-  const { isDark } = useTheme();
+  const { t } = useTranslation();
   const navigate = useNavigate();
-  const [version, setVersion] = useState<string>("");
-  const [latestVersion, setLatestVersion] = useState<string>("");
-  const [updateModalOpen, setUpdateModalOpen] = useState(false);
-  const [updateMarkdown, setUpdateMarkdown] = useState<string>("");
-  const { user, clearUser } = useAuthStore();
+  const { isDark } = useTheme();
+  const { logout } = useLogout();
+  const { loading: accountLoading, jwtMode, handleUpdateProfile } =
+    useAccountProfile();
+
+  const displayName = useMemo(() => getDisplayUsernameFromToken(), []);
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [accountForm] = Form.useForm();
 
   const handleLogout = () => {
-    clearAuthToken();
-    clearUser();
-    navigate("/login");
+    void logout();
   };
 
-  const userMenuItems = [
+  const onAccountFinish = async (values: {
+    currentPassword: string;
+    newUsername?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }) => {
+    const ok = await handleUpdateProfile(values);
+    if (ok) {
+      setAccountModalOpen(false);
+      accountForm.resetFields();
+    }
+  };
+
+  const userMenuItems: MenuProps["items"] = [
     {
-      key: "change-password",
-      label: t("header.user.changePassword", "Change Password"),
-      icon: <KeyOutlined />,
+      key: "profile",
+      icon: <i className="ri-user-line" style={{ fontSize: 14 }} />,
+      label: t("account.title", "账号设置"),
       onClick: () => {
-        // Implementation for change password can be added here or navigate to a profile page
-        navigate("/settings/security");
+        accountForm.resetFields();
+        setAccountModalOpen(true);
       },
     },
     {
-      type: "divider" as const,
+      key: "users",
+      icon: <i className="ri-team-line" style={{ fontSize: 14 }} />,
+      label: t("nav.users", "用户管理"),
+      onClick: () => navigate("/users"),
     },
+    { type: "divider" },
     {
       key: "logout",
-      label: t("header.user.logout", "Logout"),
-      icon: <LogoutOutlined />,
-      danger: true,
+      icon: (
+        <i
+          className="ri-logout-box-r-line"
+          style={{ fontSize: 14, color: "#ef4444" }}
+        />
+      ),
+      label: (
+        <span style={{ color: "#ef4444" }}>
+          {t("login.logout", "退出登录")}
+        </span>
+      ),
       onClick: handleLogout,
     },
   ];
 
-  useEffect(() => {
-    api
-      .getVersion()
-      .then((res) => setVersion(res?.version ?? ""))
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetch(PYPI_URL)
-      .then((res) => res.json())
-      .then((data) => {
-        const releases = data?.releases ?? {};
-
-        const versionsWithTime = Object.entries(releases)
-          .filter(([v]) => isStableVersion(v))
-          .map(([v, files]) => {
-            const fileList = files as Array<{ upload_time_iso_8601?: string }>;
-            const latestUpload = fileList
-              .map((f) => f.upload_time_iso_8601)
-              .filter(Boolean)
-              .sort()
-              .pop();
-            return { version: v, uploadTime: latestUpload || "" };
-          });
-
-        versionsWithTime.sort((a, b) => {
-          const timeDiff =
-            new Date(b.uploadTime).getTime() - new Date(a.uploadTime).getTime();
-          return timeDiff !== 0
-            ? timeDiff
-            : compareVersions(b.version, a.version);
-        });
-
-        const versions = versionsWithTime.map((v) => v.version);
-        const latest = versions[0] ?? data?.info?.version ?? "";
-
-        const releaseTime = versionsWithTime.find((v) => v.version === latest)
-          ?.uploadTime;
-        const isOldEnough =
-          !!releaseTime &&
-          new Date(releaseTime) <= new Date(Date.now() - ONE_HOUR_MS);
-
-        if (isOldEnough) {
-          setLatestVersion(latest);
-        } else {
-          setLatestVersion("");
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const hasUpdate =
-    !!version && !!latestVersion && compareVersions(latestVersion, version) > 0;
-
-  const handleOpenUpdateModal = () => {
-    setUpdateMarkdown("");
-    setUpdateModalOpen(true);
-    const lang = i18n.language?.startsWith("zh")
-      ? "zh"
-      : i18n.language?.startsWith("ru")
-      ? "ru"
-      : "en";
-    const faqLang = lang === "zh" ? "zh" : "en";
-    const url = `https://qwenpaw.agentscope.io/docs/faq.${faqLang}.md`;
-    fetch(url, { cache: "no-cache" })
-      .then((res) => (res.ok ? res.text() : Promise.reject()))
-      .then((text) => {
-        const zhPattern = /###\s*QwenPaw如何更新[\s\S]*?(?=\n###|$)/;
-        const enPattern = /###\s*How to update QwenPaw[\s\S]*?(?=\n###|$)/;
-        const match = text.match(faqLang === "zh" ? zhPattern : enPattern);
-        setUpdateMarkdown(
-          match && lang !== "ru"
-            ? match[0].trim()
-            : UPDATE_MD[lang] ?? UPDATE_MD.en,
-        );
-      })
-      .catch(() => {
-        setUpdateMarkdown(UPDATE_MD[lang] ?? UPDATE_MD.en);
-      });
-  };
-
-  const handleNavClick = (url: string) => {
-    if (url) {
-      const pywebview = (window as any).pywebview;
-      if (pywebview?.api) {
-        pywebview.api.open_external_link(url);
-      } else {
-        window.open(url, "_blank");
-      }
-    }
-  };
-
   return (
-    <>
-      <AntHeader className={styles.header}>
-        <div className={styles.logoWrapper}>
-          <img
-            src={isDark ? "/logo-dark.svg" : "/logo-light.svg"}
-            alt="QwenPaw"
-            className={styles.logoImg}
-          />
-          <div className={styles.logoDivider} />
-          {version && (
-            <Badge
-              dot={!!hasUpdate}
-              color="rgba(255, 157, 77, 1)"
-              offset={[4, 28]}
-            >
-              <span
-                className={`${styles.versionBadge} ${
-                  hasUpdate
-                    ? styles.versionBadgeClickable
-                    : styles.versionBadgeDefault
-                }`}
-                onClick={() => hasUpdate && handleOpenUpdateModal()}
-              >
-                v{version}
-              </span>
-            </Badge>
-          )}
-        </div>
-        <Space size="middle">
-          <Tooltip title={t("header.changelog")}>
-            <Button
-              type="text"
-              onClick={() => handleNavClick(getReleaseNotesUrl(i18n.language))}
-            >
-              {t("header.changelog")}
-            </Button>
-          </Tooltip>
-          <Tooltip title={t("header.docs")}>
-            <Button
-              type="text"
-              onClick={() => handleNavClick(getDocsUrl(i18n.language))}
-            >
-              {t("header.docs")}
-            </Button>
-          </Tooltip>
-          <Tooltip title={t("header.faq")}>
-            <Button
-              type="text"
-              onClick={() => handleNavClick(getFaqUrl(i18n.language))}
-            >
-              {t("header.faq")}
-            </Button>
-          </Tooltip>
-          <Tooltip title={t("header.github")}>
-            <Button type="text" onClick={() => handleNavClick(GITHUB_URL)}>
-              {t("header.github")}
-            </Button>
-          </Tooltip>
-          <div className={styles.headerDivider} />
-          {user && (
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <div
-                className={`${styles.userDropdown} ${
-                  isDark ? styles.userDropdownDark : ""
-                }`}
-              >
-                <Avatar
-                  size="small"
-                  icon={<UserOutlined />}
-                  style={{ backgroundColor: "#ff7f16" }}
-                />
-                <span className={styles.username}>{user.username}</span>
-              </div>
-            </Dropdown>
-          )}
-          <LanguageSwitcher />
-          <ThemeToggleButton />
-        </Space>
-      </AntHeader>
-
-      <Modal
-        title={null}
-        open={updateModalOpen}
-        onCancel={() => setUpdateModalOpen(false)}
-        footer={[
-          <Button key="close" onClick={() => setUpdateModalOpen(false)}>
-            {t("common.close")}
-          </Button>,
-          <Button
-            key="releases"
-            type="primary"
-            className={styles.updateViewReleasesBtn}
-            onClick={() => handleNavClick(getReleaseNotesUrl(i18n.language))}
+    <AntHeader className={styles.header}>
+      <div className={styles.logoWrapper}>
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(59, 130, 246, 0.35)",
+            flexShrink: 0,
+            marginRight: 8,
+          }}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            {t("sidebar.updateModal.viewReleases")}
-          </Button>,
-        ]}
-        width={960}
-        className={styles.updateModal}
-      >
-        {/* Banner area */}
-        <div className={styles.updateModalBanner}>
-          <div className={styles.updateModalBannerLeft}>
-            <span className={styles.updateModalVersionTag}>
-              <TagOutlined />
-              Version {latestVersion || version}
-            </span>
-            <div className={styles.updateModalBannerTitle}>
-              {t("sidebar.updateModal.title", {
-                version: latestVersion || version,
-              })}
-            </div>
-          </div>
+            <path d="M12 2a10 10 0 1 0 10 10" />
+            <path d="M12 8v4l2.5 2.5" />
+            <circle cx="18" cy="6" r="3" fill="white" stroke="none" />
+          </svg>
         </div>
+        <span className={styles.headerTitle}>{t("common.systemName")}</span>
+      </div>
 
-        {/* Markdown content */}
-        <div className={styles.updateModalBody}>
-          {updateMarkdown ? (
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                a({ href, children, ...props }: any) {
-                  return (
-                    <a
-                      {...props}
-                      href={href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (href) handleNavClick(href);
-                      }}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {children}
-                    </a>
-                  );
-                },
-                code({ node, className, children, ...props }: any) {
-                  const match = /language-(\w+)/.exec(className || "");
-                  const isBlock =
-                    node?.position?.start?.line !== node?.position?.end?.line ||
-                    match;
-                  return isBlock ? (
-                    <UpdateCodeBlock
-                      code={String(children).replace(/\n$/, "")}
-                    />
-                  ) : (
-                    <code className={styles.codeInline} {...props}>
-                      {children}
-                    </code>
-                  );
-                },
+      <Space size="middle">
+        <LanguageSwitcher />
+        <ThemeToggleButton />
+
+        <Dropdown
+          menu={{ items: userMenuItems }}
+          placement="bottomRight"
+          trigger={["click"]}
+          overlayStyle={{ minWidth: 160 }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              cursor: "pointer",
+              padding: "4px 8px",
+              borderRadius: 8,
+              transition: "background 0.2s",
+              background: "transparent",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLDivElement).style.background = isDark
+                ? "rgba(255,255,255,0.06)"
+                : "rgba(0,0,0,0.04)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLDivElement).style.background =
+                "transparent";
+            }}
+          >
+            <Avatar
+              size={28}
+              style={{
+                background: "linear-gradient(135deg, #06b6d4, #6366f1)",
+                fontSize: 12,
+                fontWeight: 700,
+                flexShrink: 0,
               }}
             >
-              {updateMarkdown}
-            </ReactMarkdown>
-          ) : (
-            <div className={styles.updateModalSpinWrapper}>
-              <Spin />
-            </div>
+              {displayName.slice(0, 1).toUpperCase()}
+            </Avatar>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: isDark ? "#cbd5e1" : "#334155",
+                maxWidth: 80,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {displayName}
+            </span>
+            <i
+              className="ri-arrow-down-s-line"
+              style={{ fontSize: 14, color: isDark ? "#64748b" : "#94a3b8" }}
+            />
+          </div>
+        </Dropdown>
+      </Space>
+
+      <Modal
+        open={accountModalOpen}
+        onCancel={() => setAccountModalOpen(false)}
+        title={t("account.title")}
+        footer={null}
+        destroyOnHidden
+        centered
+      >
+        <Form
+          form={accountForm}
+          layout="vertical"
+          onFinish={onAccountFinish}
+        >
+          {!jwtMode && (
+            <>
+              <Form.Item
+                name="currentPassword"
+                label={t("account.currentPassword")}
+                rules={[
+                  {
+                    required: true,
+                    message: t("account.currentPasswordRequired"),
+                  },
+                ]}
+              >
+                <Input.Password />
+              </Form.Item>
+              <Form.Item name="newUsername" label={t("account.newUsername")}>
+                <Input placeholder={t("account.newUsernamePlaceholder")} />
+              </Form.Item>
+            </>
           )}
-        </div>
+          <Form.Item name="newPassword" label={t("account.newPassword")}>
+            <Input.Password
+              placeholder={t("account.newPasswordPlaceholder")}
+            />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label={t("account.confirmPassword")}
+            dependencies={["newPassword"]}
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value && !getFieldValue("newPassword")) {
+                    return Promise.resolve();
+                  }
+                  if (value === getFieldValue("newPassword")) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(
+                    new Error(t("account.passwordMismatch")),
+                  );
+                },
+              }),
+            ]}
+          >
+            <Input.Password
+              placeholder={t("account.confirmPasswordPlaceholder")}
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={accountLoading}
+              block
+            >
+              {t("account.save")}
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
-    </>
+    </AntHeader>
   );
 }

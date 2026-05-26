@@ -3,7 +3,7 @@ name: cron
 description: Use this skill only for scheduled or recurring tasks. Manage jobs with qwenpaw cron list/create/get/state/pause/resume/delete/run, and always pass --agent-id explicitly.
 metadata:
   builtin_skill_version: "1.4"
-  qwenpaw:
+  aiwork:
     emoji: "⏰"
 ---
 
@@ -53,26 +53,26 @@ Do not omit it, or the task may be incorrectly created in the default agent's wo
 
 ```bash
 # List tasks
-qwenpaw cron list --agent-id <agent_id>
+aiwork cron list --agent-id <agent_id>
 
 # View task details
-qwenpaw cron get <job_id> --agent-id <agent_id>
+aiwork cron get <job_id> --agent-id <agent_id>
 
 # View task status
-qwenpaw cron state <job_id> --agent-id <agent_id>
+aiwork cron state <job_id> --agent-id <agent_id>
 
 # Create a task
-qwenpaw cron create --agent-id <agent_id> ...
+aiwork cron create --agent-id <agent_id> ...
 
 # Delete a task
-qwenpaw cron delete <job_id> --agent-id <agent_id>
+aiwork cron delete <job_id> --agent-id <agent_id>
 
 # Pause / Resume a task
-qwenpaw cron pause <job_id> --agent-id <agent_id>
-qwenpaw cron resume <job_id> --agent-id <agent_id>
+aiwork cron pause <job_id> --agent-id <agent_id>
+aiwork cron resume <job_id> --agent-id <agent_id>
 
 # Run an existing task once immediately
-qwenpaw cron run <job_id> --agent-id <agent_id>
+aiwork cron run <job_id> --agent-id <agent_id>
 ```
 
 ---
@@ -98,7 +98,7 @@ If any of this information is missing, confirm with the user before creating the
 ### Creation Examples
 
 ```bash
-qwenpaw cron create \
+aiwork cron create \
   --agent-id <agent_id> \
   --type text \
   --name "Daily Greeting" \
@@ -110,7 +110,7 @@ qwenpaw cron create \
 ```
 
 ```bash
-qwenpaw cron create \
+aiwork cron create \
   --agent-id <agent_id> \
   --type agent \
   --name "Check Todos" \
@@ -124,7 +124,7 @@ qwenpaw cron create \
 ### Create from JSON
 
 ```bash
-qwenpaw cron create --agent-id <agent_id> -f job_spec.json
+aiwork cron create --agent-id <agent_id> -f job_spec.json
 ```
 
 ---
@@ -173,7 +173,7 @@ If the user has not specified the time, schedule, target channel, or target sess
 Before pausing, resuming, or deleting, first run:
 
 ```bash
-qwenpaw cron list --agent-id <agent_id>
+aiwork cron list --agent-id <agent_id>
 ```
 
 to find the correct `job_id`.
@@ -192,13 +192,13 @@ to find the correct `job_id`.
 ## Help Information
 
 ```bash
-qwenpaw cron -h
-qwenpaw cron list -h
-qwenpaw cron create -h
-qwenpaw cron get -h
-qwenpaw cron state -h
-qwenpaw cron pause -h
-qwenpaw cron resume -h
-qwenpaw cron delete -h
-qwenpaw cron run -h
+aiwork cron -h
+aiwork cron list -h
+aiwork cron create -h
+aiwork cron get -h
+aiwork cron state -h
+aiwork cron pause -h
+aiwork cron resume -h
+aiwork cron delete -h
+aiwork cron run -h
 ```

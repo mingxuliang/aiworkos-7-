@@ -279,6 +279,7 @@ export function SkillDrawer({
 
   return (
     <Drawer
+      rootClassName="copaw-ported-drawer"
       width={520}
       placement="right"
       title={editingSkill ? t("skills.viewSkill") : t("skills.createSkill")}
@@ -291,20 +292,20 @@ export function SkillDrawer({
         {!editingSkill ? (
           <Form.Item
             name="name"
-            label="Name"
+            label={t("skills.skillName")}
             rules={[{ required: true, message: t("skills.pleaseInputName") }]}
           >
             <Input placeholder={t("skills.skillNamePlaceholder")} />
           </Form.Item>
         ) : (
-          <Form.Item name="name" label="Name">
+          <Form.Item name="name" label={t("skills.skillName")}>
             <Input />
           </Form.Item>
         )}
 
         <Form.Item
           name="content"
-          label="Content"
+          label={t("skills.skillContent")}
           rules={[{ required: true, validator: validateFrontmatter }]}
         >
           <MarkdownCopy

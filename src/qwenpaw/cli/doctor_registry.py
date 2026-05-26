@@ -2,7 +2,7 @@
 """Extensible hooks for `qwenpaw doctor`
 (entry points + programmatic registration).
 
-Plugins can expose a setuptools entry point in group ``qwenpaw.doctor``::
+Plugins can expose a setuptools entry point in group ``aiwork.doctor``::
 
     [project.entry-points."qwenpaw.doctor"]
     my_pkg = "my_pkg.doctor:doctor_notes"

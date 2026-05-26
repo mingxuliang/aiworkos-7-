@@ -6,6 +6,7 @@ import { MCPClientCard } from "./components";
 import { useMCP } from "./useMCP";
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/PageHeader";
+import { CopawWorkbenchShell } from "@/components/CopawWorkbenchShell";
 import styles from "./index.module.less";
 
 type MCPTransport = "stdio" | "streamable_http" | "sse";
@@ -161,43 +162,47 @@ function MCPPage() {
   };
 
   return (
-    <div className={styles.mcpPage}>
-      <PageHeader
-        items={[{ title: t("nav.agent") }, { title: t("mcp.title") }]}
-        extra={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateModalOpen(true)}
-          >
-            {t("mcp.create")}
-          </Button>
-        }
-      />
+    <CopawWorkbenchShell>
+      <div className={styles.mcpPage}>
+        <PageHeader
+          items={[{ title: t("nav.agent") }, { title: t("mcp.title") }]}
+          extra={
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setCreateModalOpen(true)}
+            >
+              {t("mcp.create")}
+            </Button>
+          }
+        />
 
-      {loading ? (
-        <div className={styles.loading}>
-          <p>{t("common.loading")}</p>
+        <div className="copaw-bench-main-section copaw-bench-main-section--scroll">
+          {loading ? (
+            <div className={styles.loading}>
+              <p>{t("common.loading")}</p>
+            </div>
+          ) : clients.length === 0 ? (
+            <div className={styles.emptyState}>
+              <Empty description={t("mcp.emptyState")} />
+            </div>
+          ) : (
+            <div className="cbc-agent-grid">
+              {clients.map((client, index) => (
+                <MCPClientCard
+                  key={client.key}
+                  client={client}
+                  cardIndex={index}
+                  onToggle={handleToggleEnabled}
+                  onDelete={handleDelete}
+                  onUpdate={updateClient}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      ) : clients.length === 0 ? (
-        <div className={styles.emptyState}>
-          <Empty description={t("mcp.emptyState")} />
-        </div>
-      ) : (
-        <div className={styles.mcpGrid}>
-          {clients.map((client) => (
-            <MCPClientCard
-              key={client.key}
-              client={client}
-              onToggle={handleToggleEnabled}
-              onDelete={handleDelete}
-              onUpdate={updateClient}
-            />
-          ))}
-        </div>
-      )}
 
-      <Modal
+        <Modal
         title={t("mcp.create")}
         open={createModalOpen}
         onCancel={() => setCreateModalOpen(false)}
@@ -240,6 +245,7 @@ function MCPPage() {
         />
       </Modal>
     </div>
+    </CopawWorkbenchShell>
   );
 }
 

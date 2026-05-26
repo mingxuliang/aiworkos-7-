@@ -3,7 +3,7 @@ name: guidance
 description: "回答用户关于 QwenPaw 安装与配置的问题：优先定位并阅读本地文档，再提炼答案；若本地信息不足，兜底访问官网文档。"
 metadata:
   builtin_skill_version: "1.2"
-  qwenpaw:
+  aiwork:
     emoji: "🧭"
     requires: {}
 ---
@@ -42,10 +42,10 @@ DOC_DIR=$(find ~/.qwenpaw/memory/ -type d -name "docs")
 # 获取二进制绝对路径
 COP_PATH=$(which qwenpaw 2>/dev/null || whereis qwenpaw | awk '{print $2}')
 
-# 逻辑推导：如果路径包含 .qwenpaw/bin/qwenpaw，则根目录在其上三层
-# 例如：/path/to/QwenPaw/.qwenpaw/bin/qwenpaw -> /path/to/QwenPaw
-if [[ "$COP_PATH" == *".qwenpaw/bin/qwenpaw" ]]; then
-    QWENPAW_ROOT=$(echo "$COP_PATH" | sed 's/\/\.qwenpaw\/bin\/qwenpaw//')
+# 逻辑推导：如果路径包含 .aiwork/bin/aiwork，则根目录在其上三层
+# 例如：/path/to/QwenPaw/.qwenpaw/bin/aiwork -> /path/to/QwenPaw
+if [[ "$COP_PATH" == *".aiwork/bin/aiwork" ]]; then
+    QWENPAW_ROOT=$(echo "$COP_PATH" | sed 's/\/\.aiwork\/bin\/aiwork//')
 else
     # 兜底：尝试获取所在目录的父目录
     QWENPAW_ROOT=$(dirname $(dirname "$COP_PATH") 2>/dev/null || echo ".")

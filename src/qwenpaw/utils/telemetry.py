@@ -15,7 +15,7 @@ from typing import Any, Callable
 logger = logging.getLogger(__name__)
 
 TELEMETRY_ENDPOINT = (
-    "https://qwenpawelemetry-sukzkbfzhc.ap-southeast-1.fcapp.run"
+    "https://aiworkelemetry-sukzkbfzhc.ap-southeast-1.fcapp.run"
 )
 TELEMETRY_MARKER_FILE = ".telemetry_collected"
 
@@ -44,7 +44,7 @@ def get_system_info() -> dict[str, Any]:
 
     Returns anonymized system information including:
     - install_id: Random UUID (not tied to user)
-    - qwenpaw_version: QwenPaw version string
+    - aiwork_version: QwenPaw version string
     - install_method: How QwenPaw was installed (docker/desktop/pip)
     - os: Operating system (Windows/Darwin/Linux)
     - os_version: OS version string
@@ -52,11 +52,11 @@ def get_system_info() -> dict[str, Any]:
     - architecture: CPU architecture (x86_64/arm64/etc)
     - has_gpu: GPU availability detection
     """
-    from ..__version__ import __version__ as qwenpaw_ver
+    from ..__version__ import __version__ as aiwork_ver
 
     info = {
         "install_id": str(uuid.uuid4()),
-        "qwenpaw_version": _safe_get(lambda: qwenpaw_ver, "unknown"),
+        "aiwork_version": _safe_get(lambda: aiwork_ver, "unknown"),
         "install_method": _safe_get(_detect_install_method, "unknown"),
         "os": _safe_get(platform.system, "unknown"),
         "os_version": _safe_get(platform.release, "unknown"),
@@ -178,9 +178,9 @@ def _upload_telemetry_sync(data: dict[str, Any]) -> bool:
 def _get_current_version() -> str:
     """Get the current QwenPaw version string."""
     try:
-        from ..__version__ import __version__ as qwenpaw_ver
+        from ..__version__ import __version__ as aiwork_ver
 
-        return qwenpaw_ver
+        return aiwork_ver
     except Exception:
         return "unknown"
 
@@ -207,8 +207,8 @@ def has_telemetry_been_collected(working_dir: Path) -> bool:
         collected_versions = marker_data.get("collected_versions", [])
         if collected_versions:
             return current in collected_versions
-        # v1.1 compat: single qwenpaw_version field
-        return marker_data.get("qwenpaw_version", "") == current
+        # v1.1 compat: single aiwork_version field
+        return marker_data.get("aiwork_version", "") == current
     except Exception:
         return False
 
@@ -262,7 +262,7 @@ def mark_telemetry_collected(
                 prev_opted_out = old_data.get("opted_out", False) is True
                 # Migrate from v1.1 single-version format
                 if not collected_versions:
-                    old_ver = old_data.get("qwenpaw_version", "")
+                    old_ver = old_data.get("aiwork_version", "")
                     if old_ver:
                         collected_versions = [old_ver]
             except Exception:
@@ -273,7 +273,7 @@ def mark_telemetry_collected(
 
         marker_data = {
             "collected_at": time.time(),
-            "qwenpaw_version": current,
+            "aiwork_version": current,
             "collected_versions": collected_versions,
             "opted_out": opted_out or prev_opted_out,
             "version": "1.3",

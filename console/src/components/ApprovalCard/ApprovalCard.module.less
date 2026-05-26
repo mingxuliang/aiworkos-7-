@@ -59,7 +59,7 @@
   }
 
   .icon {
-    color: #f97316;
+    color: #3b82f6;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -326,7 +326,7 @@
   }
 
   .approveButton {
-    background: #f97316;
+    background: #3b82f6;
     border: none;
     color: #ffffff;
     box-shadow: 0 1px 4px rgba(249, 115, 22, 0.2);
@@ -341,20 +341,20 @@
 /* ─── Dark Mode ──────────────────────────────────────────────────────────── */
 :global(.dark-mode) {
   .approvalCard {
-    background: #1e1e1e;
-    border-color: #333;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    background: var(--copaw-dm-surface-raised, #1a2235);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 
     &:hover {
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
     }
   }
 
   .header {
-    border-bottom-color: #2d2d2d;
+    border-bottom-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
 
     .icon {
-      color: #f97316;
+      color: #3b82f6;
     }
 
     .title {
@@ -362,49 +362,49 @@
     }
 
     .timer {
-      background: #2a2a2a;
+      background: var(--copaw-dm-input, #1f2a42);
 
       .timerIcon {
-        color: #666;
+        color: var(--copaw-dm-text-muted, #475569);
       }
 
       .timerText {
-        color: #999;
+        color: var(--copaw-dm-text-secondary, #94a3b8);
       }
     }
   }
 
   .label {
-    color: #888;
+    color: var(--copaw-dm-text-secondary, #94a3b8);
   }
 
   .value {
     color: rgba(255, 255, 255, 0.85);
 
     &:global(.ant-typography) code {
-      background: #2a2a2a;
-      border-color: #3a3a3a;
-      color: #ccc;
+      background: var(--copaw-dm-input, #1f2a42);
+      border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+      color: #cbd5e1;
     }
   }
 
   .summaryBox {
-    background: #252525;
+    background: var(--copaw-dm-surface, #111827);
     border-left-color: #555;
 
     .summaryText {
-      color: #bbb;
+      color: #cbd5e1;
     }
   }
 
   .copyButton {
-    color: #777;
-    border-color: #444;
+    color: var(--copaw-dm-text-muted, #475569);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.08));
 
     &:hover {
       background: rgba(255, 255, 255, 0.06);
-      border-color: #555;
-      color: #bbb;
+      border-color: rgba(148, 163, 184, 0.35);
+      color: #cbd5e1;
     }
 
     &.copied {
@@ -414,62 +414,62 @@
   }
 
   .paramsDetails {
-    background: #252525;
-    border-color: #333;
+    background: var(--copaw-dm-surface, #111827);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
 
     summary {
-      color: #999;
+      color: var(--copaw-dm-text-secondary, #94a3b8);
 
       &::before {
-        color: #666;
+        color: var(--copaw-dm-text-muted, #475569);
       }
 
       &:hover {
-        color: #ccc;
+        color: #cbd5e1;
       }
     }
 
     &[open] summary {
-      border-bottom-color: #333;
-      color: #ccc;
+      border-bottom-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+      color: #cbd5e1;
     }
   }
 
   .paramsCode {
-    background: #1a1a1a;
-    border-color: #333;
-    color: #bbb;
+    background: var(--copaw-dm-input, #1f2a42);
+    border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+    color: #cbd5e1;
 
     &::-webkit-scrollbar-track {
-      background: #222;
+      background: var(--copaw-dm-surface, #111827);
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #444;
+      background: rgba(255, 255, 255, 0.18);
 
       &:hover {
-        background: #555;
+        background: rgba(255, 255, 255, 0.28);
       }
     }
   }
 
   .actions {
-    border-top-color: #2d2d2d;
+    border-top-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
 
     .denyButton {
-      background: #2a2a2a;
-      border-color: #444;
-      color: #bbb;
+      background: var(--copaw-dm-input, #1f2a42);
+      border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.1));
+      color: #cbd5e1;
 
       &:hover:not(:disabled) {
-        background: #333;
-        border-color: #555;
-        color: #ddd;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(148, 163, 184, 0.35);
+        color: #e2e8f0;
       }
     }
 
     .approveButton {
-      background: #f97316;
+      background: #3b82f6;
       color: #ffffff;
       box-shadow: 0 1px 4px rgba(249, 115, 22, 0.3);
 

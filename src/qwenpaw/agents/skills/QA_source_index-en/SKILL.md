@@ -3,7 +3,7 @@ name: QA_source_index
 description: "Maps topics and keywords from user questions to QwenPaw official documentation paths and common source code entry points, reducing blind searching. Intended for the built-in QA Agent to quickly identify which files to read when answering questions about installation, configuration, skills, MCP, multi-agent, memory, CLI, etc."
 metadata:
   builtin_skill_version: "1.2"
-  qwenpaw:
+  aiwork:
     emoji: "🗂️"
     requires: {}
 ---
@@ -15,29 +15,29 @@ When answering questions about **installation, configuration, or behavioral prin
 ## Usage Steps
 
 1. Extract the topic from the user's question (match against the left column or synonyms in the table below).
-2. Resolve **`$QWENPAW_ROOT`**: use `which qwenpaw` to get the executable path. If it is `…/.qwenpaw/bin/qwenpaw`, the source root is three levels up (consistent with the **guidance** skill); otherwise, determine it from the user-provided installation path.
+2. Resolve **`$QWENPAW_ROOT`**: use `which aiwork` to get the executable path. If it is `…/.qwenpaw/bin/aiwork`, the source root is three levels up (consistent with the **guidance** skill); otherwise, determine it from the user-provided installation path.
 3. **Read documentation first**: `website/public/docs/<topic>.<language>.md` (use the same language as the user: `zh` / `en` / `ru`, etc.). If that is insufficient, read the **source entry points** listed in the table.
 
 ## Topic / Keywords → Preferred Documentation and Source Code
 
 | Topic or Keywords (examples) | Preferred Documentation (`website/public/docs/`) | Common Source Entry Points (relative to `$QWENPAW_ROOT`) |
 |---------------------|-----------------------------------|-----------------------------------|
-| Installation, dependencies, getting started | `quickstart`, `intro` | `src/qwenpaw/cli/`, `pyproject.toml` |
-| Configuration, config.json, environment variables | `config` | `src/qwenpaw/config/config.py`, `src/qwenpaw/constant.py` |
-| Skills, SKILL, skill_pool, built-in skills | `skills` | `src/qwenpaw/agents/skills_manager.py`, `src/qwenpaw/agents/skills/` |
-| MCP, plugins | `mcp` | `src/qwenpaw/app/routers/` (grep `mcp` as needed) |
-| Multi-agent, workspace, agent, built-in QA | `multi-agent` | `src/qwenpaw/app/routers/agents.py`, `src/qwenpaw/app/migration.py`, `src/qwenpaw/constant.py` (`BUILTIN_QA_AGENT_ID`, etc.) |
-| Memory, MEMORY, memory_search | `memory` | `src/qwenpaw/agents/memory/memory_manager.py`, `src/qwenpaw/agents/tools/memory_search.py` |
+| Installation, dependencies, getting started | `quickstart`, `intro` | `src/aiwork/cli/`, `pyproject.toml` |
+| Configuration, config.json, environment variables | `config` | `src/aiwork/config/config.py`, `src/aiwork/constant.py` |
+| Skills, SKILL, skill_pool, built-in skills | `skills` | `src/aiwork/agents/skills_manager.py`, `src/aiwork/agents/skills/` |
+| MCP, plugins | `mcp` | `src/aiwork/app/routers/` (grep `mcp` as needed) |
+| Multi-agent, workspace, agent, built-in QA | `multi-agent` | `src/aiwork/app/routers/agents.py`, `src/aiwork/app/migration.py`, `src/aiwork/constant.py` (`BUILTIN_QA_AGENT_ID`, etc.) |
+| Memory, MEMORY, memory_search | `memory` | `src/aiwork/agents/memory/memory_manager.py`, `src/aiwork/agents/tools/memory_search.py` |
 | Console, frontend | `console` | `console/` |
-| CLI, subcommands, init | `cli` | `src/qwenpaw/cli/` (e.g., `init_cmd.py`) |
-| Channels, sessions | `channels` | Search for `channels` keyword under `src/qwenpaw` |
-| Context, window | `context` | `config` docs + related logic in `src/qwenpaw/agents/` |
-| Models, API Key | `models` | `src/qwenpaw/config/config.py` |
-| Heartbeat, HEARTBEAT | `heartbeat` | Search for `heartbeat` / `HEARTBEAT` under `src/qwenpaw` |
+| CLI, subcommands, init | `cli` | `src/aiwork/cli/` (e.g., `init_cmd.py`) |
+| Channels, sessions | `channels` | Search for `channels` keyword under `src/aiwork` |
+| Context, window | `context` | `config` docs + related logic in `src/aiwork/agents/` |
+| Models, API Key | `models` | `src/aiwork/config/config.py` |
+| Heartbeat, HEARTBEAT | `heartbeat` | Search for `heartbeat` / `HEARTBEAT` under `src/aiwork` |
 | Desktop client | `desktop` | `desktop/` (if present in the repository) |
 | Security | `security` | Read `security.<lang>.md` first |
 | Errors, FAQ | `faq` | Read `faq.<lang>.md` first, then examine source code as needed |
-| Commands and slash commands | `commands` | CLI/command registration modules under `src/qwenpaw` (search as needed) |
+| Commands and slash commands | `commands` | CLI/command registration modules under `src/aiwork` (search as needed) |
 
 ## Conventions
 

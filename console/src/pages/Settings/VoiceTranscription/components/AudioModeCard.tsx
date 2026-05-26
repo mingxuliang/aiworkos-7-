@@ -58,7 +58,7 @@ export function AudioModeCard({
             />
           ) : (
             <Alert
-              type="warning"
+              type="info"
               showIcon
               message={t("voiceTranscription.ffmpegMissing")}
               description={t("voiceTranscription.ffmpegMissingDesc")}

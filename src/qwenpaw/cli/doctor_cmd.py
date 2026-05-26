@@ -49,7 +49,7 @@ from .doctor_checks import (
     scan_unknown_config_keys,
     security_baseline_notes,
     skill_layout_notes,
-    qwenpaw_local_llm_deep_notes,
+    aiwork_local_llm_deep_notes,
     startup_extra_volume_disk_notes,
     workspace_hygiene_notes,
 )
@@ -279,7 +279,7 @@ async def _check_active_llm(
     deep_notes: list[str] = []
     pid = (slot.provider_id or "").strip()
     if deep and pid in ("qwenpaw-local", "copaw-local"):
-        deep_notes = qwenpaw_local_llm_deep_notes()
+        deep_notes = aiwork_local_llm_deep_notes()
 
     if not getattr(provider, "support_connection_check", True):
         return (
@@ -964,7 +964,7 @@ def run_doctor_checks(
     is_flag=True,
     help=(
         "Run extra checks: enabled-channel reachability (non-fatal notes; "
-        "uses --timeout) and, when the active model is qwenpaw-local, "
+        "uses --timeout) and, when the active model is aiwork-local, "
         "llama.cpp install/server status notes."
     ),
 )

@@ -116,7 +116,7 @@ export default function CreateBackupModal({
           <BackupScopeForm value={scope} onChange={setScope} agents={agents} />
 
           <Alert type="info" showIcon message={t("backup.localModelsNotice")} />
-          <Alert type="warning" showIcon message={t("backup.securityNotice")} />
+          <Alert type="info" showIcon message={t("backup.securityNotice")} />
         </Space>
       )}
     </Modal>

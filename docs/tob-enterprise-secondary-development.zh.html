@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="ProgId" content="Word.Document" />
+  <meta name="Generator" content="Microsoft Word" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>AI Work OS ToB 企业级二次开发分析</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: "Microsoft YaHei", "SimSun", sans-serif; font-size: 11pt; line-height: 1.45; max-width: 900px; margin: 24px auto; color: #111; }
+    h1 { font-size: 20pt; border-bottom: 1px solid #ccc; padding-bottom: 8px; }
+    h2 { font-size: 14pt; margin-top: 22px; }
+    h3 { font-size: 12pt; margin-top: 16px; }
+    p { margin: 8px 0; text-align: justify; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10.5pt; }
+    th, td { border: 1px solid #333; padding: 6px 8px; vertical-align: top; }
+    th { background: #f0f0f0; }
+    .meta { color: #444; font-size: 10pt; margin-bottom: 16px; }
+    ul { margin: 8px 0 8px 22px; }
+    li { margin: 4px 0; }
+    .note { background: #f7f7f7; padding: 10px 12px; border-left: 4px solid #666; margin: 14px 0; font-size: 10.5pt; }
+  </style>
+</head>
+<body>
+
+<h1>AI Work OS / QwenPaw 二次开发与 ToB 企业级改造——详细分析</h1>
+
+<p class="meta"><strong>文档版本：</strong>1.0　|　<strong>适用范围：</strong>私有化交付、行业大客户、集团多租户场景</p>
+
+<p>本文档侧重从产品现状走向企业级 ToB 的架构与工作拆分，可与既有控制台（Console）、Workspace、安全模块演进对齐。</p>
+
+<h2>一、背景与目标</h2>
+
+<h3>1.1 业务背景</h3>
+<p>当前产品在对话与工作台场景中已具备 Agent、频道、会话、定时任务、Skills/Tools/MCP、文件工作区等能力。面向个人或小团队时，以 Agent 维度隔离工作目录即可运转；但面向 ToB / 企业客户时，采购方通常要求：身份与权限（IAM）、数据边界、审计追溯、合规与安全基线、运维与可观测性、集成与企业 SSO 等与消费级产品默认假设不一致的能力。</p>
+
+<h3>1.2 改造目标（建议写成对外 SLA / 对内 OKR）</h3>
+<table>
+  <tr><th>目标域</th><th>企业客户典型诉求</th><th>改造方向摘要</th></tr>
+  <tr><td>身份与访问</td><td>账号生命周期、角色、最小权限</td><td>RBAC/ABAC、策略引擎、与 IdP 集成</td></tr>
+  <tr><td>数据与隔离</td><td>团队/部门/项目数据不可互窥</td><td>多租户模型 + 存储前缀/卷隔离 + 加密</td></tr>
+  <tr><td>文件与知识</td><td>文件级权限、外发控制</td><td>统一文件网关、ACL、DLP 钩子</td></tr>
+  <tr><td>合规审计</td><td>谁在何时访问了什么</td><td>不可篡改审计日志、留存策略、导出</td></tr>
+  <tr><td>运维交付</td><td>私有化、升级、灰度</td><td>配置体系、健康检查、备份恢复、License</td></tr>
+  <tr><td>集成</td><td>AD/LDAP、钉钉飞书、工单 SIEM</td><td>SCIM、Webhook、事件总线、API 网关</td></tr>
+</table>
+
+<h2>二、现状差距分析与二次开发切入点</h2>
+
+<h3>2.1 已识别的产品能力边界（示例）</h3>
+<p>在文件隐私类需求上，若当前隔离主要在 Agent + 本地目录（例如按 agent_id 划分 workspace），则企业视角下的缺口通常包括：</p>
+<ul>
+  <li><strong>缺少面向自然人 / 组织单元的文件 IAM</strong>：同一控制台用户、多 Agent、多技能路径下的访问边界不清晰时，难以通过审计回答「谁读了哪份合同」。</li>
+  <li><strong>工具链绕过风险</strong>：若 MCP / 本地工具可直接访问 OS 路径，则仅靠 UI 隐藏或 Agent 约定无法通过安全测评。</li>
+  <li><strong>运维侧一致性</strong>：单机 chmod 类手段难以在多副本、容器化、网络存储上一致执行，也不利于批量交付。</li>
+</ul>
+
+<h3>2.2 二次开发的主战场（分层）</h3>
+<table>
+  <tr><th>层级</th><th>二次开发重点</th><th>价值</th></tr>
+  <tr><td>策略与网关层</td><td>所有文件类 API 统一鉴权与路径规范化</td><td>防绕过、可审计</td></tr>
+  <tr><td>租户与组织模型</td><td>Tenant → Org → Project → Workspace</td><td>ToB 计费与隔离基石</td></tr>
+  <tr><td>控制台体验</td><td>权限向导、数据分级标签、审批流</td><td>降低误配置与安全事故</td></tr>
+  <tr><td>可观测与合规</td><td>结构化审计、导出、对接 SIEM</td><td>中标与续约关键项</td></tr>
+</table>
+
+<h2>三、ToB 企业级参考架构（改造蓝图）</h2>
+
+<h3>3.1 逻辑架构（文字描述）</h3>
+<ul>
+  <li><strong>接入层</strong>：企业 SSO（OIDC/SAML）、可选反向代理、mTLS（金融行业常见）。</li>
+  <li><strong>应用层</strong>：控制台 BFF、核心业务 API、异步任务（导入导出、索引构建）。</li>
+  <li><strong>策略层</strong>：Authorization Service（RBAC + 资源级策略 + 可选 ABAC 标签）。</li>
+  <li><strong>数据层</strong>：关系库（用户/租户/权限/审计）、对象存储或统一文件服务、向量与检索（若涉及 RAG）。</li>
+  <li><strong>执行层</strong>：Agent 运行时、Tool/MCP 执行沙箱（进程/容器/权限降权）。</li>
+  <li><strong>运维层</strong>：配置中心、密钥管理（KMS/Vault）、日志与链路追踪、备份。</li>
+</ul>
+
+<h3>3.2 多租户模型（推荐演进路径）</h3>
+<ol>
+  <li><strong>租户隔离（逻辑）</strong>：所有业务表带 tenant_id；对象存储按前缀隔离；缓存键带租户维度。</li>
+  <li><strong>强隔离（物理）</strong>：大客户专属集群或专属命名空间；密钥与客户 KMS 绑定。</li>
+  <li><strong>混合</strong>：默认逻辑隔离 + 「白金租户」物理隔离（计费与交付绑定）。</li>
+</ol>
+
+<h2>四、分阶段二次开发路线图</h2>
+
+<h3>阶段 A：企业化底座（0–3 个月，强烈建议优先）</h3>
+<p><strong>交付物：</strong></p>
+<ul>
+  <li>租户 / 组织 / 成员模型与控制台管理后台雏形。</li>
+  <li>SSO（OIDC）与可选 SAML；会话与令牌轮换策略文档化。</li>
+  <li><strong>统一审计</strong>：登录、权限变更、文件读写（至少高危操作）、Agent 配置变更、导出行为。</li>
+  <li>API 网关层：tenant_id 注入、速率限制、请求 ID。</li>
+</ul>
+<p><strong>验收口径：</strong>可演示同一租户内角色差异与跨租户不可见（含 API 自动化用例）；审计日志可按用户、资源、时间窗口导出 CSV/JSON。</p>
+
+<h3>阶段 B：资源级权限与文件网关（3–6 个月）</h3>
+<p><strong>交付物：</strong></p>
+<ul>
+  <li>文件服务抽象：列表、读取、写入、删除、打包下载均走同一 Policy Engine。</li>
+  <li>ACL 模型：owner、visibility（私有/团队/组织）、可选敏感分级标签。</li>
+  <li>MCP/Tool 路径白名单与动态策略注入（避免开发者工具绕过）。</li>
+  <li>控制台：文件夹权限、继承规则、敏感目录模板。</li>
+</ul>
+<p><strong>验收口径：</strong>渗透测试项（路径穿越、符号链接、压缩解压路径逃逸）全部拦截或有明确告警；任意工具调用链上有同一套鉴权决策 ID。</p>
+
+<h3>阶段 C：合规、运维与商业化封装（6–12 个月）</h3>
+<p><strong>交付物：</strong></p>
+<ul>
+  <li>数据留存与删除策略（GDPR/个人信息场景可按模块裁剪）。</li>
+  <li>备份恢复 Runbook + 自动化校验（含租户级恢复演练）。</li>
+  <li>License / 用量计量（Token、存储、并发会话、Agent 数）。</li>
+  <li>私有化安装器与健康检查脚本；离线升级包流程。</li>
+</ul>
+<p><strong>验收口径：</strong>备份 RPO/RTO 与客户合同对齐；升级文档通过客户运维评审。</p>
+
+<h2>五、功能模块改造清单（可按 Scrum 拆 Epic）</h2>
+
+<h3>5.1 控制台（Console）</h3>
+<table>
+  <tr><th>Epic</th><th>说明</th></tr>
+  <tr><td>租户与组织</td><td>租户开户、子部门、邀请成员、成员状态</td></tr>
+  <tr><td>角色权限</td><td>系统角色 + 自定义角色；权限模板（安全管理员、开发者、只读审计）</td></tr>
+  <tr><td>文件与 Workspace</td><td>权限继承 UI、敏感标签、外发拦截提示</td></tr>
+  <tr><td>安全中心</td><td>SSO 配置、IP 允许列表、会话策略、API Key 生命周期</td></tr>
+  <tr><td>运维面板</td><td>版本、配置快照、日志级别、队列积压</td></tr>
+</table>
+
+<h3>5.2 后端与中间件</h3>
+<table>
+  <tr><th>Epic</th><th>说明</th></tr>
+  <tr><td>AuthZ 服务</td><td>PDP/PEP 分离；决策缓存；批量鉴权接口</td></tr>
+  <tr><td>文件网关</td><td>规范化路径、病毒扫描钩子（可选）、下载水印（可选）</td></tr>
+  <tr><td>事件总线</td><td>resource.accessed、policy.denied 等标准事件</td></tr>
+  <tr><td>集成</td><td>SCIM 用户同步、Webhook、审计导出到 Syslog</td></tr>
+</table>
+
+<h3>5.3 Agent / Tool / MCP</h3>
+<table>
+  <tr><th>Epic</th><th>说明</th></tr>
+  <tr><td>执行隔离</td><td>最小权限 OS 用户、只读根、临时目录回收</td></tr>
+  <tr><td>工具注册</td><td>工具声明所需权限范围；运行时校验</td></tr>
+  <tr><td>配置下发</td><td>Agent 仅能获得当前租户允许的路径与环境变量</td></tr>
+</table>
+
+<h2>六、安全与合规要点（ToB 售前常见问卷）</h2>
+<ol>
+  <li><strong>身份</strong>：MFA 策略、会话超时、刷新令牌轮转、服务账号与人工账号分离。</li>
+  <li><strong>传输与存储</strong>：TLS 版本、静态加密（磁盘/KMS）、密钥轮换。</li>
+  <li><strong>审计</strong>：完整性（WORM 或远程只读 SIEM）、时钟同步、管理员操作双人复核（可选）。</li>
+  <li><strong>隐私</strong>：最小采集、字段脱敏显示、导出审批流。</li>
+  <li><strong>供应链</strong>：依赖 SBOM、CVE 响应 SLA、构建签名与镜像扫描。</li>
+</ol>
+
+<h2>七、团队与流程建议</h2>
+<table>
+  <tr><th>角色</th><th>职责</th></tr>
+  <tr><td>产品经理</td><td>ToB PRD、优先级、与客户成功对齐交付边界</td></tr>
+  <tr><td>架构师</td><td>多租户与 AuthZ 边界、灾难场景</td></tr>
+  <tr><td>后端</td><td>租户模型、策略引擎、文件网关</td></tr>
+  <tr><td>前端</td><td>权限 UX、审计检索、运维可视化</td></tr>
+  <tr><td>安全</td><td>威胁建模、渗透测试跟进</td></tr>
+  <tr><td>技术支持</td><td>Runbook、升级脚本、客户环境问题分级</td></tr>
+</table>
+<p>研发流程建议：特性开关（Feature Flag）+ 灰度租户；每个 Epic 附带安全验收用例与运维文档作为 Definition of Done。</p>
+
+<h2>八、风险与缓解</h2>
+<table>
+  <tr><th>风险</th><th>缓解</th></tr>
+  <tr><td>过度设计导致交付延期</td><td>先做租户 + SSO + 审计 + 文件网关 MVP</td></tr>
+  <tr><td>工具链绕过</td><td>统一 PEP；禁止未注册工具直访磁盘</td></tr>
+  <tr><td>数据迁移复杂</td><td>早期冻结 tenant_id 与资源 URI 规范</td></tr>
+  <tr><td>客户合规条款冲突</td><td>模块化售卖（审计增强包、专属 KMS 包）</td></tr>
+</table>
+
+<h2>九、结论</h2>
+<p>将产品从 Agent 级工作目录隔离推进到 ToB 企业级应用，二次开发的核心不是简单增加页面，而是构建<strong>租户化数据平面 + 统一授权决策 + 全链路审计 + 可运维交付</strong>。建议按阶段 A→B→C 递进：<strong>先做身份与审计底座，再做文件与工具链策略闭环，最后封装合规与商业化运维能力</strong>，以降低架构返工与安全负债。</p>
+
+<div class="note">
+  <strong>Word 导出步骤：</strong>用 Microsoft Word 打开本 HTML 文件 →「文件」→「另存为」→ 选择「Word 文档 (*.docx)」。同源 Markdown 位于仓库 <code>docs/tob-enterprise-secondary-development.zh.md</code>。
+</div>
+
+</body>
+</html>

@@ -1,5 +1,4 @@
-import React, { useState, type ReactNode } from "react";
-import { Card } from "@agentscope-ai/design";
+import React, { type KeyboardEvent, type ReactNode } from "react";
 import {
   ApiOutlined,
   CodeOutlined,
@@ -8,7 +7,8 @@ import {
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import type { ACPAgentConfig } from "../../../../api/types";
-import styles from "../../../Control/Channels/index.module.less";
+import { cbcCardStripeClass } from "../../../../utils/cbcCardTheme";
+import styles from "./ACPCard.module.less";
 
 interface ACPCardIconSpec {
   icon?: ReactNode;
@@ -38,6 +38,7 @@ interface ACPCardProps {
   agentKey: string;
   config: ACPAgentConfig;
   isBuiltin: boolean;
+  cardIndex: number;
   onClick: () => void;
 }
 
@@ -45,73 +46,83 @@ export const ACPCard = React.memo(function ACPCard({
   agentKey,
   config,
   isBuiltin,
+  cardIndex,
   onClick,
 }: ACPCardProps) {
   const { t } = useTranslation();
-  const [isHover, setIsHover] = useState(false);
   const argsSummary = config.args?.join(" ") || t("acp.notSet");
   const iconSpec = BUILTIN_ACP_ICON_MAP[agentKey] ?? DEFAULT_ACP_ICON;
-  const getCardClassNames = () => {
-    if (isHover) return `${styles.channelCard} ${styles.hover}`;
-    if (config.enabled) return `${styles.channelCard} ${styles.enabled}`;
-    return `${styles.channelCard} ${styles.normal}`;
+  const stripe = cbcCardStripeClass(cardIndex);
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onClick();
+    }
   };
 
   return (
-    <Card
-      hoverable
+    <div
+      role="button"
+      tabIndex={0}
+      className={`cbc-card ${stripe}`}
       onClick={onClick}
-      onMouseEnter={() => setIsHover(true)}
-      onMouseLeave={() => setIsHover(false)}
-      className={getCardClassNames()}
-      bodyStyle={{ padding: 24 }}
+      onKeyDown={onKeyDown}
+      aria-label={agentKey}
     >
-      <div className={styles.cardTopSection}>
-        <div className={styles.channelIcon}>
-          {iconSpec.imageUrl ? (
-            <img
-              src={iconSpec.imageUrl}
-              alt={agentKey}
-              width={40}
-              height={40}
+      <div className="cbc-glow-layer" aria-hidden />
+      {config.enabled ? (
+        <>
+          <div className="cbc-enabled-ring" aria-hidden />
+          <div className="cbc-spectrum" aria-hidden>
+            <span />
+          </div>
+        </>
+      ) : null}
+      <div className="cbc-card-inner">
+        <div className={styles.topRow}>
+          <div className={styles.iconSlot}>
+            {iconSpec.imageUrl ? (
+              <img
+                src={iconSpec.imageUrl}
+                alt={agentKey}
+                width={40}
+                height={40}
+              />
+            ) : (
+              iconSpec.icon
+            )}
+          </div>
+          <div className="cbc-status-pill">
+            <span
+              className={`cbc-status-dot${config.enabled ? "" : " cbc-status-dot--off"}`}
             />
-          ) : (
-            iconSpec.icon
-          )}
+            <span
+              className={
+                config.enabled ? "cbc-status-text-on" : "cbc-status-text-off"
+              }
+            >
+              {config.enabled ? t("common.enabled") : t("common.disabled")}
+            </span>
+          </div>
         </div>
-        <div className={styles.statusIndicator}>
-          <div
-            className={`${styles.statusDot} ${
-              config.enabled ? styles.enabled : styles.disabled
-            }`}
-          />
-          <span
-            className={`${styles.statusText} ${
-              config.enabled ? styles.enabled : styles.disabled
-            }`}
-          >
-            {config.enabled ? t("common.enabled") : t("common.disabled")}
+
+        <div className={styles.middle}>
+          <h3 className={`card-title ${styles.cardTitle}`}>{agentKey}</h3>
+          <span className="cbc-tag">
+            {isBuiltin ? t("acp.builtin") : t("acp.custom")}
           </span>
         </div>
-      </div>
 
-      <div className={styles.cardMiddleSection}>
-        <div className={styles.cardTitle}>{agentKey}</div>
-        {isBuiltin ? (
-          <span className={styles.builtinTag}>{t("acp.builtin")}</span>
-        ) : (
-          <span className={styles.customTag}>{t("acp.custom")}</span>
-        )}
-      </div>
-
-      <div className={styles.cardBottomSection}>
-        <div className={styles.cardDescription}>
-          {t("acp.command")}: {config.command || t("acp.notSet")}
-        </div>
-        <div className={styles.cardDescription}>
-          {t("acp.args")}: {argsSummary}
+        <div className={`cbc-meta ${styles.bottom}`}>
+          <p className={styles.bottomLine}>
+            {t("acp.command")}: {config.command || t("acp.notSet")}
+          </p>
+          <p className={styles.bottomLine}>
+            {t("acp.args")}: {argsSummary}
+          </p>
         </div>
       </div>
-    </Card>
+    </div>
   );
 });

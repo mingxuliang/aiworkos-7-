@@ -12,7 +12,7 @@ from typing import Optional
 import click
 
 from .process_utils import (
-    _is_qwenpaw_wrapper_process,
+    _is_aiwork_wrapper_process,
     _process_table,
     _windows_process_snapshot,
 )
@@ -145,7 +145,7 @@ def _find_windows_wrapper_ancestor_pids(pids: set[int]) -> set[int]:
             if parent_info is None:
                 break
 
-            if _is_qwenpaw_wrapper_process(parent_info[1], parent_info[2]):
+            if _is_aiwork_wrapper_process(parent_info[1], parent_info[2]):
                 matches.add(parent_pid)
 
             current_pid = parent_pid

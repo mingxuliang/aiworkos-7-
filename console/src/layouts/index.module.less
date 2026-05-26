@@ -7,61 +7,107 @@
   // inherits from .page-container global class; add local overrides here if needed
 }
 
-// ─── Header ───────────────────────────────────────────────────────────────────
+// ─── Header（顶栏与 agent 团队工作台一致：浅磨砂条） ─────────────────────────
 .header {
   height: 56px;
-  padding: 0 28px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #f9f8f4;
+  background: rgba(248, 250, 252, 0.9) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .headerTitle {
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 600;
   min-width: 90px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #0f172a;
 }
 
-// ─── Sidebar ─────────────────────────────────────────────────────────────────
+// ─── Sidebar（agent团队 DashboardSidebar：浅色主导航 / 深色为变体） ────────────
+.siderAmbientOrbA,
+.siderAmbientOrbB {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(40px);
+}
+
+.siderAmbientOrbA {
+  top: -40px;
+  right: -32px;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.09) 0%,
+    transparent 68%
+  );
+}
+
+.siderAmbientOrbB {
+  bottom: 12%;
+  left: -44px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.055) 0%,
+    transparent 70%
+  );
+}
+
 .sider {
-  background: #f9f8f4 !important;
-  overflow: auto;
-  height: calc(100vh - 64px);
-  padding: 0 16px;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: calc(100vh - 56px);
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
-
-  // Hide scrollbar in browser
-  &::-webkit-scrollbar {
-    display: none;
-    /* Safari and Chrome */
-  }
-
-  &::-moz-scrollbar {
-    display: none;
-    /* Firefox */
-  }
-
-  &::-ms-scrollbar {
-    display: none;
-    /* IE/Edge */
-  }
+  background: #f8fafc !important;
+  border-right: 1px solid rgba(226, 232, 240, 0.92) !important;
+  box-shadow: 4px 0 28px rgba(15, 23, 42, 0.045);
 
   scrollbar-width: none;
-  /* Firefox */
   -ms-overflow-style: none;
-  /* IE and Edge */
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
-  // Agent-scoped section: selector + Chat + Control + Workspace
-  .agentScopedSection {
-    background: rgba(43, 18, 0, 0.02);
-    border-radius: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.06);
-    padding: 4px;
+  /* 浅色：整块导航（工作台 + 设置）共用同一磨砂底，避免下层菜单落到灰底外 */
+  .sidebarNavCard {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.82);
+    border-radius: 14px;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    padding: 5px;
+    margin-bottom: 8px;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     :global {
       .qwenpaw-menu {
@@ -69,53 +115,23 @@
       }
     }
   }
-  // AgentSelector container - fixed at top
-  .agentSelectorContainer {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    margin-bottom: 4px;
-  }
 
-  // Menu takes remaining space
   .sideMenu {
-    flex: 1;
-    overflow-y: auto;
-
-    // Hide scrollbar for menu too
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    &::-moz-scrollbar {
-      display: none;
-    }
-
-    &::-ms-scrollbar {
-      display: none;
-    }
-
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    position: relative;
+    z-index: 1;
   }
 
   &.siderCollapsed {
-    padding: 0 8px;
-
-    .agentSelectorContainer {
-      display: flex;
-      justify-content: center;
-    }
+    padding: 12px 6px;
 
     .collapseToggleContainer {
       justify-content: center;
-      width: calc(100% + 16px);
-      margin: 0 -8px;
+      width: calc(100% + 12px);
+      margin: 0 -6px;
       padding: 8px 0;
     }
 
     :global {
-      /* Center icon in collapsed menu items */
       .qwenpaw-menu-item,
       .qwenpaw-menu-submenu .qwenpaw-menu-item {
         padding-left: 0 !important;
@@ -125,14 +141,17 @@
         justify-content: center !important;
       }
 
-      /* Hide label text in collapsed mode */
+      .qwenpaw-menu-item-icon {
+        margin-right: 0 !important;
+        margin-inline-end: 0 !important;
+      }
+
       .qwenpaw-menu-title-content,
       .qwenpaw-menu-item > span:not([role]),
       .qwenpaw-menu-item-only-child > span {
         display: none !important;
       }
 
-      /* Hide group labels */
       .qwenpaw-menu-submenu-title {
         display: none !important;
       }
@@ -141,55 +160,107 @@
 
   :global {
     .qwenpaw-menu {
+      background: transparent !important;
       border-inline-end: 0 !important;
     }
 
-    /* Group title (一级菜单分组) */
-    .qwenpaw-menu-submenu-title {
-      font-family: "PingFang SC", sans-serif !important;
-      font-size: 12px !important;
-      font-weight: 500 !important;
-      line-height: 32px !important;
-      letter-spacing: normal !important;
-      color: rgba(26, 23, 22, 0.25) !important;
-      padding-left: 8px !important;
-
-      /* No hover effect for group titles */
-      &:hover {
-        background: transparent !important;
-        color: rgba(26, 23, 22, 0.25) !important;
-      }
-    }
-
-    /* Hide submenu arrow */
     .qwenpaw-menu-submenu-arrow {
       display: none !important;
     }
 
-    /* Always expand submenus */
-    .qwenpaw-menu-submenu {
-      > .qwenpaw-menu {
-        display: block !important;
+    .qwenpaw-menu-submenu > .qwenpaw-menu {
+      display: block !important;
+    }
+  }
+
+  /* 浅色：主导航条目（圆角 + 选中浅蓝底 + 图标方格） */
+  &:not(.siderDark) :global {
+    .qwenpaw-menu-submenu-title {
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      line-height: 28px !important;
+      letter-spacing: 0.07em !important;
+      text-transform: uppercase !important;
+      color: rgb(148, 163, 184) !important;
+      padding-left: 10px !important;
+
+      &:hover {
+        background: transparent !important;
+        color: rgb(148, 163, 184) !important;
       }
     }
 
-    /* Menu item padding - align all items */
     .qwenpaw-menu-item {
-      padding-left: 8px !important;
+      height: auto !important;
+      min-height: 40px !important;
+      line-height: normal !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      margin: 2px 0 !important;
+      border-radius: 12px !important;
+      font-size: 13px !important;
+      font-weight: 500 !important;
+      color: rgb(100, 116, 139) !important;
+      transition: background 0.18s ease, color 0.18s ease !important;
+      position: relative !important;
+
+      &:hover {
+        background: rgba(243, 244, 246, 0.92) !important;
+        color: rgb(55, 65, 81) !important;
+      }
+
+      .qwenpaw-menu-item-icon {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        margin-inline-end: 11px !important;
+        margin-right: 11px !important;
+        border-radius: 10px !important;
+        background: rgb(243, 244, 246) !important;
+        transition:
+          background 0.18s ease,
+          color 0.18s ease,
+          box-shadow 0.18s ease !important;
+      }
+
+      .qwenpaw-menu-item-icon svg {
+        opacity: 1 !important;
+      }
     }
 
-    /* Remove submenu indent - align with parent */
     .qwenpaw-menu-submenu .qwenpaw-menu-item {
-      padding-left: 8px !important;
+      padding-left: 10px !important;
     }
 
-    /* Selected item */
     .qwenpaw-menu-item-selected {
-      background: rgba(43, 18, 0, 0.08) !important;
-      color: inherit !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+      background: #eff6ff !important;
+      color: rgb(29, 78, 216) !important;
+      font-weight: 600 !important;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 22px;
+        width: 3px;
+        border-radius: 0 4px 4px 0;
+        background: linear-gradient(to bottom, #93c5fd, #2563eb);
+      }
+
+      .qwenpaw-menu-item-icon {
+        background: linear-gradient(
+          145deg,
+          #3b82f6 0%,
+          #2563eb 100%
+        ) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+      }
 
       .qwenpaw-menu-title-content {
         display: flex !important;
@@ -197,55 +268,273 @@
       }
     }
 
-    /* Selected submenu item - keep text color unchanged */
     .qwenpaw-menu-submenu .qwenpaw-menu-item-selected {
-      color: inherit !important;
+      color: rgb(29, 78, 216) !important;
     }
   }
-}
 
-.siderDark {
-  background: #1a1a1a !important;
-  border-right-color: rgba(255, 255, 255, 0.08) !important;
+  /* 深色：同一套圆角方式 */
+  &.siderDark {
+    background: var(--copaw-dm-rail, #0e1525) !important;
+    border-right-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06)) !important;
+    box-shadow:
+      4px 0 32px rgba(0, 0, 0, 0.42),
+      inset -1px 0 0 rgba(255, 255, 255, 0.04);
 
-  // Agent-scoped section (dark mode)
-  .agentScopedSection {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  :global {
-    .qwenpaw-menu {
-      background: #1a1a1a !important;
-      border-inline-end: 0 !important;
+    .siderAmbientOrbA {
+      background: radial-gradient(
+        circle,
+        rgba(59, 130, 246, 0.12) 0%,
+        transparent 68%
+      );
     }
 
-    /* Group title (sub-menu label) */
-    .qwenpaw-menu-submenu-title {
-      color: rgba(255, 255, 255, 0.45) !important;
+    .siderAmbientOrbB {
+      background: radial-gradient(
+        circle,
+        rgba(37, 99, 235, 0.07) 0%,
+        transparent 70%
+      );
+    }
 
-      /* No hover effect for group titles in dark mode */
-      &:hover {
-        background: transparent !important;
-        color: rgba(255, 255, 255, 0.45) !important;
+    .sidebarNavCard {
+      background: var(--copaw-dm-surface, #111827);
+      border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.045),
+        0 8px 28px rgba(0, 0, 0, 0.38);
+    }
+
+    :global {
+      .qwenpaw-menu-submenu-title {
+        color: rgba(148, 163, 184, 0.55) !important;
+      }
+
+      .qwenpaw-menu-item {
+        height: auto !important;
+        min-height: 40px !important;
+        line-height: normal !important;
+        margin: 2px 0 !important;
+        border-radius: 12px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: rgba(203, 213, 225, 0.78) !important;
+        position: relative !important;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.06) !important;
+          color: #f1f5f9 !important;
+        }
+
+        .qwenpaw-menu-item-icon {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 36px !important;
+          height: 36px !important;
+          margin-inline-end: 11px !important;
+          border-radius: 10px !important;
+          background: rgba(255, 255, 255, 0.06) !important;
+          color: rgba(226, 232, 240, 0.75) !important;
+        }
+      }
+
+      .qwenpaw-menu-submenu .qwenpaw-menu-item {
+        padding-left: 10px !important;
+      }
+
+      .qwenpaw-menu-item-selected {
+        background: rgba(59, 130, 246, 0.22) !important;
+        color: #e0f2fe !important;
+        font-weight: 600 !important;
+
+        &::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          height: 22px;
+          width: 3px;
+          border-radius: 0 4px 4px 0;
+          background: linear-gradient(to bottom, #93c5fd, #3b82f6);
+        }
+
+        .qwenpaw-menu-item-icon {
+          background: linear-gradient(
+            145deg,
+            #3b82f6 0%,
+            #2563eb 100%
+          ) !important;
+          color: #fff !important;
+          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38) !important;
+        }
+
+        .qwenpaw-menu-title-content {
+          display: flex !important;
+          align-items: center !important;
+        }
+      }
+
+      .qwenpaw-menu-submenu .qwenpaw-menu-item-selected {
+        color: #e0f2fe !important;
       }
     }
+  }
 
-    /* Regular menu item */
-    .qwenpaw-menu-item {
-      color: rgba(255, 255, 255, 0.75) !important;
+  /* 底部账号区、折叠按钮、收起图标导航 — 与浅色主导航一体 */
+  .authActions {
+    position: relative;
+    z-index: 1;
+    padding: 10px 4px 6px;
+    margin-top: 4px;
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
+  }
+
+  .authBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-start;
+    color: rgb(100, 116, 139) !important;
+    border-radius: 10px;
+
+    &:hover {
+      color: rgb(29, 78, 216) !important;
+      background: rgb(239, 246, 255) !important;
     }
+  }
 
-    /* Hover state - only for menu items, not group titles */
-    .qwenpaw-menu-item:hover {
-      background: rgba(255, 255, 255, 0.1) !important;
-      color: rgba(255, 255, 255, 0.95) !important;
+  &.siderDark .authActions {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  &.siderDark .authBtn {
+    color: rgba(191, 219, 254, 0.72) !important;
+
+    &:hover {
+      color: rgba(249, 250, 251, 0.95) !important;
+      background: rgba(255, 255, 255, 0.07) !important;
     }
+  }
 
-    /* Selected item */
-    .qwenpaw-menu-item-selected {
-      background: rgba(255, 127, 22, 0.5) !important;
-      color: #ff7f16 !important;
+  .authBtnCollapsed {
+    justify-content: center;
+  }
+
+  .authBtn + .authBtn {
+    margin-top: 4px;
+  }
+
+  .collapseToggleContainer {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    width: calc(100% + 20px);
+    margin: 0 -10px;
+    padding: 10px;
+    border-top: 1px solid rgba(226, 232, 240, 0.88);
+  }
+
+  &.siderDark .collapseToggleContainer {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .collapseToggle {
+    color: rgb(148, 163, 184);
+    border-radius: 10px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgb(243, 244, 246) !important;
+      color: rgb(59, 130, 246) !important;
+    }
+  }
+
+  &.siderDark .collapseToggle {
+    color: rgba(147, 197, 253, 0.55);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: #93c5fd !important;
+    }
+  }
+
+  .collapsedNav {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 0 8px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .collapsedNavItem {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: rgb(148, 163, 184);
+    transition:
+      background 0.18s ease,
+      color 0.18s ease;
+
+    &:hover {
+      background: rgb(243, 244, 246);
+      color: rgb(71, 85, 105);
+    }
+  }
+
+  .collapsedNavItemActive {
+    background: rgb(239, 246, 255) !important;
+    color: rgb(37, 99, 235) !important;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 9px;
+      bottom: 9px;
+      width: 3px;
+      border-radius: 0 4px 4px 0;
+      background: linear-gradient(to bottom, #93c5fd, #2563eb);
+    }
+  }
+
+  &.siderDark .collapsedNavItem {
+    color: rgba(148, 163, 184, 0.75);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.07);
+      color: rgb(226, 232, 240);
+    }
+  }
+
+  &.siderDark .collapsedNavItemActive {
+    background: rgba(59, 130, 246, 0.28) !important;
+    color: #fff !important;
+    box-shadow: none;
+
+    &::before {
+      background: linear-gradient(to bottom, #93c5fd, #3b82f6);
     }
   }
 }
@@ -260,332 +549,25 @@
   width: auto;
 }
 
-.logoDivider {
-  width: 16px;
-  height: 0px;
-  transform: rotate(90deg);
-  border-top: 1px solid rgba(234, 232, 231, 1);
-  margin: 0 8px;
-}
-
-.headerDivider {
-  width: 16px;
-  height: 0px;
-  transform: rotate(90deg);
-  z-index: 4;
-  border-top: 1px solid rgba(234, 232, 231, 1);
-}
-
-.userDropdown {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 6px;
-  transition: background 0.2s;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.05);
-  }
-}
-
-.username {
-  margin-left: 8px;
-  font-weight: 500;
-  color: #1a1716;
-}
-
-.userDropdownDark {
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .username {
-    color: rgba(255, 255, 255, 0.85);
-  }
-}
-
-.versionBadge {
-  font-size: 12px;
-  color: #1a171673;
-  font-weight: 600;
-  line-height: 1;
-  position: relative;
-  top: 3px;
-}
-
-.versionBadgeClickable {
-  cursor: pointer;
-}
-
-.versionBadgeDefault {
-  cursor: default;
-}
-
-.collapseBtn {
-  margin: auto;
-  color: #ff7f16;
-}
-
-// ─── Auth actions (account + logout) ──────────────────────────────────────────
-.authActions {
-  padding: 12px 16px;
-  border-top: 1px solid #f0f0f0;
-}
-
-.authBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: flex-start;
-  color: rgba(0, 0, 0, 0.65);
-
-  &:hover {
-    color: rgba(0, 0, 0, 0.88) !important;
-    background: rgba(0, 0, 0, 0.04) !important;
-  }
-}
-
-.authBtnCollapsed {
-  justify-content: center;
-}
-
-.authBtn + .authBtn {
-  margin-top: 4px;
-}
-
-/* Collapse Toggle Button */
-.collapseToggleContainer {
-  flex-shrink: 0;
-  z-index: 10;
-  width: calc(100% + 32px);
-  margin: 0 -16px;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.collapseToggle {
-  color: rgba(0, 0, 0, 0.45);
-  border-radius: 8px;
-  transition: all 0.2s;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.06) !important;
-    color: #ff7f16 !important;
-  }
-}
-
-/* Collapsed nav (icon-only group list) */
-.collapsedNav {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 0;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.collapsedNavItem {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: rgba(0, 0, 0, 0.55);
-  transition: all 0.15s;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.06);
-    color: rgba(0, 0, 0, 0.88);
-  }
-}
-
-.collapsedNavItemActive {
-  background: rgba(43, 18, 0, 0.08) !important;
-  color: rgba(0, 0, 0, 0.88) !important;
-}
-
-// ─── Update Modal ─────────────────────────────────────────────────────────────
-.updateModal {
-  :global(.qwenpaw-modal-content) {
-    padding: 0 !important;
-    border-radius: 12px !important;
-    overflow: visible !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
-
-  :global(.qwenpaw-modal-body) {
-    padding: 0 !important;
-  }
-
-  :global(.qwenpaw-modal-footer) {
-    padding: 12px 24px;
-    margin-top: 0;
-  }
-
-  :global(.qwenpaw-modal-header) {
-    display: none !important;
-  }
-
-  :global(.qwenpaw-modal-close) {
-    display: none !important;
-  }
-}
-
-.updateModalBanner {
-  background: url("/public/qwenpawBack.png") no-repeat center top;
-  background-size: contain;
-  padding: 48px 28px 0px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  min-height: 100px;
-  position: relative;
-  transform: translateY(-48px);
-}
-
-.updateModalBannerLeft {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.updateModalVersionTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: #fff;
-  border: 1px solid rgba(43, 18, 0, 0.12);
-  border-radius: 20px;
-  padding: 3px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(26, 23, 22, 0.65);
-  width: fit-content;
-}
-
-.updateModalBannerTitle {
-  font-size: 32px;
-  font-weight: 500;
-  line-height: 64.78px;
-  letter-spacing: normal;
-  color: #ff7f16;
-}
-
-.updateModalTitle {
-  color: #ff7f16;
-}
-
-.updateModalBody {
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 16px 24px 8px;
-  min-height: 120px;
-  margin-top: -40px;
-}
-
-.updateModalSpinWrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 120px;
-}
-
-.updateViewReleasesBtn {
-  background: #ff7f16 !important;
-  border-color: #ff7f16 !important;
-  color: #fff !important;
-
-  &:hover {
-    background: #d45b0a !important;
-    border-color: #d45b0a !important;
-  }
-}
-
-.updateModalPrimaryBtn {
-  background: #ff7f16;
-  border-color: #ff7f16;
-}
-
-// ─── Code block inside update modal ──────────────────────────────────────────
-.codeBlock {
-  position: relative;
-  background: #f5f5f5;
-  border: 1px solid #e8e8e8;
-  border-radius: 6px;
-  padding: 12px 40px 12px 16px;
-  overflow-x: auto;
-  margin: 8px 0;
-}
-
-.codeBlockInner {
-  font-family: monospace;
-  font-size: 13px;
-}
-
-.codeInline {
-  background: #f5f5f5;
-  border-radius: 3px;
-  padding: 1px 5px;
-  font-family: monospace;
-  font-size: 13px;
-}
-
-// ─── CopyButton ───────────────────────────────────────────────────────────────
-.copyBtn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  transition: color 0.2s;
-  background: none;
-  border: none;
-  padding: 2px 4px;
-  cursor: pointer;
-  line-height: 1;
-  border-radius: 4px;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.06);
-  }
-}
-
-.copyBtnCopied {
-  color: #52c41a;
-}
-
-.copyBtnDefault {
-  color: #999;
-}
-
 /* ─── Dark mode overrides ─────────────────────────────────────────────────── */
 :global(.dark-mode) {
   .header {
-    background: #1a1a1a !important;
-    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(10, 15, 30, 0.95) !important;
+    border-bottom-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06)) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 1px 24px rgba(0, 0, 0, 0.35) !important;
     color: rgba(255, 255, 255, 0.85);
 
-    /* Text buttons (Docs / FAQ / GitHub / Changelog) */
     :global(.qwenpaw-btn-text),
     :global(.ant-btn-text) {
-      color: rgba(255, 255, 255, 0.75) !important;
+      color: rgba(203, 213, 225, 0.78) !important;
 
       &:hover {
-        color: #fff !important;
-        background: rgba(255, 255, 255, 0.08) !important;
+        color: #f1f5f9 !important;
+        background: rgba(255, 255, 255, 0.07) !important;
       }
 
       .anticon,
@@ -594,80 +576,65 @@
       }
     }
 
-    /* Fallback: any icon or text directly inside header */
+    /* Header input/search bar (opt平台 WorkbenchHeader style) */
+    :global(.qwenpaw-input),
+    :global(.ant-input),
+    :global(.qwenpaw-input-affix-wrapper),
+    :global(.ant-input-affix-wrapper) {
+      background: var(--copaw-dm-surface-raised, #1a2235) !important;
+      border-color: var(--copaw-dm-border, rgba(255, 255, 255, 0.06)) !important;
+      color: rgba(203, 213, 225, 0.85) !important;
+
+      &::placeholder,
+      :global(input)::placeholder {
+        color: rgba(148, 163, 184, 0.45) !important;
+      }
+
+      &:focus,
+      &:focus-within {
+        border-color: rgba(6, 182, 212, 0.45) !important;
+        box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.1) !important;
+      }
+    }
+
     :global(.anticon) {
-      color: rgba(255, 255, 255, 0.75);
+      color: rgba(148, 163, 184, 0.75);
     }
   }
 
   .headerTitle {
-    color: rgba(255, 255, 255, 0.85);
-  }
-
-  .sider {
-    background: #1a1a1a !important;
-    border-right-color: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 
   .siderTop {
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
-  .versionBadge {
-    color: #ff7f16;
+  /* Sider nav card — glassmorphism depth */
+  .sider.siderDark .sidebarNavCard {
+    background: rgba(17, 24, 39, 0.88) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 8px 24px rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(12px);
   }
 
-  .collapseBtn {
-    color: #ff7f16;
+  /* Ambient orbs in dark — subtle cyan tint */
+  .sider.siderDark .siderAmbientOrbA {
+    background: radial-gradient(
+      circle,
+      rgba(6, 182, 212, 0.1) 0%,
+      transparent 68%
+    );
   }
 
-  .authActions {
-    border-top-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .authBtn {
-    color: rgba(255, 255, 255, 0.75);
-
-    &:hover {
-      color: rgba(255, 255, 255, 0.9) !important;
-      background: rgba(255, 255, 255, 0.06) !important;
-    }
-  }
-
-  .collapseToggle {
-    color: rgba(255, 255, 255, 0.45);
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #ff7f16;
-    }
-  }
-
-  .collapsedNavItem {
-    color: rgba(255, 255, 255, 0.5);
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: rgba(255, 255, 255, 0.88);
-    }
-  }
-
-  .collapsedNavItemActive {
-    background: rgba(255, 127, 22, 0.5) !important;
-    color: rgba(255, 255, 255, 0.88) !important;
-  }
-
-  .codeBlock {
-    background: #2a2a2a;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .codeInline {
-    background: #2a2a2a;
-    color: rgba(255, 255, 255, 0.85);
-  }
-
-  .copyBtnDefault {
-    color: rgba(255, 255, 255, 0.3);
+  .sider.siderDark .siderAmbientOrbB {
+    background: radial-gradient(
+      circle,
+      rgba(6, 182, 212, 0.055) 0%,
+      transparent 70%
+    );
   }
 }

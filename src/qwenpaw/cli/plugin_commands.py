@@ -18,11 +18,11 @@ import click
 logger = logging.getLogger(__name__)
 
 
-def _check_qwenpaw_not_running():
+def _check_aiwork_not_running():
     """Check if QwenPaw is not running, exit if it is."""
-    from ..config.utils import is_qwenpaw_running
+    from ..config.utils import is_aiwork_running
 
-    if is_qwenpaw_running():
+    if is_aiwork_running():
         click.echo(
             "❌ QwenPaw is currently running. Please stop it first:",
             err=True,
@@ -119,7 +119,7 @@ def install(source: str, force: bool):
     from ..config.utils import get_plugins_dir
 
     # Check if QwenPaw is running
-    _check_qwenpaw_not_running()
+    _check_aiwork_not_running()
 
     # Check if source is a URL
     is_url = source.startswith(("http://", "https://"))
@@ -343,7 +343,7 @@ def uninstall(plugin_id: str):
     from ..config.utils import get_plugins_dir
 
     # Check if QwenPaw is running
-    _check_qwenpaw_not_running()
+    _check_aiwork_not_running()
 
     plugin_dir = get_plugins_dir() / plugin_id
 

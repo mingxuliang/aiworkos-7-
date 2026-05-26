@@ -3,7 +3,7 @@ name: channel_message
 description: 当需要主动向用户、会话或频道单向发送消息时，使用本 skill。通常仅在用户明确要求向某个 channel / 会话发送消息，或需要主动通知时使用。先用 qwenpaw chats list 查询 session，再用 qwenpaw channels send 推送消息。
 metadata:
   builtin_skill_version: "1.3"
-  qwenpaw:
+  aiwork:
     emoji: "📤"
 ---
 
@@ -42,19 +42,19 @@ metadata:
 ### 1) 先查询可用 sessions
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --channel <channel>
+aiwork chats list --agent-id <your_agent> --channel <channel>
 ```
 
 也可以按用户筛选：
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --user-id <user_id>
+aiwork chats list --agent-id <your_agent> --user-id <user_id>
 ```
 
 ### 2) 发送消息
 
 ```bash
-qwenpaw channels send \
+aiwork channels send \
   --agent-id <your_agent> \
   --channel <channel> \
   --target-user <user_id> \
@@ -93,7 +93,7 @@ qwenpaw channels send \
 发送前先执行：
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --channel <channel>
+aiwork chats list --agent-id <your_agent> --channel <channel>
 ```
 
 从结果中获取：
@@ -113,9 +113,9 @@ qwenpaw chats list --agent-id <your_agent> --channel <channel>
 ### 用户明确要求发往某个 channel
 
 ```bash
-qwenpaw chats list --agent-id notify_bot --channel feishu
+aiwork chats list --agent-id notify_bot --channel feishu
 
-qwenpaw channels send \
+aiwork channels send \
   --agent-id notify_bot \
   --channel feishu \
   --target-user manager_id \
@@ -126,9 +126,9 @@ qwenpaw channels send \
 ### 任务完成通知
 
 ```bash
-qwenpaw chats list --agent-id task_bot --channel console
+aiwork chats list --agent-id task_bot --channel console
 
-qwenpaw channels send \
+aiwork channels send \
   --agent-id task_bot \
   --channel console \
   --target-user alice \
@@ -139,9 +139,9 @@ qwenpaw channels send \
 ### 异步结果回推
 
 ```bash
-qwenpaw chats list --agent-id analyst_bot --user-id alice
+aiwork chats list --agent-id analyst_bot --user-id alice
 
-qwenpaw channels send \
+aiwork channels send \
   --agent-id analyst_bot \
   --channel console \
   --target-user alice \
@@ -162,7 +162,7 @@ qwenpaw channels send \
 不要猜 `target-user` 或 `target-session`，先执行：
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --channel <channel>
+aiwork chats list --agent-id <your_agent> --channel <channel>
 ```
 
 ### 错误 3：缺少必填参数
@@ -184,27 +184,27 @@ qwenpaw chats list --agent-id <your_agent> --channel <channel>
 ### 查看所有会话
 
 ```bash
-qwenpaw chats list --agent-id <your_agent>
+aiwork chats list --agent-id <your_agent>
 ```
 
 ### 查看某个用户的会话
 
 ```bash
-qwenpaw chats list --agent-id <your_agent> --user-id <user_id>
+aiwork chats list --agent-id <your_agent> --user-id <user_id>
 ```
 
 ### 查看可用频道
 
 ```bash
-qwenpaw channels list --agent-id <your_agent>
+aiwork channels list --agent-id <your_agent>
 ```
 
 ---
 
 ## 与 Agent Chat 的区别
 
-- **qwenpaw agents chat**：发给其他 agent，双向，有回复
-- **qwenpaw channels send**：发给用户/会话/频道，单向，无回复
+- **aiwork agents chat**：发给其他 agent，双向，有回复
+- **aiwork channels send**：发给用户/会话/频道，单向，无回复
 
 **选择原则**：
 - 要找其他 agent 协作 → `qwenpaw agents chat`
@@ -243,8 +243,8 @@ qwenpaw channels list --agent-id <your_agent>
 随时使用 `-h` 查看详细帮助：
 
 ```bash
-qwenpaw channels -h
-qwenpaw channels send -h
-qwenpaw chats -h
-qwenpaw chats list -h
+aiwork channels -h
+aiwork channels send -h
+aiwork chats -h
+aiwork chats list -h
 ```

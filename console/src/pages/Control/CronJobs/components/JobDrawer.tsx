@@ -24,7 +24,7 @@ interface JobDrawerProps {
   form: FormInstance<CronJob>;
   saving: boolean;
   onClose: () => void;
-  onSubmit: (values: CronJob) => void;
+  onSubmit: (values: CronJob & Record<string, unknown>) => void | Promise<void>;
 }
 
 export function JobDrawer({
@@ -42,6 +42,7 @@ export function JobDrawer({
 
   return (
     <Drawer
+      rootClassName="copaw-ported-drawer"
       width={600}
       placement="right"
       title={editingJob ? t("cronJobs.editJob") : t("cronJobs.createJob")}
@@ -90,8 +91,8 @@ export function JobDrawer({
           <Switch />
         </Form.Item>
 
-        <Form.Item name={["schedule", "type"]} label="ScheduleType" hidden>
-          <Input disabled value="cron" />
+        <Form.Item name={["schedule", "type"]} hidden initialValue="cron">
+          <Input />
         </Form.Item>
 
         <Form.Item
@@ -156,7 +157,9 @@ export function JobDrawer({
                 <Form.Item
                   name="cronDaysOfWeek"
                   label={t("cronJobs.cronDaysOfWeek")}
-                  rules={[{ required: true, message: "请选择至少一天" }]}
+                  rules={[
+                    { required: true, message: t("cronJobs.selectWeekdayRequired") },
+                  ]}
                 >
                   <Checkbox.Group
                     options={[
@@ -248,8 +251,12 @@ export function JobDrawer({
           tooltip={t("cronJobs.taskTypeTooltip")}
         >
           <Select>
-            <Select.Option value="text">text</Select.Option>
-            <Select.Option value="agent">agent</Select.Option>
+            <Select.Option value="text">
+              {t("cronJobs.taskTypeOptionText")}
+            </Select.Option>
+            <Select.Option value="agent">
+              {t("cronJobs.taskTypeOptionAgent")}
+            </Select.Option>
           </Select>
         </Form.Item>
 
@@ -331,22 +338,6 @@ export function JobDrawer({
           }}
         </Form.Item>
 
-        <Form.Item
-          name={["request", "session_id"]}
-          label={t("cronJobs.requestSessionId")}
-          tooltip={t("cronJobs.requestSessionIdTooltip")}
-        >
-          <Input placeholder="default" />
-        </Form.Item>
-
-        <Form.Item
-          name={["request", "user_id"]}
-          label={t("cronJobs.requestUserId")}
-          tooltip={t("cronJobs.requestUserIdTooltip")}
-        >
-          <Input placeholder="system" />
-        </Form.Item>
-
         <Form.Item name={["dispatch", "type"]} label="DispatchType" hidden>
           <Input disabled value="channel" />
         </Form.Item>
@@ -391,6 +382,15 @@ export function JobDrawer({
             <Select.Option value="stream">stream</Select.Option>
             <Select.Option value="final">final</Select.Option>
           </Select>
+        </Form.Item>
+
+        <Form.Item
+          name={["runtime", "share_session"]}
+          label={t("cronJobs.runtimeShareSession")}
+          valuePropName="checked"
+          tooltip={t("cronJobs.shareSessionTooltip")}
+        >
+          <Switch defaultChecked />
         </Form.Item>
 
         <Form.Item

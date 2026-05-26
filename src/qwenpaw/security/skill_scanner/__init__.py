@@ -173,7 +173,7 @@ def is_skill_whitelisted(
 # ---------------------------------------------------------------------------
 
 _BLOCKED_HISTORY_FILE = "skill_scanner_blocked.json"
-_WORKING_DIR_CURRENT_NAME = ".qwenpaw"
+_WORKING_DIR_CURRENT_NAME = ".aiwork"
 _WORKING_DIR_LEGACY_NAME = ".copaw"
 _history_lock = threading.Lock()
 

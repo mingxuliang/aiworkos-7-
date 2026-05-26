@@ -1,6 +1,6 @@
 /**
  * Renders a row of Ant Design Tags summarising what a backup covers:
- * agent count, global config, skill pool, and secrets (highlighted in orange).
+ * agent count, global config, skill pool, and secrets (highlighted in geekblue).
  * Used in the BackupTable scope column and potentially elsewhere.
  */
 import { Tag } from "antd";
@@ -22,7 +22,7 @@ export default function ScopeTags({ scope, agentCount }: Props) {
       ) : null}
       {scope.include_global_config && <Tag>{t("backup.globalConfig")}</Tag>}
       {scope.include_skill_pool && <Tag>{t("backup.skillPool")}</Tag>}
-      {scope.include_secrets && <Tag color="orange">{t("backup.secrets")}</Tag>}
+      {scope.include_secrets && <Tag color="geekblue">{t("backup.secrets")}</Tag>}
     </div>
   );
 }

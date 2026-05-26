@@ -17,12 +17,21 @@ from ...config.context import (
     get_current_workspace_dir,
     get_current_recent_max_bytes,
 )
+from ...security.sandbox import (
+    SandboxBoundaryError,
+    assert_path_in_jail,
+    get_current_sandbox_root,
+    is_sandbox_enabled,
+)
 from ...constant import WORKING_DIR, TRUNCATION_NOTICE_MARKER
 
 
 def _resolve_file_path(file_path: str) -> str:
     """Resolve file path: use absolute path as-is,
     resolve relative path from current workspace or WORKING_DIR.
+
+    When execution sandbox is enabled, the resolved path must stay inside
+    the current sandbox root.
 
     Args:
         file_path: The input file path (absolute or relative).
@@ -31,12 +40,39 @@ def _resolve_file_path(file_path: str) -> str:
         The resolved absolute file path as string.
     """
     path = Path(file_path).expanduser()
-    if path.is_absolute():
-        return str(path)
+    if is_sandbox_enabled():
+        base = get_current_sandbox_root() or (
+            get_current_workspace_dir() or WORKING_DIR
+        )
     else:
-        # Use current workspace_dir from context, fallback to WORKING_DIR
-        workspace_dir = get_current_workspace_dir() or WORKING_DIR
-        return str(workspace_dir / file_path)
+        base = get_current_workspace_dir() or WORKING_DIR
+
+    if path.is_absolute():
+        resolved = str(path.resolve(strict=False))
+    else:
+        resolved = str((Path(base) / file_path).resolve(strict=False))
+
+    if is_sandbox_enabled():
+        sandbox_root = get_current_sandbox_root() or (
+            get_current_workspace_dir() or WORKING_DIR
+        )
+        assert_path_in_jail(resolved, sandbox_root)
+    return resolved
+
+
+def _resolve_file_path_or_error(file_path: str) -> str | ToolResponse:
+    """Resolve path or return a ToolResponse error for sandbox violations."""
+    try:
+        return _resolve_file_path(file_path)
+    except SandboxBoundaryError as exc:
+        return ToolResponse(
+            content=[
+                TextBlock(
+                    type="text",
+                    text=f"Error: {exc}",
+                ),
+            ],
+        )
 
 
 def _get_encoding_for_file(file_path: str) -> str:
@@ -109,7 +145,10 @@ async def read_file(  # pylint: disable=too-many-return-statements
                 ],
             )
 
-    file_path = _resolve_file_path(file_path)
+    resolved = _resolve_file_path_or_error(file_path)
+    if isinstance(resolved, ToolResponse):
+        return resolved
+    file_path = resolved
 
     if not os.path.exists(file_path):
         return ToolResponse(
@@ -228,7 +267,10 @@ async def write_file(
             ],
         )
 
-    file_path = _resolve_file_path(file_path)
+    resolved = _resolve_file_path_or_error(file_path)
+    if isinstance(resolved, ToolResponse):
+        return resolved
+    file_path = resolved
     encoding = _get_encoding_for_file(file_path)
 
     try:
@@ -281,7 +323,10 @@ async def edit_file(
             ],
         )
 
-    resolved_path = _resolve_file_path(file_path)
+    resolved = _resolve_file_path_or_error(file_path)
+    if isinstance(resolved, ToolResponse):
+        return resolved
+    resolved_path = resolved
 
     if not os.path.exists(resolved_path):
         return ToolResponse(
@@ -370,7 +415,10 @@ async def append_file(
             ],
         )
 
-    file_path = _resolve_file_path(file_path)
+    resolved = _resolve_file_path_or_error(file_path)
+    if isinstance(resolved, ToolResponse):
+        return resolved
+    file_path = resolved
     encoding = _get_encoding_for_file(file_path)
 
     try:

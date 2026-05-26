@@ -153,7 +153,7 @@ export function ReMeLightMemoryCard() {
             children: (
               <>
                 <Alert
-                  type="warning"
+                  type="info"
                   showIcon
                   message={`${t("agentConfig.embeddingEnableHint")} ${t(
                     "agentConfig.embeddingRestartWarning",
