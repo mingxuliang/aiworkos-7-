@@ -50,6 +50,9 @@ import WhisperSpeechButton, {
   WhisperSpeechButtonRef,
 } from "./components/WhisperSpeechButton";
 import SenderTypingWaveform from "./components/SenderTypingWaveform";
+import ExecutionEnvironmentSelector from "./components/ExecutionEnvironmentSelector";
+import ChatSenderPrefixActions from "./components/ChatSenderPrefixActions";
+import { useExecutionEnvironment } from "../../hooks/useExecutionEnvironment";
 
 import {
   toDisplayUrl,
@@ -510,6 +513,8 @@ export default function ChatPage() {
   const [showModelPrompt, setShowModelPrompt] = useState(false);
   const { selectedAgent, setSelectedAgent } = useAgentStore();
   const { toolRenderConfig } = usePlugins();
+  const { mode: executionMode, sandboxEnabled, setMode: setExecutionMode } =
+    useExecutionEnvironment();
 
   // Auto-select agent when navigated from workbench "分配任务" button
   useEffect(() => {
@@ -727,6 +732,37 @@ export default function ChatPage() {
   /** Stable tree for AgentScope sender.beforeUI — TypingWaveform from ai助手. */
   const senderTypingWaveform = useMemo(() => <SenderTypingWaveform />, []);
 
+  const executionEnvironmentSelector = useMemo(
+    () => (
+      <ExecutionEnvironmentSelector
+        mode={executionMode}
+        onChange={setExecutionMode}
+      />
+    ),
+    [executionMode, setExecutionMode],
+  );
+
+  const senderPrefixActions = useMemo(
+    () => (
+      <ChatSenderPrefixActions
+        whisper={
+          whisperEnabled ? (
+            <WhisperSpeechButton
+              ref={whisperSpeechRef}
+              onTranscription={handleWhisperTranscription}
+            />
+          ) : undefined
+        }
+        environmentSelector={executionEnvironmentSelector}
+      />
+    ),
+    [
+      whisperEnabled,
+      handleWhisperTranscription,
+      executionEnvironmentSelector,
+    ],
+  );
+
   useMessageHistoryNavigation(chatRef, isChatActive, isComposingRef);
 
   // Shortcut key for voice recording (Ctrl+Shift+M or Cmd+Shift+M on Mac)
@@ -932,6 +968,7 @@ export default function ChatPage() {
         user_id: window.currentUserId || session?.user_id || DEFAULT_USER_ID,
         channel: window.currentChannel || session?.channel || DEFAULT_CHANNEL,
         stream: true,
+        execution_sandbox_enabled: sandboxEnabled,
         ...biz_params,
       };
 
@@ -959,7 +996,7 @@ export default function ChatPage() {
 
       return response;
     },
-    [selectedAgent],
+    [selectedAgent, sandboxEnabled],
   );
 
   const handleFileUpload = useCallback(
@@ -1075,12 +1112,7 @@ export default function ChatPage() {
         beforeSubmit: handleBeforeSubmit,
         beforeUI: senderTypingWaveform,
         allowSpeech: !whisperEnabled,
-        prefix: whisperEnabled ? (
-          <WhisperSpeechButton
-            ref={whisperSpeechRef}
-            onTranscription={handleWhisperTranscription}
-          />
-        ) : undefined,
+        prefix: senderPrefixActions,
         attachments: {
           trigger: function (props: any) {
             const tooltipKey = multimodalCaps.supportsMultimodal
@@ -1151,6 +1183,7 @@ export default function ChatPage() {
               session_id: window.currentSessionId || data.session_id,
               user_id: window.currentUserId || DEFAULT_USER_ID,
               channel: window.currentChannel || DEFAULT_CHANNEL,
+              execution_sandbox_enabled: sandboxEnabled,
             }),
             signal: data.signal,
           });
@@ -1185,6 +1218,10 @@ export default function ChatPage() {
     scheduleHistoryClear,
     planEnabled,
     senderTypingWaveform,
+    senderPrefixActions,
+    sandboxEnabled,
+    whisperEnabled,
+    handleWhisperTranscription,
   ]);
 
   return (

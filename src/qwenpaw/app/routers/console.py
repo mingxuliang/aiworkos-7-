@@ -14,6 +14,7 @@ from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
 from starlette.responses import StreamingResponse
 
 from agentscope_runtime.engine.schemas.agent_schemas import AgentRequest
+from ...security.sandbox.context import parse_sandbox_enabled_value
 from ...utils.logging import LOG_FILE_PATH
 from ..agent_context import get_agent_for_request
 from ..runner.title_generator import generate_and_update_title
@@ -103,11 +104,26 @@ def _extract_placeholder_name(content_parts: list) -> tuple[str, str]:
     return first_text[:10], first_text
 
 
+def _read_execution_sandbox_enabled(
+    request_data: Union[AgentRequest, dict],
+) -> bool | None:
+    """Read chat-level sandbox toggle from console request body."""
+    if isinstance(request_data, dict):
+        return parse_sandbox_enabled_value(
+            request_data.get("execution_sandbox_enabled"),
+        )
+    return parse_sandbox_enabled_value(
+        getattr(request_data, "execution_sandbox_enabled", None),
+    )
+
+
 def _extract_session_and_payload(request_data: Union[AgentRequest, dict]):
     """Extract run_key (ChatSpec.id), session_id, and native payload.
 
     run_key must be ChatSpec.id (chat_id) so it matches list_chats/get_chat.
     """
+    execution_sandbox_enabled = _read_execution_sandbox_enabled(request_data)
+
     if isinstance(request_data, AgentRequest):
         channel_id = getattr(request_data, "channel", None) or "console"
         sender_id = request_data.user_id or "default"
@@ -136,6 +152,10 @@ def _extract_session_and_payload(request_data: Union[AgentRequest, dict]):
             "user_id": sender_id,
         },
     }
+    if execution_sandbox_enabled is not None:
+        native_payload["meta"]["execution_sandbox_enabled"] = (
+            execution_sandbox_enabled
+        )
     return native_payload
 
 

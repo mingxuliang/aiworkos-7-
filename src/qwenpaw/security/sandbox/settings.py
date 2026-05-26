@@ -8,6 +8,7 @@ from typing import Literal
 
 from ...constant import EnvVarLoader
 from ...config.config import ExecutionSandboxConfig
+from .context import get_sandbox_enabled_override
 
 SandboxBackend = Literal["off", "local", "docker"]
 
@@ -64,12 +65,18 @@ def _load_config() -> ExecutionSandboxConfig:
 def load_sandbox_settings() -> ResolvedSandboxSettings:
     """Resolve sandbox settings with env var overrides."""
     cfg = _load_config()
-    enabled = _env_enabled() if _env_enabled() is not None else cfg.enabled
+    override = get_sandbox_enabled_override()
+    if override is not None:
+        enabled = override
+    else:
+        enabled = _env_enabled() if _env_enabled() is not None else cfg.enabled
     backend: SandboxBackend = (
         _env_backend() if _env_backend() is not None else cfg.backend
     )
     if not enabled:
         backend = "off"
+    elif enabled and backend == "off":
+        backend = "local"
     return ResolvedSandboxSettings(
         enabled=enabled,
         backend=backend,

@@ -1637,6 +1637,15 @@
     "prompt1": "Let's start a new journey!",
     "prompt2": "Can you tell me what skills you have?",
     "inputPlaceholder": "\"↑↓\" for message navigation · \"/\" for quick commands (\"/approve\" or \"/deny\" during approvals)",
+    "executionEnvironment": {
+      "selectLabel": "Select execution environment",
+      "sandbox": "Sandbox",
+      "local": "Local",
+      "tooltipSandbox": "Sandbox mode (click to switch)",
+      "tooltipLocal": "Local mode (click to switch)",
+      "footerHintSandbox": "Sandbox restricts file access and shell execution to authorized paths",
+      "footerHintLocal": "Local mode runs tools directly on the host workspace without path jail"
+    },
     "commands": {
       "clear": {
         "description": "Clear the conversation context"

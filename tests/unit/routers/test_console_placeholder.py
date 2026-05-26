@@ -86,3 +86,33 @@ def test_falsy_first_part_is_media() -> None:
     name, first_text = _extract_placeholder_name([None])
     assert name == "Media Message"
     assert first_text == ""
+
+
+def test_extract_session_payload_reads_sandbox_flag_from_agent_request() -> None:
+    from agentscope_runtime.engine.schemas.agent_schemas import AgentRequest
+
+    from qwenpaw.app.routers.console import _extract_session_and_payload
+
+    payload = _extract_session_and_payload(
+        AgentRequest(
+            session_id="s1",
+            user_id="u1",
+            input=[],
+            execution_sandbox_enabled=True,
+        ),
+    )
+    assert payload["meta"]["execution_sandbox_enabled"] is True
+
+
+def test_extract_session_payload_reads_sandbox_flag_from_dict() -> None:
+    from qwenpaw.app.routers.console import _extract_session_and_payload
+
+    payload = _extract_session_and_payload(
+        {
+            "session_id": "s1",
+            "user_id": "u1",
+            "input": [],
+            "execution_sandbox_enabled": False,
+        },
+    )
+    assert payload["meta"]["execution_sandbox_enabled"] is False

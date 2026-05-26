@@ -327,11 +327,36 @@ class AgentRunner(Runner):
         agent = None
         chat = None
         session_state_loaded = False
+        sandbox_override_applied = False
         try:
             session_id = request.session_id
             user_id = request.user_id
             channel = getattr(request, "channel", DEFAULT_CHANNEL)
 
+            from ...security.sandbox.context import (
+                parse_sandbox_enabled_value,
+                set_sandbox_enabled_override,
+            )
+
+            channel_meta = getattr(request, "channel_meta", None) or {}
+            sandbox_override = parse_sandbox_enabled_value(
+                channel_meta.get("execution_sandbox_enabled"),
+            )
+            if sandbox_override is None:
+                sandbox_override = parse_sandbox_enabled_value(
+                    getattr(request, "execution_sandbox_enabled", None),
+                )
+            if sandbox_override is not None:
+                set_sandbox_enabled_override(sandbox_override)
+                sandbox_override_applied = True
+
+            from ...security.sandbox import (
+                load_sandbox_settings,
+                load_use_user_subdir,
+                resolve_sandbox_root,
+            )
+
+            sandbox_settings = load_sandbox_settings()
             logger.info(
                 "Handle agent query:\n%s",
                 json.dumps(
@@ -339,6 +364,9 @@ class AgentRunner(Runner):
                         "session_id": session_id,
                         "user_id": user_id,
                         "channel": channel,
+                        "execution_sandbox_enabled": sandbox_override,
+                        "sandbox_active": sandbox_settings.enabled,
+                        "sandbox_backend": sandbox_settings.backend,
                         "msgs_len": len(msgs) if msgs else 0,
                         "msgs_str": str(msgs)[:300] + "...",
                     },
@@ -347,14 +375,25 @@ class AgentRunner(Runner):
                 ),
             )
 
+            workspace_path = Path(
+                self.workspace_dir if self.workspace_dir else WORKING_DIR,
+            )
+            sandbox_root_path = None
+            if sandbox_settings.enabled:
+                sandbox_root_path = resolve_sandbox_root(
+                    workspace_path,
+                    user_id,
+                    use_user_subdir=load_use_user_subdir(),
+                )
             env_context = build_env_context(
                 session_id=session_id,
                 user_id=user_id,
                 channel=channel,
-                working_dir=(
-                    str(self.workspace_dir)
-                    if self.workspace_dir
-                    else str(WORKING_DIR)
+                working_dir=str(workspace_path),
+                execution_sandbox_enabled=sandbox_settings.enabled,
+                execution_sandbox_backend=sandbox_settings.backend,
+                sandbox_root=(
+                    str(sandbox_root_path) if sandbox_root_path else None
                 ),
             )
 
@@ -375,6 +414,10 @@ class AgentRunner(Runner):
                 "channel": channel,
                 "agent_id": self.agent_id,
             }
+            if sandbox_override is not None:
+                base_request_context["execution_sandbox_enabled"] = str(
+                    sandbox_override,
+                )
 
             # Extract root_session_id from request payload (agent chat)
             payload_root_session = getattr(request, "root_session_id", "")
@@ -758,6 +801,11 @@ class AgentRunner(Runner):
                     ) + converted.args[1:]
             raise converted from e
         finally:
+            if sandbox_override_applied:
+                from ...security.sandbox.context import set_sandbox_enabled_override
+
+                set_sandbox_enabled_override(None)
+
             if agent is not None and session_state_loaded:
                 await self.session.save_session_state(
                     session_id=session_id,

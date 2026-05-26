@@ -35,6 +35,9 @@ def build_env_context(
     channel: Optional[str] = None,
     working_dir: Optional[str] = None,
     add_hint: bool = True,
+    execution_sandbox_enabled: Optional[bool] = None,
+    execution_sandbox_backend: Optional[str] = None,
+    sandbox_root: Optional[str] = None,
 ) -> str:
     """
     Build environment context with current request context prepended.
@@ -45,6 +48,9 @@ def build_env_context(
         channel: Current channel name
         working_dir: Working directory path
         add_hint: Whether to add hint context
+        execution_sandbox_enabled: Whether execution sandbox is active
+        execution_sandbox_backend: Sandbox backend (local/docker/off)
+        sandbox_root: Effective sandbox root when sandbox is active
     Returns:
         Formatted environment context string
     """
@@ -69,7 +75,23 @@ def build_env_context(
         f"({platform.machine()})",
     )
 
-    if working_dir is not None:
+    if execution_sandbox_enabled is True:
+        backend = execution_sandbox_backend or "local"
+        parts.append(f"- Execution environment: Sandbox (backend={backend})")
+        if sandbox_root is not None:
+            parts.append(f"- Sandbox root: {sandbox_root}")
+        if working_dir is not None and working_dir != sandbox_root:
+            parts.append(f"- Agent workspace: {working_dir}")
+        parts.append(
+            "- Sandbox note: file tools and shell cwd are restricted to "
+            "the sandbox root. Host OS info above is the machine running "
+            "the backend, not a separate remote VM.",
+        )
+    elif execution_sandbox_enabled is False:
+        parts.append("- Execution environment: Local (sandbox disabled)")
+        if working_dir is not None:
+            parts.append(f"- Working directory: {working_dir}")
+    elif working_dir is not None:
         parts.append(f"- Working directory: {working_dir}")
     parts.append(
         f"- Current date: {now.strftime('%Y-%m-%d')} "

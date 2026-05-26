@@ -101,6 +101,53 @@ def test_is_sandbox_enabled_reads_config_without_env(
     assert is_sandbox_enabled() is True
 
 
+def test_is_sandbox_enabled_respects_request_override(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
+    monkeypatch.delenv("COPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
+
+    from qwenpaw.config import load_config, save_config
+    from qwenpaw.security.sandbox.context import set_sandbox_enabled_override
+
+    config = load_config()
+    config.security.execution_sandbox.enabled = False
+    config.security.execution_sandbox.backend = "off"
+    save_config(config)
+
+    set_sandbox_enabled_override(True)
+    assert is_sandbox_enabled() is True
+
+    set_sandbox_enabled_override(False)
+    assert is_sandbox_enabled() is False
+
+    set_sandbox_enabled_override(None)
+    assert is_sandbox_enabled() is False
+
+
+def test_load_sandbox_settings_honors_request_override(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
+    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_BACKEND", raising=False)
+
+    from qwenpaw.config import load_config, save_config
+    from qwenpaw.security.sandbox.context import set_sandbox_enabled_override
+    from qwenpaw.security.sandbox.settings import load_sandbox_settings
+
+    config = load_config()
+    config.security.execution_sandbox.enabled = False
+    config.security.execution_sandbox.backend = "off"
+    save_config(config)
+
+    set_sandbox_enabled_override(True)
+    settings = load_sandbox_settings()
+    assert settings.enabled is True
+    assert settings.backend == "local"
+
+    set_sandbox_enabled_override(None)
+
+
 def test_path_jail_guardian_allows_inside_file(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,

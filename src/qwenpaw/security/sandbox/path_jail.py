@@ -7,6 +7,7 @@ from pathlib import Path
 
 from ...constant import WORKING_DIR, EnvVarLoader
 from ...config.context import get_current_workspace_dir
+from .context import get_sandbox_enabled_override
 
 _TRUE_STRINGS = frozenset({"true", "1", "yes", "on"})
 
@@ -17,6 +18,12 @@ class SandboxBoundaryError(PermissionError):
 
 def is_sandbox_enabled() -> bool:
     """Return whether execution sandbox enforcement is active."""
+    override = get_sandbox_enabled_override()
+    if override is False:
+        return False
+    if override is True:
+        return True
+
     if (
         "QWENPAW_EXECUTION_SANDBOX_ENABLED" in os.environ
         or "COPAW_EXECUTION_SANDBOX_ENABLED" in os.environ

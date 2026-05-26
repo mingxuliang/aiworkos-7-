@@ -1301,17 +1301,22 @@ class QwenPawAgent(ToolGuardMixin, ReActAgent):
 
         request_context = getattr(self, "_request_context", {}) or {}
         from ..security.sandbox import (
+            is_sandbox_enabled,
             load_use_user_subdir,
             resolve_sandbox_root,
             set_current_sandbox_root,
         )
 
         user_id = str(request_context.get("user_id") or "")
-        sandbox_root = resolve_sandbox_root(
-            Path(self._workspace_dir or WORKING_DIR),
-            user_id,
-            use_user_subdir=load_use_user_subdir(),
-        )
+        workspace = Path(self._workspace_dir or WORKING_DIR)
+        if is_sandbox_enabled():
+            sandbox_root = resolve_sandbox_root(
+                workspace,
+                user_id,
+                use_user_subdir=load_use_user_subdir(),
+            )
+        else:
+            sandbox_root = workspace
         set_current_sandbox_root(sandbox_root)
 
         # Process file and media blocks in messages

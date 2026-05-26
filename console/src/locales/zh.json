@@ -1500,6 +1500,15 @@
     "prompt1": "让我们开启一段新的旅程吧！",
     "prompt2": "能告诉我你有哪些技能吗？",
     "inputPlaceholder": "\"↑↓\" 浏览消息 · \"/\" 快捷指令（审批时 \"/approve\" 或 \"/deny\"）",
+    "executionEnvironment": {
+      "selectLabel": "选择工作环境",
+      "sandbox": "沙箱环境",
+      "local": "本地环境",
+      "tooltipSandbox": "沙箱环境（点击切换）",
+      "tooltipLocal": "本地环境（点击切换）",
+      "footerHintSandbox": "使用安全沙箱限制 AI 对未授权路径的读写与命令执行",
+      "footerHintLocal": "本地环境：工具在宿主机工作区直接执行，不受沙箱路径限制"
+    },
     "commands": {
       "clear": {
         "description": "清空对话上下文"
