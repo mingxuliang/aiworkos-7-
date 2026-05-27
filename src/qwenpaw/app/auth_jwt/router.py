@@ -38,6 +38,11 @@ from .user_service import (
     get_role_by_id,
     count_users_with_role,
 )
+from ...department.service import (
+    get_user_department_names_map,
+    set_user_department,
+    get_user_department,
+)
 from ...constant import AUTH_MODE
 
 logger = logging.getLogger(__name__)
@@ -80,6 +85,14 @@ class UserCreateRequest(BaseModel):
     username: str = Field(..., min_length=2, max_length=64)
     password: str = Field(..., min_length=6)
     role_names: list[str] = Field(default_factory=lambda: ["user"])
+    department_id: Optional[int] = None
+
+
+class UserUpdateRequest(BaseModel):
+    """Request body for updating user info."""
+
+    department_id: Optional[int] = None
+    role_ids: Optional[list[int]] = None
 
 
 class BatchDeleteRequest(BaseModel):
@@ -111,6 +124,7 @@ class UserOut(BaseModel):
     username: str
     is_active: bool
     roles: list[str]
+    department_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -328,12 +342,14 @@ async def jwt_list_users(
     """List all users (admin only)."""
     _require_admin(request)
     users = await list_users(db)
+    dept_map = await get_user_department_names_map(db, [u.id for u in users])
     return [
         UserOut(
             id=u.id,
             username=u.username,
             is_active=u.is_active,
             roles=[ur.role.name for ur in u.user_roles],
+            department_name=dept_map.get(u.id),
         )
         for u in users
     ]
@@ -497,6 +513,7 @@ async def jwt_list_users_paginated(
         db, page=page, page_size=page_size,
         username=username, role_name=role,
     )
+    dept_map = await get_user_department_names_map(db, [u.id for u in users])
     total_pages = math.ceil(total / page_size) if total > 0 else 0
     return PaginatedUserOut(
         items=[
@@ -505,6 +522,7 @@ async def jwt_list_users_paginated(
                 username=u.username,
                 is_active=u.is_active,
                 roles=[ur.role.name for ur in u.user_roles],
+                department_name=dept_map.get(u.id),
             )
             for u in users
         ],
@@ -523,15 +541,69 @@ async def jwt_create_user(
 ):
     """Create a new user (admin only)."""
     _require_admin(request)
+
+    dept = None
+    if req.department_id is not None:
+        from ...department.models import Department
+
+        dept = await db.get(Department, req.department_id)
+        if dept is None:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Department with id={req.department_id} not found",
+            )
+
     try:
         user = await create_user(db, req.username, req.password, req.role_names)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc))
+
+    await set_user_department(db, user.id, req.department_id)
+
     return UserOut(
         id=user.id,
         username=user.username,
         is_active=user.is_active,
         roles=[ur.role.name for ur in user.user_roles],
+        department_name=dept.department_name if dept else None,
+    )
+
+
+@router.put("/users/{user_id}", response_model=UserOut)
+async def jwt_update_user(
+    user_id: int,
+    req: UserUpdateRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update user info (department, roles) (admin only)."""
+    _require_admin(request)
+    user = await get_user_by_id(db, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if req.department_id is not None:
+        try:
+            await set_user_department(db, user_id, req.department_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+    elif "department_id" in (req.model_fields_set or set()):
+        await set_user_department(db, user_id, None)
+
+    if req.role_ids is not None:
+        existing_role_ids = [ur.role_id for ur in user.user_roles]
+        if existing_role_ids:
+            await remove_roles(db, user_id, existing_role_ids)
+        await assign_roles(db, user_id, req.role_ids)
+        user = await get_user_by_id(db, user_id)
+
+    dept = await get_user_department(db, user_id)
+    return UserOut(
+        id=user.id,
+        username=user.username,
+        is_active=user.is_active,
+        roles=[ur.role.name for ur in user.user_roles],
+        department_name=dept.department_name if dept else None,
     )
 
 

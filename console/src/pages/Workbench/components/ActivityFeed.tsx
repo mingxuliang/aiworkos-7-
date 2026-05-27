@@ -87,6 +87,7 @@ export default function ActivityFeed({ recentChats }: Props) {
           ref={containerRef}
           style={{
             flex: 1,
+            minHeight: 0,
             overflow: "hidden",
             position: "relative",
             cursor: "default",

@@ -1,18 +1,22 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { fetchAllNews, timeAgo, type NewsArticle } from "@/api/modules/newsRss";
+import {
+  fetchWorkbenchNews,
+  readWorkbenchNewsSnapshot,
+  subscribeNewsRefresh,
+  timeAgo,
+  type NewsArticle,
+} from "@/api/modules/newsRss";
 import RssNewsDetailPanel from "@/components/news/RssNewsDetailPanel";
 import NewsCoverImage from "@/components/news/NewsCoverImage";
 import { newsData } from "./news/newsData";
 
 const SOURCE_BG: Record<string, string> = {
-  '量子位': 'linear-gradient(135deg,#7c3aed,#5b21b6)',
-  'OpenAI': 'linear-gradient(135deg,#10a37f,#047857)',
-  'arXiv AI': 'linear-gradient(135deg,#b31b1b,#7f1d1d)',
-  'InfoQ': 'linear-gradient(135deg,#0ea5e9,#0369a1)',
-  '少数派': 'linear-gradient(135deg,#6366f1,#4338ca)',
-  'Hacker News': 'linear-gradient(135deg,#ff6600,#c2410c)',
+  量子位: 'linear-gradient(135deg,#7c3aed,#5b21b6)',
+  雷锋网: 'linear-gradient(135deg,#ea580c,#c2410c)',
+  钛媒体: 'linear-gradient(135deg,#2563eb,#1d4ed8)',
+  爱范儿: 'linear-gradient(135deg,#059669,#047857)',
 };
 
 /** 静态 newsData 降级数据（真实 RSS 加载失败时展示） */
@@ -38,23 +42,46 @@ export default function WorkbenchNewsCarousel() {
   const [selected, setSelected] = useState<NewsArticle | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── 拉取实时 RSS，取前 5 条，失败降级静态数据 ──
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetchAllNews()
-      .then((list) => {
-        if (cancelled) return;
-        setArticles(list.length ? list.slice(0, 5) : FALLBACK);
-      })
-      .catch(() => {
-        if (!cancelled) setArticles(FALLBACK);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => { cancelled = true; };
+  const applyArticles = useCallback((list: NewsArticle[]) => {
+    const withCover = list.filter((a) => a.thumbnail);
+    setArticles(withCover.length ? withCover.slice(0, 5) : list.length ? list : FALLBACK);
+    setFeatIdx(0);
   }, []);
+
+  const loadArticles = useCallback(async (preferSnapshot = false) => {
+    if (preferSnapshot) {
+      const snapshot = readWorkbenchNewsSnapshot();
+      if (snapshot?.length) {
+        applyArticles(snapshot);
+        setLoading(false);
+        return;
+      }
+    }
+    setLoading(true);
+    try {
+      const list = await fetchWorkbenchNews(5);
+      applyArticles(list);
+    } catch {
+      applyArticles(FALLBACK);
+    } finally {
+      setLoading(false);
+    }
+  }, [applyArticles]);
+
+  useEffect(() => {
+    loadArticles(true);
+  }, [loadArticles]);
+
+  useEffect(() => {
+    return subscribeNewsRefresh(() => {
+      const snapshot = readWorkbenchNewsSnapshot();
+      if (snapshot?.length) {
+        applyArticles(snapshot);
+        return;
+      }
+      loadArticles(false);
+    });
+  }, [applyArticles, loadArticles]);
 
   // ── 自动轮播 ──
   useEffect(() => {
@@ -117,7 +144,7 @@ export default function WorkbenchNewsCarousel() {
               新闻中心
             </div>
             <div style={{ fontSize: 10, color: isDark ? "#475569" : "#94a3b8", marginTop: 1 }}>
-              AI 科技聚合 · 量子位 / OpenAI / InfoQ 等
+              中文 AI 资讯 · 雷锋网 / 钛媒体 / 爱范儿 / 量子位
             </div>
           </div>
         </div>

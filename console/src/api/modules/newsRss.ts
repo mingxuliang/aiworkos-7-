@@ -1,13 +1,17 @@
 /**
- * 新闻中心 - AI / 科技 RSS 聚合
+ * 新闻中心 - 中文 AI / 科技 RSS 聚合
  * 抓取：本地 /api/rss-proxy 或开发 /rss-proxy（主）→ allorigins（备）
- * 过滤：剔除数码开箱、售价促销等商品向内容
+ * 封面：优先 RSS 内嵌图片（雷锋网 / 钛媒体 / 爱范儿等）→ 文章页补图
  */
+
+import { buildAuthHeaders } from '@/api/authHeaders';
 
 const ALLORIGINS = 'https://api.allorigins.win/get?url=';
 const RSS2JSON = 'https://api.rss2json.com/v1/api.json';
 const CACHE_TTL = 5 * 60 * 1000;
-const CACHE_PREFIX = 'news_v4_';
+const CACHE_PREFIX = 'news_v6_';
+const COVER_ENRICH_LIMIT = 18;
+const COVER_CONCURRENCY = 4;
 
 // ─── 类型 ─────────────────────────────────────────────────────────────────────
 
@@ -23,22 +27,6 @@ export interface NewsArticle {
   source: string;
   sourceColor: string;
   category: string;
-  /** HN 等源的讨论帖链接 */
-  discussionLink?: string;
-  /** HN 热度（分 / 评论数） */
-  hnPoints?: number;
-  hnComments?: number;
-}
-
-export interface VideoItem {
-  bvid: string;
-  title: string;
-  thumbnail: string;
-  author: string;
-  pubDate: string;
-  link: string;
-  embedUrl: string;
-  source: string;
 }
 
 interface FeedSource {
@@ -50,15 +38,13 @@ interface FeedSource {
   strictAi?: boolean;
 }
 
-// ─── AI / 科技源（无 IT之家、36氪 等数码促销源）──────────────────────────────
+// ─── 中文 AI / 科技源（RSS 内嵌封面图）────────────────────────────────────────
 
 const FEEDS: FeedSource[] = [
+  { url: 'https://www.leiphone.com/feed', name: '雷锋网', category: 'AI', color: '#ea580c' },
+  { url: 'https://www.tmtpost.com/rss.xml', name: '钛媒体', category: 'AI', color: '#2563eb', strictAi: true },
+  { url: 'https://www.ifanr.com/feed', name: '爱范儿', category: '开发', color: '#059669', strictAi: true },
   { url: 'https://www.qbitai.com/feed', name: '量子位', category: 'AI', color: '#7c3aed' },
-  { url: 'https://openai.com/blog/rss.xml', name: 'OpenAI', category: 'AI', color: '#10a37f' },
-  { url: 'https://rss.arxiv.org/rss/cs.AI', name: 'arXiv AI', category: '学术', color: '#b31b1b' },
-  { url: 'https://www.infoq.cn/feed', name: 'InfoQ', category: '开发', color: '#0ea5e9', strictAi: true },
-  { url: 'https://sspai.com/feed', name: '少数派', category: '开发', color: '#6366f1', strictAi: true },
-  { url: 'https://hnrss.org/frontpage', name: 'Hacker News', category: '国际', color: '#ff6600', strictAi: true },
 ];
 
 /** 商品 / 数码促销向标题，命中则丢弃 */
@@ -69,13 +55,54 @@ const PRODUCT_NOISE =
 const AI_SIGNAL =
   /AI|人工智能|大模型|LLM|GPT|Claude|Gemini|Agent|智能体|机器学习|深度学习|神经网络|算法|开源|框架|Transformer|ChatGPT|OpenAI|Anthropic|Copilot|自动驾驶|NLP|计算机视觉|生成式|推理|训练|微调|RAG|embedding|论文|research|model|LLM|API|SDK|cloud|chip|semiconductor|robot|automation|data\s+science/i;
 
-const BILI_CHANNELS = [
-  { uid: '1484041659', name: '跟李沐学AI' },
-  { uid: '517327666', name: '林粒粒呀' },
-  { uid: '591977818', name: '南岭夜雨AI' },
-];
+export const NEWS_CATEGORIES = ['全部', 'AI', '开发'];
 
-export const NEWS_CATEGORIES = ['全部', 'AI', '开发', '学术', '国际', '视频'];
+/** 新闻全页刷新后通知岗位工作台同步 */
+export const NEWS_REFRESH_EVENT = 'news-rss-refresh';
+const NEWS_REFRESH_TS_KEY = 'news_refresh_ts';
+const WORKBENCH_SNAPSHOT_KEY = 'news_workbench_snapshot';
+
+export function notifyNewsRefresh(workbenchArticles?: NewsArticle[]) {
+  const ts = Date.now();
+  try {
+    localStorage.setItem(NEWS_REFRESH_TS_KEY, String(ts));
+    if (workbenchArticles?.length) {
+      sessionStorage.setItem(
+        WORKBENCH_SNAPSHOT_KEY,
+        JSON.stringify({ ts, articles: workbenchArticles }),
+      );
+    }
+  } catch {
+    /**/
+  }
+  window.dispatchEvent(new CustomEvent(NEWS_REFRESH_EVENT, { detail: { ts } }));
+}
+
+export function readWorkbenchNewsSnapshot(): NewsArticle[] | null {
+  try {
+    const raw = sessionStorage.getItem(WORKBENCH_SNAPSHOT_KEY);
+    if (!raw) return null;
+    const { ts, articles } = JSON.parse(raw) as { ts?: number; articles?: NewsArticle[] };
+    const refreshTs = Number(localStorage.getItem(NEWS_REFRESH_TS_KEY) || 0);
+    if (!ts || ts !== refreshTs || !Array.isArray(articles) || !articles.length) return null;
+    return articles;
+  } catch {
+    return null;
+  }
+}
+
+export function subscribeNewsRefresh(callback: () => void): () => void {
+  const onEvent = () => callback();
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === NEWS_REFRESH_TS_KEY) callback();
+  };
+  window.addEventListener(NEWS_REFRESH_EVENT, onEvent);
+  window.addEventListener('storage', onStorage);
+  return () => {
+    window.removeEventListener(NEWS_REFRESH_EVENT, onEvent);
+    window.removeEventListener('storage', onStorage);
+  };
+}
 
 // ─── 缓存 ─────────────────────────────────────────────────────────────────────
 
@@ -134,8 +161,8 @@ export function getNewsCoverCandidates(url: string): string[] {
 function firstImg(html: string): string {
   if (!html) return '';
   const patterns = [
-    /<img[^>]+src=["']([^"']+)["']/i,
-    /<img[^>]+data-src=["']([^"']+)["']/i,
+    /<img[^>]+(?:src|data-src|data-original|data-lazy-src)=["']([^"']+)["']/i,
+    /<img[^>]+srcset=["']([^"'\s,]+)/i,
     /src=["'](https?:\/\/[^"']+)["']/i,
     /src=["'](\/\/[^"']+)["']/i,
   ];
@@ -143,8 +170,21 @@ function firstImg(html: string): string {
     const m = html.match(re);
     if (m?.[1]) {
       const n = normalizeImageUrl(m[1]);
-      if (n) return n;
+      if (n && !/logo|avatar|icon|favicon|placeholder/i.test(n)) return n;
     }
+  }
+  const bare = html.match(/https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp)(?:\?[^\s"'<>]*)?/i);
+  if (bare?.[0]) {
+    const n = normalizeImageUrl(bare[0]);
+    if (n && !/logo|avatar|icon|favicon|placeholder/i.test(n)) return n;
+  }
+  return '';
+}
+
+function extractCoverFromHtml(...parts: string[]): string {
+  for (const part of parts) {
+    const url = firstImg(part);
+    if (url) return url;
   }
   return '';
 }
@@ -210,44 +250,71 @@ function dedupeArticles(list: NewsArticle[]): NewsArticle[] {
   });
 }
 
-/** 将 Hacker News RSS 元数据转为可读摘要，避免详情里重复堆 URL */
-function normalizeArticle(
-  article: NewsArticle,
-  descHtml: string,
-  commentsTag = '',
-): NewsArticle {
-  if (!/Article URL:/i.test(descHtml)) return article;
-
-  const points = Number(descHtml.match(/Points:\s*(\d+)/i)?.[1] || 0);
-  const commentCount = Number(descHtml.match(/#\s*Comments:\s*(\d+)/i)?.[1] || 0);
-  const articleUrl =
-    descHtml.match(/Article URL:.*?href="([^"]+)"/is)?.[1]?.trim() || article.link;
-  const discussionUrl =
-    commentsTag.trim() ||
-    descHtml.match(/Comments URL:.*?href="([^"]+)"/is)?.[1]?.trim() ||
-    '';
-
-  const summary =
-    points > 0 && commentCount > 0
-      ? `Hacker News 热榜 · ${points} 分 · ${commentCount} 条讨论`
-      : 'Hacker News 社区推荐的 AI / 技术热帖';
-
-  return {
-    ...article,
-    link: articleUrl || article.link,
-    summary,
-    content: '',
-    discussionLink: discussionUrl || undefined,
-    hnPoints: points || undefined,
-    hnComments: commentCount || undefined,
-  };
-}
-
-/** 详情区是否展示 HTML 正文（排除 HN 元数据块） */
+/** 详情区是否展示 HTML 正文 */
 export function hasReadableHtmlContent(content: string): boolean {
   if (!content?.trim()) return false;
-  if (/Article URL:/i.test(content)) return false;
   return /<(?:p|div|img|h[1-6]|ul|ol|blockquote)\b/i.test(content);
+}
+
+/** RSS 摘要仅为「跳转原文」占位文案 */
+export function isPlaceholderSummary(summary: string): boolean {
+  const text = stripHtml(summary).trim();
+  if (!text) return true;
+  return (
+    /点击查看原文|点击阅读全文|阅读全文|Read more|Continue reading|View original/i.test(
+      text,
+    ) || text.length < 24
+  );
+}
+
+/** 同源文章代理 URL，供详情 iframe 内嵌原文 */
+export function getArticleProxyUrl(link: string): string {
+  const q = encodeURIComponent(link);
+  return `/api/article-proxy?url=${q}`;
+}
+
+async function fetchArticleCover(link: string): Promise<string> {
+  try {
+    const res = await withTimeout(
+      fetch(`/api/article-cover?url=${encodeURIComponent(link)}`, {
+        headers: buildAuthHeaders(),
+      }),
+      12_000,
+    );
+    if (!res.ok) return '';
+    const data = (await res.json()) as { url?: string };
+    return normalizeImageUrl(data.url || '');
+  } catch {
+    return '';
+  }
+}
+
+async function enrichMissingCovers(articles: NewsArticle[]): Promise<NewsArticle[]> {
+  const targets = articles
+    .map((article, index) => ({ article, index }))
+    .filter(({ article }) => !article.thumbnail && article.link)
+    .slice(0, COVER_ENRICH_LIMIT);
+
+  if (!targets.length) return articles;
+
+  const enriched = [...articles];
+  const queue = [...targets];
+
+  async function worker() {
+    while (queue.length) {
+      const target = queue.shift();
+      if (!target) break;
+      const cover = await fetchArticleCover(target.article.link);
+      if (cover) {
+        enriched[target.index] = { ...enriched[target.index], thumbnail: cover };
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(COVER_CONCURRENCY, targets.length) }, () => worker()),
+  );
+  return enriched;
 }
 
 // ─── XML 解析 ─────────────────────────────────────────────────────────────────
@@ -264,13 +331,13 @@ function parseRssXml(xml: string, src: FeedSource): NewsArticle[] {
       const title = stripHtml(get('title'));
       const link = get('link') || getAttr('link', 'href') || get('guid') || '';
       const desc = get('description') || get('summary') || get('content') || '';
-      const raw =
-        getAttr('content\\:encoded, encoded', 'innerHTML') ||
-        el.querySelector('content')?.innerHTML ||
-        desc;
+      const encoded =
+        el.querySelector('content\\:encoded')?.textContent ||
+        el.querySelector('encoded')?.textContent ||
+        '';
+      const raw = encoded || el.querySelector('content')?.innerHTML || desc;
       const date = get('pubDate') || get('published') || get('updated') || '';
       const guid = get('guid') || get('id') || link;
-      const commentsTag = get('comments');
 
       let thumb =
         thumbFromElement(el) ||
@@ -278,10 +345,10 @@ function parseRssXml(xml: string, src: FeedSource): NewsArticle[] {
         getAttr('media\\:content', 'url') ||
         getAttr('media\\:thumbnail', 'url') ||
         '';
-      if (!thumb) thumb = firstImg(raw) || firstImg(desc);
+      if (!thumb) thumb = extractCoverFromHtml(raw, desc, encoded);
       thumb = normalizeImageUrl(thumb);
 
-      const base: NewsArticle = {
+      return {
         id: guid || title,
         title: title || '无标题',
         summary: stripHtml(desc).slice(0, 200),
@@ -293,8 +360,7 @@ function parseRssXml(xml: string, src: FeedSource): NewsArticle[] {
         source: src.name,
         sourceColor: src.color,
         category: src.category,
-      };
-      return normalizeArticle(base, raw || desc, commentsTag);
+      } satisfies NewsArticle;
     });
     return filterArticles(mapped, src);
   } catch {
@@ -312,7 +378,9 @@ async function fetchFeedProxy(src: FeedSource): Promise<NewsArticle[]> {
   let lastErr: Error | null = null;
   for (const path of paths) {
     try {
-      const res = await fetch(path);
+      const res = await fetch(path, {
+        headers: path.startsWith('/api/') ? buildAuthHeaders() : undefined,
+      });
       if (!res.ok) throw new Error(`proxy HTTP ${res.status}`);
       const xml = await res.text();
       if (!/<rss|<feed/i.test(xml)) throw new Error('not rss');
@@ -344,8 +412,8 @@ async function fetchFeedRss2json(src: FeedSource): Promise<NewsArticle[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapped = (json.items as any[]).slice(0, 15).map((item) => {
     let thumb = normalizeImageUrl(item.thumbnail || '');
-    if (!thumb) thumb = firstImg(item.content) || firstImg(item.description);
-    const base: NewsArticle = {
+    if (!thumb) thumb = extractCoverFromHtml(item.content, item.description);
+    return {
       id: item.guid || item.link,
       title: stripHtml(item.title),
       summary: stripHtml(item.description).slice(0, 200),
@@ -357,8 +425,7 @@ async function fetchFeedRss2json(src: FeedSource): Promise<NewsArticle[]> {
       source: src.name,
       sourceColor: src.color,
       category: src.category,
-    };
-    return normalizeArticle(base, item.content || item.description || '');
+    } satisfies NewsArticle;
   });
   return filterArticles(mapped, src);
 }
@@ -384,7 +451,10 @@ async function fetchFeed(src: FeedSource): Promise<NewsArticle[]> {
     }
   }
 
-  if (articles.length) cacheSet(ck, articles);
+  if (articles.length) {
+    articles = await enrichMissingCovers(articles);
+    cacheSet(ck, articles);
+  }
   return articles;
 }
 
@@ -401,6 +471,57 @@ export async function fetchAllNews(): Promise<NewsArticle[]> {
   );
 }
 
+function sortNewsCoverFirst(list: NewsArticle[]): NewsArticle[] {
+  return [...list].sort((a, b) => {
+    const coverDiff = Number(!!b.thumbnail) - Number(!!a.thumbnail);
+    if (coverDiff !== 0) return coverDiff;
+    return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+  });
+}
+
+async function pickWorkbenchNewsFromAll(all: NewsArticle[], limit = 5): Promise<NewsArticle[]> {
+  let sorted = sortNewsCoverFirst(all);
+  let covered = sorted.filter((a) => a.thumbnail);
+
+  if (covered.length < limit) {
+    const candidates = sorted.filter((a) => !a.thumbnail && a.link).slice(0, Math.max(limit * 3, 12));
+    if (candidates.length) {
+      const enriched = await enrichMissingCovers(candidates);
+      const enrichedMap = new Map(enriched.map((a) => [a.id, a]));
+      sorted = sortNewsCoverFirst(sorted.map((a) => enrichedMap.get(a.id) || a));
+      covered = sorted.filter((a) => a.thumbnail);
+    }
+  }
+
+  if (covered.length >= limit) return covered.slice(0, limit);
+  if (covered.length >= 3) return covered.slice(0, limit);
+  const rest = sorted.filter((a) => !a.thumbnail);
+  return [...covered, ...rest].slice(0, limit);
+}
+
+/** 岗位工作台：优先展示带封面的最新资讯 */
+export async function fetchWorkbenchNews(limit = 5): Promise<NewsArticle[]> {
+  return pickWorkbenchNewsFromAll(await fetchAllNews(), limit);
+}
+
+/** 强制刷新 RSS，并同步岗位工作台轮播数据 */
+export async function refreshNewsWithWorkbenchSync(
+  category = '全部',
+): Promise<NewsArticle[]> {
+  clearNewsCache();
+  if (category === '全部') {
+    const articles = await fetchAllNews();
+    notifyNewsRefresh(await pickWorkbenchNewsFromAll(articles, 5));
+    return articles;
+  }
+  const [articles, all] = await Promise.all([
+    fetchNewsByCategory(category),
+    fetchAllNews(),
+  ]);
+  notifyNewsRefresh(await pickWorkbenchNewsFromAll(all, 5));
+  return articles;
+}
+
 export async function fetchNewsByCategory(cat: string): Promise<NewsArticle[]> {
   if (cat === '全部') return fetchAllNews();
   const sources = FEEDS.filter((f) => f.category === cat);
@@ -413,52 +534,4 @@ export async function fetchNewsByCategory(cat: string): Promise<NewsArticle[]> {
   return dedupeArticles(all).sort(
     (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
   );
-}
-
-function biliTitleOk(title: string): boolean {
-  if (PRODUCT_NOISE.test(title)) return false;
-  return AI_SIGNAL.test(title);
-}
-
-export async function fetchBiliVideos(): Promise<VideoItem[]> {
-  const cached = cacheGet<VideoItem[]>('bili');
-  if (cached?.length) return cached;
-
-  const results = await Promise.allSettled(
-    BILI_CHANNELS.map(async (ch) => {
-      const res = await withTimeout(
-        fetch(
-          `https://api.bilibili.com/x/space/arc/search?mid=${ch.uid}&ps=6&pn=1&order=pubdate`,
-        ),
-        8_000,
-      );
-      if (!res.ok) throw new Error('bili HTTP ' + res.status);
-      const json = await res.json();
-      if (json.code !== 0) throw new Error('bili code ' + json.code);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return ((json.data?.list?.vlist as any[]) || [])
-        .filter((v) => biliTitleOk(String(v.title || '')))
-        .slice(0, 4)
-        .map((v) => ({
-          bvid: v.bvid as string,
-          title: v.title as string,
-          thumbnail: (v.pic as string)?.replace('http://', 'https://') || '',
-          author: v.author as string,
-          pubDate: new Date((v.created as number) * 1000).toISOString(),
-          link: `https://www.bilibili.com/video/${v.bvid}`,
-          embedUrl: `https://player.bilibili.com/player.html?bvid=${v.bvid}&autoplay=0&danmaku=0`,
-          source: ch.name,
-        })) as VideoItem[];
-    }),
-  );
-
-  const all: VideoItem[] = [];
-  results.forEach((r) => {
-    if (r.status === 'fulfilled') all.push(...r.value);
-  });
-  const sorted = all.sort(
-    (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
-  );
-  if (sorted.length) cacheSet('bili', sorted);
-  return sorted;
 }

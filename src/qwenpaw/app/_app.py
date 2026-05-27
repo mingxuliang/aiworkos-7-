@@ -308,6 +308,9 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
             auth_mode = EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy").lower()
             if auth_mode == "jwt":
                 try:
+                    from .auth_jwt.internal_token import get_internal_token
+
+                    get_internal_token()
                     from .auth_jwt.database import init_db
                     from .auth_jwt.redis_client import init_redis
 

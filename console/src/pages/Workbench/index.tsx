@@ -135,13 +135,13 @@ export default function WorkbenchPage() {
               display: "grid",
               gridTemplateColumns: "2fr 1fr",
               gap: 16,
-              minHeight: 320,
+              height: 320,
             }}
           >
-            <div style={{ minHeight: 0, overflow: "hidden" }}>
+            <div style={{ height: "100%", minHeight: 0, overflow: "hidden" }}>
               <AgentStatusGrid agents={filteredAgents} />
             </div>
-            <div style={{ minHeight: 0, overflow: "hidden" }}>
+            <div style={{ height: "100%", minHeight: 0, overflow: "hidden" }}>
               <ActivityFeed recentChats={recentChats} />
             </div>
           </div>

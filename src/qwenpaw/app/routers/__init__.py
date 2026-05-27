@@ -61,6 +61,10 @@ if EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy").lower() == "jwt":
 
     router.include_router(get_router())
 
+    from .department import router as department_router
+
+    router.include_router(department_router)
+
 
 def create_agent_scoped_router() -> APIRouter:
     """Create agent-scoped router that wraps existing routers.

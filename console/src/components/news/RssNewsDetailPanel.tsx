@@ -1,18 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+  getArticleProxyUrl,
   hasReadableHtmlContent,
+  isPlaceholderSummary,
   timeAgo,
   type NewsArticle,
 } from "@/api/modules/newsRss";
+import { buildAuthHeaders } from "@/api/authHeaders";
 import NewsCoverImage from "@/components/news/NewsCoverImage";
 
 const SOURCE_BG: Record<string, string> = {
   量子位: "linear-gradient(135deg,#7c3aed,#5b21b6)",
-  OpenAI: "linear-gradient(135deg,#10a37f,#047857)",
-  "arXiv AI": "linear-gradient(135deg,#b31b1b,#7f1d1d)",
-  InfoQ: "linear-gradient(135deg,#0ea5e9,#0369a1)",
-  少数派: "linear-gradient(135deg,#6366f1,#4338ca)",
-  "Hacker News": "linear-gradient(135deg,#ff6600,#c2410c)",
+  雷锋网: "linear-gradient(135deg,#ea580c,#c2410c)",
+  钛媒体: "linear-gradient(135deg,#2563eb,#1d4ed8)",
+  爱范儿: "linear-gradient(135deg,#059669,#047857)",
 };
 
 function CoverArea({ article }: { article: NewsArticle }) {
@@ -67,6 +68,10 @@ export default function RssNewsDetailPanel({
   article,
   onClose,
 }: RssNewsDetailPanelProps) {
+  const [originalHtml, setOriginalHtml] = useState<string | null>(null);
+  const [originalLoading, setOriginalLoading] = useState(false);
+  const [originalError, setOriginalError] = useState<string | null>(null);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -75,10 +80,55 @@ export default function RssNewsDetailPanel({
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  const showHtml = article ? hasReadableHtmlContent(article.content) : false;
+  const embedOriginal = article ? !showHtml && !!article.link : false;
+
+  useEffect(() => {
+    if (!embedOriginal || !article?.link) {
+      setOriginalHtml(null);
+      setOriginalError(null);
+      setOriginalLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setOriginalLoading(true);
+    setOriginalError(null);
+    setOriginalHtml(null);
+
+    fetch(getArticleProxyUrl(article.link), {
+      headers: buildAuthHeaders(),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const detail = await res.text().catch(() => "");
+          throw new Error(detail || `HTTP ${res.status}`);
+        }
+        return res.text();
+      })
+      .then((html) => {
+        if (!cancelled) setOriginalHtml(html);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setOriginalError(
+            err instanceof Error ? err.message : "原文加载失败",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setOriginalLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [article?.link, embedOriginal]);
+
   if (!article) return null;
 
-  const showHtml = hasReadableHtmlContent(article.content);
-  const isHn = article.source === "Hacker News" || !!article.discussionLink;
+  const showSummary =
+    !!article.summary && !isPlaceholderSummary(article.summary) && !embedOriginal;
 
   return (
     <>
@@ -98,7 +148,7 @@ export default function RssNewsDetailPanel({
           top: 0,
           right: 0,
           bottom: 0,
-          width: 480,
+          width: embedOriginal ? 640 : 480,
           maxWidth: "95vw",
           background: "#fff",
           zIndex: 1001,
@@ -152,22 +202,33 @@ export default function RssNewsDetailPanel({
           </button>
         </div>
 
-        <div style={{ flex: 1, overflow: "auto", padding: "20px" }}>
-          <CoverArea article={article} />
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflow: embedOriginal ? "hidden" : "auto",
+            padding: embedOriginal ? 0 : "20px",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {!embedOriginal && <CoverArea article={article} />}
 
-          <h2
-            style={{
-              margin: "0 0 12px",
-              fontSize: 18,
-              fontWeight: 700,
-              color: "#0f172a",
-              lineHeight: 1.45,
-            }}
-          >
-            {article.title}
-          </h2>
+          {!embedOriginal && (
+            <h2
+              style={{
+                margin: "0 0 12px",
+                fontSize: 18,
+                fontWeight: 700,
+                color: "#0f172a",
+                lineHeight: 1.45,
+              }}
+            >
+              {article.title}
+            </h2>
+          )}
 
-          {article.author && article.author !== article.source && (
+          {!embedOriginal && article.author && article.author !== article.source && (
             <p
               style={{
                 margin: "0 0 12px",
@@ -183,51 +244,7 @@ export default function RssNewsDetailPanel({
             </p>
           )}
 
-          {(article.hnPoints != null || article.hnComments != null) && (
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                marginBottom: 14,
-                flexWrap: "wrap",
-              }}
-            >
-              {article.hnPoints != null && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                    background: "#fff7ed",
-                    color: "#c2410c",
-                    border: "1px solid #fed7aa",
-                  }}
-                >
-                  <i className="ri-fire-line" style={{ marginRight: 4 }} />
-                  {article.hnPoints} 分
-                </span>
-              )}
-              {article.hnComments != null && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                    background: "#f0f9ff",
-                    color: "#0369a1",
-                    border: "1px solid #bae6fd",
-                  }}
-                >
-                  <i className="ri-chat-3-line" style={{ marginRight: 4 }} />
-                  {article.hnComments} 条讨论
-                </span>
-              )}
-            </div>
-          )}
-
-          {article.summary && (
+          {showSummary && (
             <div
               style={{
                 background: "#f8fafc",
@@ -243,21 +260,66 @@ export default function RssNewsDetailPanel({
             </div>
           )}
 
-          {isHn && !showHtml && (
-            <p style={{ margin: 0, fontSize: 12, color: "#94a3b8", lineHeight: 1.6 }}>
-              本文为外链报道，点击下方按钮阅读全文或参与 Hacker News 讨论。
-            </p>
-          )}
-
           {showHtml && (
             <div
               style={{ fontSize: 13, color: "#334155", lineHeight: 1.8 }}
-              dangerouslySetInnerHTML={{
-                __html:
-                  article.content.slice(0, 2000) +
-                  (article.content.length > 2000 ? "…" : ""),
-              }}
+              dangerouslySetInnerHTML={{ __html: article.content }}
             />
+          )}
+
+          {embedOriginal && (
+            <>
+              {originalLoading && (
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#94a3b8",
+                    fontSize: 13,
+                  }}
+                >
+                  <i
+                    className="ri-loader-4-line animate-spin"
+                    style={{ marginRight: 8 }}
+                  />
+                  正在加载原文…
+                </div>
+              )}
+              {!originalLoading && originalError && (
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 12,
+                    padding: 24,
+                    color: "#64748b",
+                    fontSize: 13,
+                    textAlign: "center",
+                  }}
+                >
+                  <p style={{ margin: 0 }}>原文加载失败，请点击下方按钮在新窗口打开。</p>
+                </div>
+              )}
+              {!originalLoading && originalHtml && (
+                <iframe
+                  title={article.title}
+                  srcDoc={originalHtml}
+                  style={{
+                    flex: 1,
+                    width: "100%",
+                    border: "none",
+                    minHeight: 0,
+                    background: "#fff",
+                  }}
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -293,34 +355,8 @@ export default function RssNewsDetailPanel({
                 boxShadow: "0 2px 8px rgba(14,165,233,0.35)",
               }}
             >
-              <i className="ri-article-line" />
-              阅读原文
-            </a>
-          ) : null}
-          {article.discussionLink ? (
-            <a
-              href={article.discussionLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                flex: 1,
-                minWidth: 120,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                height: 38,
-                borderRadius: 10,
-                background: "#fff7ed",
-                color: "#c2410c",
-                textDecoration: "none",
-                fontSize: 14,
-                fontWeight: 600,
-                border: "1px solid #fed7aa",
-              }}
-            >
-              <i className="ri-discuss-line" />
-              HN 讨论
+              <i className="ri-external-link-line" />
+              {embedOriginal ? "新窗口打开" : "阅读原文"}
             </a>
           ) : null}
           <button

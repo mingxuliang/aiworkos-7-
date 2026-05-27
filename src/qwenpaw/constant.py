@@ -369,3 +369,5 @@ JWT_EXPIRE_MINUTES = EnvVarLoader.get_int(
     1440,
     min_value=1,
 )
+
+INTERNAL_TOKEN = EnvVarLoader.get_str("QWENPAW_INTERNAL_TOKEN", "")

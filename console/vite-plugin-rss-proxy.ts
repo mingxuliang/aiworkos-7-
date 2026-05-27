@@ -6,12 +6,9 @@ const UA =
 /** 允许代理的 RSS 域名（与 newsRss.ts FEEDS 同步） */
 export const RSS_ALLOWED_HOSTS = new Set([
   "www.qbitai.com",
-  "www.infoq.cn",
-  "sspai.com",
-  "openai.com",
-  "hnrss.org",
-  "rss.arxiv.org",
-  "api.bilibili.com",
+  "www.leiphone.com",
+  "www.tmtpost.com",
+  "www.ifanr.com",
 ]);
 
 function rssProxyMiddleware(): Connect.NextHandleFunction {

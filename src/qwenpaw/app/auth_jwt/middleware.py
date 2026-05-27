@@ -15,6 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from ...constant import EnvVarLoader
 from .jwt_utils import decode_token
+from .internal_token import is_internal_token
 from .redis_client import get_session_user_info
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ _PUBLIC_PATHS: frozenset[str] = frozenset(
         "/api/version",
         "/api/settings/language",
         "/api/plugins",
+        "/metrics",
     },
 )
 
@@ -62,6 +64,9 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                 status_code=401,
                 media_type="application/json",
             )
+
+        if self._try_internal_token(request, token):
+            return await call_next(request)
 
         payload = await decode_token(token)
         if payload is None:
@@ -123,6 +128,9 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                 media_type="application/json",
             )
 
+        if JWTAuthMiddleware._try_internal_token(request, token):
+            return await call_next(request)
+
         payload = await decode_token(token)
         if payload is None:
             return Response(
@@ -173,6 +181,21 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         if not path.startswith("/api/"):
             return True
 
+        return False
+
+    @staticmethod
+    def _try_internal_token(request: Request, token: str) -> bool:
+        """Check if *token* is the internal CLI token."""
+        try:
+            if is_internal_token(token):
+                request.state.user = "__internal__"
+                request.state.user_id = "0"
+                request.state.roles = ["admin"]
+                request.state.jti = ""
+                logger.debug("Internal token auth: request from CLI")
+                return True
+        except Exception:
+            pass
         return False
 
     @staticmethod

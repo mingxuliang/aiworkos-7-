@@ -17,6 +17,10 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from ...constant import JWT_DB_URL
+
+# Ensure department ORM is registered against Base.metadata
+from ...department import models as _dept_models  # noqa: F401
+
 from .models import (
     Base,
     Role,
@@ -79,6 +83,23 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 # ---------------------------------------------------------------------------
 
 
+async def _migrate_department_schema(engine) -> None:
+    """Handle department schema changes not covered by create_all."""
+    from sqlalchemy import text
+
+    async with engine.begin() as conn:
+        try:
+            await conn.execute(
+                text("ALTER TABLE departments ADD COLUMN job_desc VARCHAR(512) NULL"),
+            )
+        except Exception:
+            pass
+
+        await conn.execute(
+            text("DROP TABLE IF EXISTS department_responsibilities"),
+        )
+
+
 async def init_db() -> None:
     """Create tables and seed default roles / permissions.
 
@@ -90,6 +111,9 @@ async def init_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("JWT auth database tables created / verified")
+
+    await _migrate_department_schema(engine)
+    logger.info("Department schema migration completed")
 
     # Seed default data
     factory = get_session_factory()
