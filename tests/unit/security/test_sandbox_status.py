@@ -26,6 +26,11 @@ def _settings(**overrides: object) -> ResolvedSandboxSettings:
         docker_cpus="1",
         docker_pids_limit=64,
         docker_timeout_seconds=120,
+        skill_sandbox_enforcement="warn",
+        auto_tag_risky_skills=True,
+        session_container_enabled=False,
+        session_idle_seconds=900,
+        session_max_containers=32,
     )
     defaults.update(overrides)
     return ResolvedSandboxSettings(**defaults)  # type: ignore[arg-type]
@@ -71,3 +76,4 @@ async def test_get_execution_sandbox_status_reports_docker_health() -> None:
     assert status.docker_image_present is True
     assert status.env_enabled == "true"
     assert status.env_backend == "docker"
+    assert status.session_containers.active_count == 0

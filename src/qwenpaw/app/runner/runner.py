@@ -259,6 +259,85 @@ class AgentRunner(Runner):
         return None
 
     @staticmethod
+    def _lookup_skill_by_name(
+        skill_name: str,
+        skills: dict,
+    ) -> dict | None:
+        lowered = skill_name.lower()
+        return next(
+            (
+                s
+                for s in skills.values()
+                if Path(s["dir"]).name.lower() == lowered
+            ),
+            None,
+        )
+
+    @staticmethod
+    def _skill_requires_sandbox(skill_name: str, skills: dict) -> bool:
+        skill = AgentRunner._lookup_skill_by_name(skill_name, skills)
+        if not skill:
+            return False
+        skill_dir = Path(skill["dir"])
+        skill_md = skill_dir / "SKILL.md"
+        if not skill_md.exists():
+            return False
+        from ...agents.skills_manager import _extract_requirements
+
+        raw = read_text_file_with_encoding_fallback(skill_md)
+        post = fm.loads(raw)
+        return _extract_requirements(post).requires_sandbox
+
+    @staticmethod
+    def _enforce_skill_sandbox_requirement(
+        query: str | None,
+        skills: dict,
+        *,
+        sandbox_override: bool | None,
+        sandbox_settings,
+    ) -> bool:
+        """Force sandbox when an invoked skill requires it. Returns override applied."""
+        if not query:
+            return False
+        parsed = AgentRunner._parse_skill_query(query)
+        if not parsed or not parsed[1]:
+            return False
+        name, _user_input = parsed
+        if not AgentRunner._skill_requires_sandbox(name, skills):
+            return False
+
+        from ...security.sandbox.context import (
+            set_current_skill_requires_sandbox,
+            set_sandbox_enabled_override,
+        )
+
+        set_current_skill_requires_sandbox(True)
+        enforcement = sandbox_settings.skill_sandbox_enforcement
+        if enforcement == "off":
+            return False
+
+        effective = (
+            sandbox_override
+            if sandbox_override is not None
+            else sandbox_settings.enabled
+        )
+        if effective:
+            return False
+
+        if enforcement == "strict":
+            logger.info(
+                "Forcing execution sandbox for skill '%s' (strict policy)",
+                name,
+            )
+        else:
+            logger.warning(
+                "Forcing execution sandbox for skill '%s' (warn policy)",
+                name,
+            )
+        set_sandbox_enabled_override(True)
+        return True
+
+    @staticmethod
     def _rewrite_last_message_text(
         msgs: list,
         new_text: str,
@@ -328,6 +407,8 @@ class AgentRunner(Runner):
         chat = None
         session_state_loaded = False
         sandbox_override_applied = False
+        skill_sandbox_override_applied = False
+        session_container_key = None
         try:
             session_id = request.session_id
             user_id = request.user_id
@@ -385,6 +466,9 @@ class AgentRunner(Runner):
                     user_id,
                     use_user_subdir=load_use_user_subdir(),
                 )
+            from ...security.sandbox.context import set_current_sandbox_root
+
+            set_current_sandbox_root(sandbox_root_path)
             env_context = build_env_context(
                 session_id=session_id,
                 user_id=user_id,
@@ -397,15 +481,8 @@ class AgentRunner(Runner):
                 ),
             )
 
-            # Get MCP clients from manager (hot-reloadable)
-            mcp_clients = []
-            if self._mcp_manager is not None:
-                mcp_clients = await self._mcp_manager.get_clients()
-
             # Load agent-specific configuration
             agent_config = load_agent_config(self.agent_id)
-
-            logger.debug(f"Enabled MCP: {mcp_clients}")
 
             # Build base request context
             base_request_context = {
@@ -444,6 +521,55 @@ class AgentRunner(Runner):
                     "Runner: current session is root: %s",
                     session_preview,
                 )
+
+            root_session_id = base_request_context.get(
+                "root_session_id",
+                session_id,
+            )
+            session_container_key = (
+                f"{self.agent_id}:{user_id}:{root_session_id}"
+            )
+            from ...security.sandbox.context import (
+                set_current_session_container_key,
+            )
+
+            set_current_session_container_key(session_container_key)
+
+            def _needs_session_container(settings) -> bool:
+                if not settings.enabled or settings.backend != "docker":
+                    return False
+                if settings.session_container_enabled:
+                    return True
+                try:
+                    from ...config import load_config
+
+                    for client in load_config().mcp.clients.values():
+                        if (
+                            client.enabled
+                            and client.transport == "stdio"
+                            and client.run_in_sandbox
+                        ):
+                            return True
+                except Exception:
+                    return False
+                return False
+
+            if _needs_session_container(sandbox_settings) and sandbox_root_path:
+                from ...security.sandbox.session_container_manager import (
+                    get_session_container_manager,
+                )
+
+                await get_session_container_manager().acquire(
+                    session_container_key,
+                    sandbox_root_path,
+                )
+
+            # Get MCP clients after session container context is ready
+            mcp_clients = []
+            if self._mcp_manager is not None:
+                mcp_clients = await self._mcp_manager.get_clients()
+
+            logger.debug(f"Enabled MCP: {mcp_clients}")
 
             # Mission Mode: /mission
             _ws = self.workspace_dir or WORKING_DIR
@@ -601,6 +727,19 @@ class AgentRunner(Runner):
             await agent.register_mcp_clients()
             agent.set_console_output_enabled(enabled=False)
 
+            if sandbox_settings.enabled:
+                from ...config import load_config
+                from ...security.sandbox.context import set_current_readonly_roots
+
+                exec_cfg = load_config().security.execution_sandbox
+                if exec_cfg.allow_enabled_skill_dirs:
+                    skill_dirs = [
+                        str(Path(skill["dir"]).resolve())
+                        for skill in agent.toolkit.skills.values()
+                        if skill.get("dir")
+                    ]
+                    set_current_readonly_roots(skill_dirs)
+
             logger.debug(
                 f"Agent Query msgs {msgs}",
             )
@@ -649,6 +788,29 @@ class AgentRunner(Runner):
                 if skill_response is not None:
                     yield skill_response, True
                     return
+
+                skill_sandbox_override_applied = (
+                    self._enforce_skill_sandbox_requirement(
+                        query,
+                        agent.toolkit.skills,
+                        sandbox_override=sandbox_override,
+                        sandbox_settings=sandbox_settings,
+                    )
+                )
+                if skill_sandbox_override_applied:
+                    sandbox_override_applied = True
+                    sandbox_settings = load_sandbox_settings()
+                    if sandbox_settings.enabled and sandbox_root_path is None:
+                        sandbox_root_path = resolve_sandbox_root(
+                            workspace_path,
+                            user_id,
+                            use_user_subdir=load_use_user_subdir(),
+                        )
+                        from ...security.sandbox.context import (
+                            set_current_sandbox_root,
+                        )
+
+                        set_current_sandbox_root(sandbox_root_path)
 
             # Ensure session file has a valid plan_notebook dict
             # to prevent TypeError/KeyError during load_state_dict
@@ -805,6 +967,38 @@ class AgentRunner(Runner):
                 from ...security.sandbox.context import set_sandbox_enabled_override
 
                 set_sandbox_enabled_override(None)
+
+            from ...security.sandbox.context import set_current_readonly_roots
+
+            set_current_readonly_roots(None)
+
+            if skill_sandbox_override_applied:
+                from ...security.sandbox.context import (
+                    set_current_skill_requires_sandbox,
+                )
+
+                set_current_skill_requires_sandbox(False)
+
+            if session_container_key:
+                from ...security.sandbox.context import (
+                    set_current_session_container_key,
+                    set_current_sandbox_root,
+                )
+                from ...security.sandbox.session_container_manager import (
+                    get_session_container_manager,
+                )
+
+                set_current_session_container_key(None)
+                set_current_sandbox_root(None)
+                try:
+                    await get_session_container_manager().release(
+                        session_container_key,
+                    )
+                except Exception:
+                    logger.debug(
+                        "Session container release skipped",
+                        exc_info=True,
+                    )
 
             if agent is not None and session_state_loaded:
                 await self.session.save_session_state(

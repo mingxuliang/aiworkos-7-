@@ -469,9 +469,52 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
 
     _bg_task = asyncio.create_task(_background_startup())
 
+    async def _session_container_reaper() -> None:
+        while True:
+            await asyncio.sleep(60)
+            try:
+                from ..security.sandbox.session_container_manager import (
+                    get_session_container_manager,
+                )
+
+                count = await get_session_container_manager().reap_idle()
+                if count:
+                    logger.info(
+                        "Reaped %d idle session container(s)",
+                        count,
+                    )
+            except Exception:
+                logger.debug(
+                    "Session container reaper tick failed",
+                    exc_info=True,
+                )
+
+    _session_reaper_task = asyncio.create_task(_session_container_reaper())
+
     try:
         yield
     finally:
+        _session_reaper_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await _session_reaper_task
+
+        try:
+            from ..security.sandbox.session_container_manager import (
+                get_session_container_manager,
+            )
+
+            destroyed = await get_session_container_manager().destroy_all()
+            if destroyed:
+                logger.info(
+                    "Destroyed %d session container(s) on shutdown",
+                    destroyed,
+                )
+        except Exception:
+            logger.debug(
+                "Session container shutdown cleanup failed",
+                exc_info=True,
+            )
+
         # Cancel background startup if still in progress
         if not _bg_task.done():
             _bg_task.cancel()

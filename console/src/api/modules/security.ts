@@ -102,6 +102,28 @@ export interface ExecutionSandboxConfig {
   docker_cpus: string;
   docker_pids_limit: number;
   docker_timeout_seconds: number;
+  skill_sandbox_enforcement: "off" | "warn" | "strict";
+  auto_tag_risky_skills: boolean;
+  session_container_enabled: boolean;
+  session_idle_seconds: number;
+  session_max_containers: number;
+}
+
+export interface SessionContainerInfo {
+  session_key: string;
+  container_id: string;
+  container_name: string;
+  sandbox_root: string;
+  idle_for: number;
+  created_at: number;
+}
+
+export interface SessionContainersStatus {
+  enabled: boolean;
+  active_count: number;
+  idle_seconds: number;
+  max_containers: number;
+  containers: SessionContainerInfo[];
 }
 
 export interface ExecutionSandboxStatus {
@@ -112,6 +134,7 @@ export interface ExecutionSandboxStatus {
   docker_image: string;
   env_enabled: string | null;
   env_backend: string | null;
+  session_containers: SessionContainersStatus;
 }
 
 export const securityApi = {
@@ -211,5 +234,11 @@ export const securityApi = {
   getExecutionSandboxStatus: () =>
     request<ExecutionSandboxStatus>(
       "/config/security/execution-sandbox/status",
+    ),
+
+  destroySessionContainer: (sessionKey: string) =>
+    request<{ destroyed: boolean }>(
+      `/config/security/execution-sandbox/session-containers/${encodeURIComponent(sessionKey)}`,
+      { method: "DELETE" },
     ),
 };

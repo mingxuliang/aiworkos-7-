@@ -19,51 +19,48 @@ from ...config.context import (
 )
 from ...security.sandbox import (
     SandboxBoundaryError,
-    assert_path_in_jail,
-    get_current_sandbox_root,
     is_sandbox_enabled,
+    resolve_tool_path_string,
 )
 from ...constant import WORKING_DIR, TRUNCATION_NOTICE_MARKER
 
 
-def _resolve_file_path(file_path: str) -> str:
-    """Resolve file path: use absolute path as-is,
-    resolve relative path from current workspace or WORKING_DIR.
-
-    When execution sandbox is enabled, the resolved path must stay inside
-    the current sandbox root.
-
-    Args:
-        file_path: The input file path (absolute or relative).
-
-    Returns:
-        The resolved absolute file path as string.
-    """
+def _resolve_read_path(file_path: str) -> str:
+    """Resolve a readable file path under sandbox read policy."""
+    if is_sandbox_enabled():
+        return resolve_tool_path_string(file_path, mode="read")
     path = Path(file_path).expanduser()
-    if is_sandbox_enabled():
-        base = get_current_sandbox_root() or (
-            get_current_workspace_dir() or WORKING_DIR
-        )
-    else:
-        base = get_current_workspace_dir() or WORKING_DIR
-
+    base = get_current_workspace_dir() or WORKING_DIR
     if path.is_absolute():
-        resolved = str(path.resolve(strict=False))
-    else:
-        resolved = str((Path(base) / file_path).resolve(strict=False))
+        return str(path.resolve(strict=False))
+    return str((Path(base) / file_path).resolve(strict=False))
 
+
+def _resolve_write_path(file_path: str) -> str:
+    """Resolve a writable file path under sandbox write policy."""
     if is_sandbox_enabled():
-        sandbox_root = get_current_sandbox_root() or (
-            get_current_workspace_dir() or WORKING_DIR
-        )
-        assert_path_in_jail(resolved, sandbox_root)
-    return resolved
+        return resolve_tool_path_string(file_path, mode="write")
+    path = Path(file_path).expanduser()
+    base = get_current_workspace_dir() or WORKING_DIR
+    if path.is_absolute():
+        return str(path.resolve(strict=False))
+    return str((Path(base) / file_path).resolve(strict=False))
 
 
-def _resolve_file_path_or_error(file_path: str) -> str | ToolResponse:
+def _resolve_file_path(file_path: str, *, mode: str = "read") -> str:
+    if mode == "write":
+        return _resolve_write_path(file_path)
+    return _resolve_read_path(file_path)
+
+
+def _resolve_file_path_or_error(
+    file_path: str,
+    *,
+    mode: str = "read",
+) -> str | ToolResponse:
     """Resolve path or return a ToolResponse error for sandbox violations."""
     try:
-        return _resolve_file_path(file_path)
+        return _resolve_file_path(file_path, mode=mode)
     except SandboxBoundaryError as exc:
         return ToolResponse(
             content=[
@@ -145,7 +142,7 @@ async def read_file(  # pylint: disable=too-many-return-statements
                 ],
             )
 
-    resolved = _resolve_file_path_or_error(file_path)
+    resolved = _resolve_file_path_or_error(file_path, mode="read")
     if isinstance(resolved, ToolResponse):
         return resolved
     file_path = resolved
@@ -267,7 +264,7 @@ async def write_file(
             ],
         )
 
-    resolved = _resolve_file_path_or_error(file_path)
+    resolved = _resolve_file_path_or_error(file_path, mode="write")
     if isinstance(resolved, ToolResponse):
         return resolved
     file_path = resolved
@@ -323,7 +320,7 @@ async def edit_file(
             ],
         )
 
-    resolved = _resolve_file_path_or_error(file_path)
+    resolved = _resolve_file_path_or_error(file_path, mode="read")
     if isinstance(resolved, ToolResponse):
         return resolved
     resolved_path = resolved
@@ -415,7 +412,7 @@ async def append_file(
             ],
         )
 
-    resolved = _resolve_file_path_or_error(file_path)
+    resolved = _resolve_file_path_or_error(file_path, mode="write")
     if isinstance(resolved, ToolResponse):
         return resolved
     file_path = resolved

@@ -8,6 +8,7 @@ import {
   Tag,
   Alert,
   Button,
+  Table,
 } from "@agentscope-ai/design";
 import { Space } from "antd";
 import { ReloadOutlined, ContainerOutlined } from "@ant-design/icons";
@@ -44,6 +45,11 @@ const DEFAULT_CONFIG: ExecutionSandboxConfig = {
   docker_cpus: "1",
   docker_pids_limit: 64,
   docker_timeout_seconds: 120,
+  skill_sandbox_enforcement: "warn",
+  auto_tag_risky_skills: true,
+  session_container_enabled: false,
+  session_idle_seconds: 900,
+  session_max_containers: 32,
 };
 
 export function ExecutionSandboxSection({
@@ -126,6 +132,19 @@ export function ExecutionSandboxSection({
   useEffect(() => {
     onSave?.({ save: handleSave, reset: handleReset, saving });
   }, [handleSave, handleReset, onSave, saving]);
+
+  const handleDestroyContainer = useCallback(
+    async (sessionKey: string) => {
+      try {
+        await api.destroySessionContainer(sessionKey);
+        message.success(t("security.executionSandbox.containerDestroyed"));
+        await fetchStatus();
+      } catch {
+        message.error(t("security.executionSandbox.containerDestroyFailed"));
+      }
+    },
+    [fetchStatus, message, t],
+  );
 
   const envOverrideActive =
     status?.env_enabled != null || status?.env_backend != null;
@@ -314,9 +333,126 @@ export function ExecutionSandboxSection({
                   }
                 />
               </div>
+
+              <div className={styles.formRow}>
+                <span>{t("security.executionSandbox.sessionContainerEnabled")}</span>
+                <Switch
+                  checked={config.session_container_enabled}
+                  onChange={(checked) =>
+                    updateField("session_container_enabled", checked)
+                  }
+                />
+              </div>
+
+              {config.session_container_enabled && (
+                <>
+                  <div className={styles.formRow}>
+                    <span>{t("security.executionSandbox.sessionIdleSeconds")}</span>
+                    <InputNumber
+                      min={60}
+                      value={config.session_idle_seconds}
+                      onChange={(value) =>
+                        updateField("session_idle_seconds", value ?? 900)
+                      }
+                    />
+                  </div>
+
+                  <div className={styles.formRow}>
+                    <span>{t("security.executionSandbox.sessionMaxContainers")}</span>
+                    <InputNumber
+                      min={1}
+                      value={config.session_max_containers}
+                      onChange={(value) =>
+                        updateField("session_max_containers", value ?? 32)
+                      }
+                    />
+                  </div>
+                </>
+              )}
             </>
           )}
+
+          <div className={styles.formRow}>
+            <span>{t("security.executionSandbox.skillSandboxEnforcement")}</span>
+            <Select
+              style={{ minWidth: 180 }}
+              value={config.skill_sandbox_enforcement}
+              onChange={(value: ExecutionSandboxConfig["skill_sandbox_enforcement"]) =>
+                updateField("skill_sandbox_enforcement", value)
+              }
+              options={[
+                { value: "off", label: t("security.executionSandbox.enforcementOff") },
+                { value: "warn", label: t("security.executionSandbox.enforcementWarn") },
+                { value: "strict", label: t("security.executionSandbox.enforcementStrict") },
+              ]}
+            />
+          </div>
+
+          <div className={styles.formRow}>
+            <span>{t("security.executionSandbox.autoTagRiskySkills")}</span>
+            <Switch
+              checked={config.auto_tag_risky_skills}
+              onChange={(checked) => updateField("auto_tag_risky_skills", checked)}
+            />
+          </div>
         </div>
+
+        {status?.session_containers && (
+          <div className={styles.executionSandboxSessionContainers}>
+            <div className={styles.executionSandboxSubheading}>
+              {t("security.executionSandbox.sessionContainersTitle")}
+            </div>
+            <Space wrap className={styles.executionSandboxStatus}>
+              <Tag color={status.session_containers.enabled ? "blue" : "default"}>
+                {status.session_containers.enabled
+                  ? t("security.executionSandbox.sessionContainersEnabled")
+                  : t("security.executionSandbox.sessionContainersDisabled")}
+              </Tag>
+              <Tag>
+                {t("security.executionSandbox.sessionContainersActive")}:{" "}
+                {status.session_containers.active_count}
+              </Tag>
+              <Tag>
+                {t("security.executionSandbox.sessionContainersIdle")}:{" "}
+                {status.session_containers.idle_seconds}s
+              </Tag>
+            </Space>
+            <Table
+              size="small"
+              pagination={false}
+              rowKey="session_key"
+              dataSource={status.session_containers.containers}
+              columns={[
+                {
+                  title: t("security.executionSandbox.sessionKey"),
+                  dataIndex: "session_key",
+                },
+                {
+                  title: t("security.executionSandbox.containerId"),
+                  dataIndex: "container_id",
+                  render: (value: string) => value?.slice(0, 12) ?? "-",
+                },
+                {
+                  title: t("security.executionSandbox.idleFor"),
+                  dataIndex: "idle_for",
+                  render: (value: number) => `${value}s`,
+                },
+                {
+                  title: t("security.executionSandbox.actions"),
+                  render: (_value, record) => (
+                    <Button
+                      size="small"
+                      danger
+                      onClick={() => handleDestroyContainer(record.session_key)}
+                    >
+                      {t("security.executionSandbox.destroyContainer")}
+                    </Button>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -26,7 +26,12 @@ import frontmatter
 from pydantic import BaseModel, Field
 
 from ..exceptions import SkillsError
-from ..security.skill_scanner import scan_skill_directory
+from ..security.skill_scanner import (
+    SkillScanError,
+    SkillSandboxRequiredError,
+    scan_skill_directory,
+    should_recommend_sandbox,
+)
 from .utils.file_handling import read_text_file_with_encoding_fallback
 
 try:
@@ -110,6 +115,7 @@ class SkillRequirements(BaseModel):
 
     require_bins: list[str] = Field(default_factory=list)
     require_envs: list[str] = Field(default_factory=list)
+    requires_sandbox: bool = Field(default=False)
 
 
 _ACTIVE_SKILL_ENV_ENTRIES: dict[str, dict[str, Any]] = {}
@@ -712,6 +718,16 @@ def _resolve_skill_name(skill_dir: Path) -> str:
     return skill_dir.name
 
 
+def _parse_requires_sandbox(requires: Any) -> bool:
+    if isinstance(requires, dict):
+        sandbox_val = requires.get("sandbox")
+        if isinstance(sandbox_val, bool):
+            return sandbox_val
+        if isinstance(sandbox_val, str):
+            return sandbox_val.strip().lower() in {"true", "1", "yes", "on"}
+    return False
+
+
 def _extract_requirements(post: dict[str, Any]) -> SkillRequirements:
     """Extract requirements from a parsed frontmatter dict."""
     metadata = post.get("metadata")
@@ -744,6 +760,7 @@ def _extract_requirements(post: dict[str, Any]) -> SkillRequirements:
         return SkillRequirements(
             require_bins=list(requires.get("bins", [])),
             require_envs=list(requires.get("env", [])),
+            requires_sandbox=_parse_requires_sandbox(requires),
         )
     except Exception as e:
         logger.warning(
@@ -923,6 +940,7 @@ def _build_skill_metadata(
         "source": source,
         "protected": protected,
         "requirements": requirements.model_dump(),
+        "requires_sandbox": requirements.requires_sandbox,
         "updated_at": _get_skill_mtime(skill_dir),
     }
 
@@ -2190,7 +2208,111 @@ def _extract_zip_skills(data: bytes) -> tuple[Path, list[tuple[Path, str]]]:
 
 
 def _scan_skill_dir_or_raise(skill_dir: Path, skill_name: str) -> None:
-    scan_skill_directory(skill_dir, skill_name=skill_name)
+    result = scan_skill_directory(skill_dir, skill_name=skill_name)
+    if result is not None:
+        _apply_scan_sandbox_policy(skill_dir, skill_name, result)
+
+
+def _apply_scan_sandbox_policy(
+    skill_dir: Path,
+    skill_name: str,
+    result: Any,
+) -> None:
+    """Auto-tag risky skills and enforce strict sandbox requirements."""
+    if not should_recommend_sandbox(result):
+        return
+
+    try:
+        from ..config import load_config
+
+        exec_cfg = load_config().security.execution_sandbox
+    except Exception:
+        return
+
+    manifest_path = get_workspace_skill_manifest_path(
+        _resolve_workspace_from_skill_dir(skill_dir),
+    )
+
+    if exec_cfg.auto_tag_risky_skills:
+        def _tag(payload: dict[str, Any]) -> bool:
+            entry = payload.get("skills", {}).get(skill_name)
+            if entry is None:
+                return False
+            entry["requires_sandbox"] = True
+            requirements = dict(entry.get("requirements") or {})
+            requirements["requires_sandbox"] = True
+            entry["requirements"] = requirements
+            return True
+
+        _mutate_json(
+            manifest_path,
+            _default_workspace_manifest(),
+            _tag,
+        )
+        logger.info(
+            "Auto-tagged skill '%s' with requires_sandbox after scan",
+            skill_name,
+        )
+
+    if exec_cfg.skill_sandbox_enforcement == "strict":
+        from ..security.sandbox.settings import load_sandbox_settings
+
+        sandbox_settings = load_sandbox_settings()
+        if not sandbox_settings.enabled or sandbox_settings.backend == "off":
+            raise SkillSandboxRequiredError(skill_name)
+
+
+def _resolve_workspace_from_skill_dir(skill_dir: Path) -> Path:
+    """Best-effort workspace root for a skill directory under skills/."""
+    resolved = skill_dir.resolve()
+    if resolved.parent.name == "skills":
+        return resolved.parent.parent
+    return resolved.parent
+
+
+def _skill_entry_requires_sandbox(entry: dict[str, Any]) -> bool:
+    if entry.get("requires_sandbox"):
+        return True
+    requirements = entry.get("requirements") or {}
+    return bool(requirements.get("requires_sandbox"))
+
+
+def _check_enable_sandbox_requirement(
+    skill_name: str,
+    manifest_path: Path,
+) -> dict[str, Any] | None:
+    """Return an error payload when strict mode blocks enable."""
+    try:
+        from ..config import load_config
+
+        exec_cfg = load_config().security.execution_sandbox
+    except Exception:
+        return None
+
+    if exec_cfg.skill_sandbox_enforcement != "strict":
+        return None
+
+    manifest = read_skill_manifest(manifest_path.parent)
+    entry = manifest.get("skills", {}).get(skill_name) or {}
+    if not _skill_entry_requires_sandbox(entry):
+        return None
+
+    from ..security.sandbox.settings import load_sandbox_settings
+
+    sandbox_settings = load_sandbox_settings()
+    if sandbox_settings.enabled and sandbox_settings.backend != "off":
+        return None
+
+    return {
+        "success": False,
+        "updated_workspaces": [],
+        "failed": [manifest_path.parent.name],
+        "reason": "sandbox_required",
+        "message": (
+            f"Skill '{skill_name}' requires execution sandbox but sandbox "
+            "is disabled. Enable execution sandbox before enabling this skill."
+        ),
+    }
 
 
 @contextmanager
@@ -2684,6 +2806,15 @@ class SkillService:
                 "failed": [self.workspace_dir.name],
                 "reason": "not_found",
             }
+
+        manifest_path = get_workspace_skill_manifest_path(self.workspace_dir)
+        sandbox_block = _check_enable_sandbox_requirement(
+            skill_name,
+            manifest_path,
+        )
+        if sandbox_block is not None:
+            return sandbox_block
+
         _scan_skill_dir_or_raise(skill_dir, skill_name)
 
         def _update(payload: dict[str, Any]) -> bool:

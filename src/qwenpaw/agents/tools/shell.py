@@ -22,8 +22,16 @@ from ...config.context import (
     get_current_workspace_dir,
 )
 from ...security.sandbox import get_current_sandbox_root
-from ...security.sandbox.docker_runner import DockerSandboxRunner
-from ...security.sandbox.settings import load_sandbox_settings, use_docker_shell_backend
+from ...security.sandbox.docker_runner import (
+    DockerSandboxRunner,
+    EphemeralDockerRunner,
+    SessionDockerRunner,
+)
+from ...security.sandbox.settings import (
+    load_sandbox_settings,
+    use_docker_shell_backend,
+    use_session_container_backend,
+)
 
 
 def _kill_process_tree_win32(pid: int) -> None:
@@ -327,7 +335,12 @@ async def _execute_shell_in_docker(
 ) -> ToolResponse | None:
     """Execute shell in Docker sandbox, or return None to fall back to local."""
     settings = load_sandbox_settings()
-    runner = DockerSandboxRunner(settings)
+    if use_session_container_backend():
+        runner: DockerSandboxRunner | SessionDockerRunner = SessionDockerRunner(
+            settings,
+        )
+    else:
+        runner = EphemeralDockerRunner()
     available = await runner.is_available()
     if not available:
         if settings.fail_closed:

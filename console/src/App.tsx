@@ -31,6 +31,7 @@ const LoginPage = lazyImportWithRetry("./pages/Login/index");
 import { authApi } from "./api/modules/auth";
 import { languageApi } from "./api/modules/language";
 import { getApiUrl, getApiToken, clearAuthToken } from "./api/config";
+import { syncAuthenticatedUserKeyFromToken } from "./utils/authUsername";
 import "./styles/layout.css";
 import "./styles/agent-team-port.css";
 import "./styles/form-override.css";
@@ -82,6 +83,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
           });
           if (cancelled) return;
           if (r.ok) {
+            syncAuthenticatedUserKeyFromToken(token);
             setStatus("ok");
           } else {
             clearAuthToken();

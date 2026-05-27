@@ -44,6 +44,7 @@ class RegisterRequest(BaseModel):
 class AuthStatusResponse(BaseModel):
     enabled: bool
     has_users: bool
+    mode: str = "legacy"
 
 
 @router.post("/login")
@@ -106,9 +107,27 @@ async def register(req: RegisterRequest):
 @router.get("/status")
 async def auth_status():
     """Check if authentication is enabled and whether a user exists."""
+    auth_mode = EnvVarLoader.get_str("QWENPAW_AUTH_MODE", "legacy").lower()
+    if auth_mode == "jwt":
+        from ..auth_jwt.database import get_session_factory
+        from ..auth_jwt.user_service import list_users
+
+        has_users = True
+        session_factory = get_session_factory()
+        if session_factory is not None:
+            async with session_factory() as db:
+                users = await list_users(db)
+                has_users = bool(users)
+        return AuthStatusResponse(
+            enabled=True,
+            has_users=has_users,
+            mode="jwt",
+        )
+
     return AuthStatusResponse(
         enabled=is_auth_enabled(),
         has_users=has_registered_users(),
+        mode="legacy",
     )
 
 

@@ -3,11 +3,25 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 
 from ...constant import EnvVarLoader
 from .docker_runner import DockerSandboxRunner
 from .settings import ResolvedSandboxSettings, load_sandbox_settings
+
+
+@dataclass(frozen=True)
+class SessionContainersStatus:
+    """Session container runtime snapshot."""
+
+    enabled: bool
+    active_count: int
+    idle_seconds: int
+    max_containers: int
+    containers: list[dict[str, object]] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 
 @dataclass(frozen=True)
@@ -21,6 +35,7 @@ class ExecutionSandboxStatus:
     docker_image: str
     env_enabled: str | None
     env_backend: str | None
+    session_containers: SessionContainersStatus
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -48,13 +63,25 @@ async def get_execution_sandbox_status(
 ) -> ExecutionSandboxStatus:
     """Collect resolved settings and docker backend health."""
     resolved = settings or load_sandbox_settings()
-    runner = DockerSandboxRunner(resolved)
+    runner = DockerSandboxRunner()
     docker_available = await runner.is_available()
     docker_image_present = False
     if docker_available:
         docker_image_present = await probe_docker_image_present(
             resolved.docker_image,
         )
+
+    from .session_container_manager import get_session_container_manager
+
+    manager = get_session_container_manager()
+    containers = manager.list_containers()
+    session_status = SessionContainersStatus(
+        enabled=resolved.session_container_enabled,
+        active_count=len(containers),
+        idle_seconds=resolved.session_idle_seconds,
+        max_containers=resolved.session_max_containers,
+        containers=containers,
+    )
 
     return ExecutionSandboxStatus(
         effective_enabled=resolved.enabled and resolved.backend != "off",
@@ -64,4 +91,5 @@ async def get_execution_sandbox_status(
         docker_image=resolved.docker_image,
         env_enabled=EnvVarLoader.get_str("QWENPAW_EXECUTION_SANDBOX_ENABLED"),
         env_backend=EnvVarLoader.get_str("QWENPAW_EXECUTION_SANDBOX_BACKEND"),
+        session_containers=session_status,
     )

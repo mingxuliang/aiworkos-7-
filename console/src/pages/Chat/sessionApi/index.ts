@@ -9,13 +9,13 @@ import api, {
   type ChatStatus,
   type Message,
 } from "../../../api";
+import { getEffectiveUserId } from "../../../utils/authUsername";
 import { toDisplayUrl } from "../utils";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const DEFAULT_USER_ID = "default";
 const DEFAULT_CHANNEL = "console";
 const DEFAULT_SESSION_NAME = "New Chat";
 const ROLE_TOOL = "tool";
@@ -470,15 +470,24 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
     }
   }
 
+  private resolveUserId(sessionUserId?: string): string {
+    const effective = getEffectiveUserId("default");
+    if (sessionUserId && sessionUserId !== "default") {
+      return sessionUserId;
+    }
+    return effective;
+  }
+
   private createEmptySession(sessionId: string): ExtendedSession {
+    const userId = this.resolveUserId();
     window.currentSessionId = sessionId;
-    window.currentUserId = DEFAULT_USER_ID;
+    window.currentUserId = userId;
     window.currentChannel = DEFAULT_CHANNEL;
     return {
       id: sessionId,
       name: DEFAULT_SESSION_NAME,
       sessionId,
-      userId: DEFAULT_USER_ID,
+      userId,
       channel: DEFAULT_CHANNEL,
       messages: [],
       meta: {},
@@ -486,8 +495,9 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
   }
 
   private updateWindowVariables(session: ExtendedSession): void {
+    const userId = this.resolveUserId(session.userId);
     window.currentSessionId = session.sessionId || "";
-    window.currentUserId = session.userId || DEFAULT_USER_ID;
+    window.currentUserId = userId;
     window.currentChannel = session.channel || DEFAULT_CHANNEL;
   }
 
@@ -607,7 +617,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
           id: sessionId,
           name: fromList.name || DEFAULT_SESSION_NAME,
           sessionId: fromList.sessionId || sessionId,
-          userId: fromList.userId || DEFAULT_USER_ID,
+          userId: this.resolveUserId(fromList.userId),
           channel: fromList.channel || DEFAULT_CHANNEL,
           messages,
           meta: fromList.meta || {},
@@ -634,7 +644,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
           id: sessionId,
           name: refreshed.name || DEFAULT_SESSION_NAME,
           sessionId: refreshed.sessionId || sessionId,
-          userId: refreshed.userId || DEFAULT_USER_ID,
+          userId: this.resolveUserId(refreshed.userId),
           channel: refreshed.channel || DEFAULT_CHANNEL,
           messages,
           meta: refreshed.meta || {},
@@ -666,7 +676,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
       id: sessionId,
       name: fromList?.name || sessionId,
       sessionId: fromList?.sessionId || sessionId,
-      userId: fromList?.userId || DEFAULT_USER_ID,
+      userId: this.resolveUserId(fromList?.userId),
       channel: fromList?.channel || DEFAULT_CHANNEL,
       messages,
       meta: fromList?.meta || {},
@@ -717,7 +727,7 @@ class SessionApi implements IAgentScopeRuntimeWebUISessionAPI {
     const extended: ExtendedSession = {
       ...session,
       sessionId: session.id,
-      userId: DEFAULT_USER_ID,
+      userId: this.resolveUserId(),
       channel: DEFAULT_CHANNEL,
     } as ExtendedSession;
 

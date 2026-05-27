@@ -14,50 +14,10 @@ from .models import (
     ChatHistory,
 )
 from .utils import agentscope_msg_to_message
+from ..auth_identity import get_authenticated_user_key
 
 
 router = APIRouter(prefix="/chats", tags=["chats"])
-
-
-async def _get_jwt_user(request: Request) -> str | None:
-    """Return the authenticated username from JWT, with fallback decoding.
-
-    Tries ``request.state.user_id`` first (set by middleware).  Falls back to
-    decoding the ``Authorization`` header directly when the middleware's
-    ``request.state`` did not propagate (known Starlette BaseHTTPMiddleware
-    issue with ``call_next`` and ``_CachedRequest``).
-
-    Reads ``username`` and ``roles`` from the Redis session cache
-    (source of truth), falling back to the JWT payload when Redis
-    is unavailable.
-    """
-    jwt_user = getattr(request.state, "user_id", None)
-    if jwt_user:
-        return jwt_user
-    # Fallback: decode JWT directly from the Authorization header
-    from ..auth_jwt.jwt_utils import decode_token as jwt_decode_token
-    from ..auth_jwt.middleware import JWTAuthMiddleware
-    from ..auth_jwt.redis_client import get_session_user_info
-
-    token = JWTAuthMiddleware._extract_token(request)
-    if not token:
-        return None
-    try:
-        payload = await jwt_decode_token(token)
-    except Exception:
-        return None
-    if not payload:
-        return None
-
-    # Try Redis session cache first (source of truth)
-    jti = payload.get("jti", "")
-    if jti:
-        user_info = await get_session_user_info(jti)
-        if user_info:
-            return str(user_info.get("user_id", "")) or user_info.get("username", "")
-
-    # Fallback to JWT payload
-    return payload.get("sub") or payload.get("username")
 
 
 async def get_workspace(request: Request):
@@ -122,10 +82,10 @@ async def list_chats(
         channel: Optional channel name to filter chats
         mgr: Chat manager dependency
     """
-    # Auto-filter by JWT user when authenticated
-    jwt_user = await _get_jwt_user(request)
-    if jwt_user:
-        user_id = jwt_user
+    # Auto-filter by authenticated user when available
+    auth_user = await get_authenticated_user_key(request)
+    if auth_user:
+        user_id = auth_user
 
     chats = await mgr.list_chats(user_id=user_id, channel=channel)
     tracker = workspace.task_tracker
@@ -168,7 +128,9 @@ async def create_chat(
 @router.post("/batch-delete", response_model=dict)
 async def batch_delete_chats(
     chat_ids: list[str],
+    request: Request,
     mgr: ChatManager = Depends(get_chat_manager),
+    workspace=Depends(get_workspace),
 ):
     """Delete chats by chat IDs.
 
@@ -179,6 +141,28 @@ async def batch_delete_chats(
         True if deleted, False if failed
 
     """
+    from ...security.sandbox import build_session_key
+    from ...security.sandbox.session_container_manager import (
+        get_session_container_manager,
+    )
+
+    container_manager = get_session_container_manager()
+    agent_id = getattr(workspace, "agent_id", "default")
+    for chat_id in chat_ids:
+        chat_spec = await mgr.get_chat(chat_id)
+        if chat_spec is None:
+            continue
+        root_session_id = str(
+            (chat_spec.meta or {}).get("root_session_id")
+            or chat_spec.session_id,
+        )
+        session_key = build_session_key(
+            agent_id,
+            chat_spec.user_id,
+            root_session_id,
+        )
+        await container_manager.destroy(session_key)
+
     deleted = await mgr.delete_chats(chat_ids=chat_ids)
     return {"deleted": deleted}
 
@@ -190,8 +174,8 @@ async def _check_chat_ownership(chat_spec: ChatSpec, request: Request) -> None:
     Uses fallback JWT decoding when middleware's request.state did not
     propagate.
     """
-    jwt_user = await _get_jwt_user(request)
-    if jwt_user and chat_spec.user_id != jwt_user:
+    auth_user = await get_authenticated_user_key(request)
+    if auth_user and chat_spec.user_id != auth_user:
         raise HTTPException(
             status_code=403,
             detail="Not authorized to access this chat",

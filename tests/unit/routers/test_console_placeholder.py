@@ -116,3 +116,17 @@ def test_extract_session_payload_reads_sandbox_flag_from_dict() -> None:
         },
     )
     assert payload["meta"]["execution_sandbox_enabled"] is False
+
+
+def test_extract_session_payload_preserves_client_user_id_before_auth_override() -> None:
+    from qwenpaw.app.routers.console import _extract_session_and_payload
+
+    payload = _extract_session_and_payload(
+        {
+            "session_id": "s1",
+            "user_id": "default",
+            "input": [],
+        },
+    )
+    assert payload["meta"]["user_id"] == "default"
+    assert payload["sender_id"] == "default"

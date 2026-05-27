@@ -57,7 +57,7 @@ from ...agents.skills_manager import (
     suggest_conflict_name,
     update_single_builtin,
 )
-from ...security.skill_scanner import SkillScanError
+from ...security.skill_scanner import SkillScanError, SkillSandboxRequiredError
 from ..utils import schedule_agent_reload
 
 logger = logging.getLogger(__name__)
@@ -1317,6 +1317,13 @@ async def batch_enable_skills(
                 "reason": "security_scan_failed",
                 "detail": _scan_error_payload(exc),
             }
+        except SkillSandboxRequiredError as exc:
+            results[skill] = {
+                "success": False,
+                "reason": "sandbox_required",
+                "message": str(exc),
+                "skill_name": exc.skill_name,
+            }
     return {"results": results}
 
 
@@ -1350,11 +1357,19 @@ async def enable_skill(
         result = SkillService(workspace_dir).enable_skill(skill_name)
     except SkillScanError as exc:
         return _scan_error_response(exc)
-    if not result.get("success"):
+    except SkillSandboxRequiredError as exc:
         raise HTTPException(
-            status_code=404,
-            detail=result.get("reason", "Skill not found"),
-        )
+            status_code=409,
+            detail={
+                "reason": "sandbox_required",
+                "message": str(exc),
+                "skill_name": exc.skill_name,
+            },
+        ) from exc
+    if not result.get("success"):
+        reason = result.get("reason", "Skill not found")
+        status_code = 409 if reason == "sandbox_required" else 404
+        raise HTTPException(status_code=status_code, detail=result)
     schedule_agent_reload(request, workspace.agent_id)
     return {"enabled": True, **result}
 

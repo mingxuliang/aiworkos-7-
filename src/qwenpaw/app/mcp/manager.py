@@ -69,11 +69,26 @@ class MCPClientManager:
             List of connected MCP client instances
         """
         async with self._lock:
-            return [
+            clients = [
                 client
                 for client in self._clients.values()
                 if client is not None
             ]
+
+        for client in clients:
+            if client.is_connected:
+                continue
+            if client.__class__.__name__ != "DockerStdIOStatefulClient":
+                continue
+            try:
+                await asyncio.wait_for(client.connect(), timeout=60.0)
+            except Exception as exc:
+                logger.warning(
+                    "Failed to lazily connect Docker MCP client '%s': %s",
+                    getattr(client, "name", "unknown"),
+                    exc,
+                )
+        return [client for client in clients if client.is_connected]
 
     async def get_client(self, key: str) -> Any | None:
         """Get a specific active MCP client by key.
@@ -107,12 +122,16 @@ class MCPClientManager:
         logger.debug(f"Connecting new MCP client: {key}")
         new_client = self._build_client(client_config)
 
-        try:
-            # Add timeout to prevent indefinite blocking
-            await asyncio.wait_for(new_client.connect(), timeout=timeout)
-        except BaseException:
-            await self._force_cleanup_client(new_client)
-            raise
+        lazy_connect = (
+            client_config.transport == "stdio" and client_config.run_in_sandbox
+        )
+        if not lazy_connect:
+            try:
+                # Add timeout to prevent indefinite blocking
+                await asyncio.wait_for(new_client.connect(), timeout=timeout)
+            except BaseException:
+                await self._force_cleanup_client(new_client)
+                raise
 
         # 2. Swap and close old client inside lock
         async with self._lock:
@@ -178,11 +197,15 @@ class MCPClientManager:
         """
         client = self._build_client(client_config)
 
-        try:
-            await asyncio.wait_for(client.connect(), timeout=timeout)
-        except BaseException:
-            await self._force_cleanup_client(client)
-            raise
+        lazy_connect = (
+            client_config.transport == "stdio" and client_config.run_in_sandbox
+        )
+        if not lazy_connect:
+            try:
+                await asyncio.wait_for(client.connect(), timeout=timeout)
+            except BaseException:
+                await self._force_cleanup_client(client)
+                raise
 
         async with self._lock:
             self._clients[key] = client
@@ -239,16 +262,43 @@ class MCPClientManager:
             "args": list(client_config.args),
             "env": dict(client_config.env),
             "cwd": client_config.cwd or None,
+            "run_in_sandbox": client_config.run_in_sandbox,
         }
 
         if client_config.transport == "stdio":
-            client = StdIOStatefulClient(
-                name=client_config.name,
-                command=client_config.command,
-                args=client_config.args,
-                env=client_config.env,
-                cwd=client_config.cwd or None,
-            )
+            use_docker_stdio = False
+            if client_config.run_in_sandbox:
+                from ...security.sandbox.settings import load_sandbox_settings
+
+                settings = load_sandbox_settings()
+                use_docker_stdio = (
+                    settings.enabled and settings.backend == "docker"
+                )
+                if not use_docker_stdio:
+                    logger.warning(
+                        "MCP client '%s' requested run_in_sandbox but "
+                        "docker backend is not active; using host stdio",
+                        client_config.name,
+                    )
+
+            if use_docker_stdio:
+                from .docker_stdio_client import DockerStdIOStatefulClient
+
+                client = DockerStdIOStatefulClient(
+                    name=client_config.name,
+                    command=client_config.command,
+                    args=client_config.args,
+                    env=client_config.env,
+                    cwd=client_config.cwd or "/work",
+                )
+            else:
+                client = StdIOStatefulClient(
+                    name=client_config.name,
+                    command=client_config.command,
+                    args=client_config.args,
+                    env=client_config.env,
+                    cwd=client_config.cwd or None,
+                )
             setattr(client, "_aiwork_rebuild_info", rebuild_info)
             return client
 

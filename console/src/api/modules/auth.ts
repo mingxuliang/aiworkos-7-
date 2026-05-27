@@ -12,6 +12,18 @@ export interface LoginResponse {
 export interface AuthStatusResponse {
   enabled: boolean;
   has_users: boolean;
+  mode?: "legacy" | "jwt" | string;
+}
+
+async function fetchJwtAuthEnabled(): Promise<boolean> {
+  try {
+    const res = await fetch(getApiUrl("/auth/jwt/status"));
+    if (!res.ok) return false;
+    const data = (await res.json()) as { enabled?: boolean };
+    return Boolean(data.enabled);
+  } catch {
+    return false;
+  }
 }
 
 export const authApi = {
@@ -36,6 +48,11 @@ export const authApi = {
   },
 
   login: async (username: string, password: string): Promise<LoginResponse> => {
+    const jwtEnabled = await fetchJwtAuthEnabled();
+    if (jwtEnabled) {
+      return authApi.jwtLogin(username, password);
+    }
+
     const res = await fetch(getApiUrl("/auth/login"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -57,6 +74,23 @@ export const authApi = {
     username: string,
     password: string,
   ): Promise<LoginResponse> => {
+    const jwtEnabled = await fetchJwtAuthEnabled();
+    if (jwtEnabled) {
+      const res = await fetch(getApiUrl("/auth/jwt/register"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(
+          typeof err.detail === "string" ? err.detail : "Registration failed",
+        );
+      }
+      const data = (await res.json()) as LoginResponse & { roles?: string[] };
+      return { token: data.token, username: data.username };
+    }
+
     const res = await fetch(getApiUrl("/auth/register"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },

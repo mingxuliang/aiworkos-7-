@@ -53,6 +53,7 @@ import SenderTypingWaveform from "./components/SenderTypingWaveform";
 import ExecutionEnvironmentSelector from "./components/ExecutionEnvironmentSelector";
 import ChatSenderPrefixActions from "./components/ChatSenderPrefixActions";
 import { useExecutionEnvironment } from "../../hooks/useExecutionEnvironment";
+import { useAuthenticatedUserId } from "../../hooks/useAuthenticatedUserId";
 
 import {
   toDisplayUrl,
@@ -142,7 +143,6 @@ function renderSuggestionLabel(command: string, description: string) {
 // Constants
 // ---------------------------------------------------------------------------
 
-const DEFAULT_USER_ID = "default";
 const DEFAULT_CHANNEL = "console";
 
 // ---------------------------------------------------------------------------
@@ -515,6 +515,7 @@ export default function ChatPage() {
   const { toolRenderConfig } = usePlugins();
   const { mode: executionMode, sandboxEnabled, setMode: setExecutionMode } =
     useExecutionEnvironment();
+  const { userId: authenticatedUserId } = useAuthenticatedUserId();
 
   // Auto-select agent when navigated from workbench "分配任务" button
   useEffect(() => {
@@ -965,7 +966,10 @@ export default function ChatPage() {
       const requestBody = {
         input: rewrittenInput,
         session_id: window.currentSessionId || session?.session_id || "",
-        user_id: window.currentUserId || session?.user_id || DEFAULT_USER_ID,
+        user_id:
+          window.currentUserId ||
+          session?.user_id ||
+          authenticatedUserId,
         channel: window.currentChannel || session?.channel || DEFAULT_CHANNEL,
         stream: true,
         execution_sandbox_enabled: sandboxEnabled,
@@ -1181,7 +1185,7 @@ export default function ChatPage() {
             body: JSON.stringify({
               reconnect: true,
               session_id: window.currentSessionId || data.session_id,
-              user_id: window.currentUserId || DEFAULT_USER_ID,
+              user_id: window.currentUserId || authenticatedUserId,
               channel: window.currentChannel || DEFAULT_CHANNEL,
               execution_sandbox_enabled: sandboxEnabled,
             }),

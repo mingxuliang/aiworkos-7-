@@ -1168,6 +1168,13 @@ class MCPClientConfig(BaseModel):
     args: List[str] = Field(default_factory=list)
     env: Dict[str, str] = Field(default_factory=dict)
     cwd: str = ""
+    run_in_sandbox: bool = Field(
+        default=False,
+        description=(
+            "When true and transport is stdio, spawn the MCP server inside "
+            "the session Docker sandbox (requires docker backend)."
+        ),
+    )
 
     @model_validator(mode="before")
     @classmethod
@@ -1563,6 +1570,13 @@ class SkillScannerConfig(BaseModel):
         default_factory=list,
         description="Skills that bypass security scanning.",
     )
+    sandbox_required_severities: List[str] = Field(
+        default_factory=lambda: ["HIGH", "CRITICAL"],
+        description=(
+            "Finding severities that trigger requires_sandbox "
+            "recommendations when paired with risky categories."
+        ),
+    )
 
 
 class ExecutionSandboxConfig(BaseModel):
@@ -1616,6 +1630,47 @@ class ExecutionSandboxConfig(BaseModel):
         default=120,
         ge=1,
         description="Default timeout for docker-backed shell execution.",
+    )
+    skill_sandbox_enforcement: Literal["off", "warn", "strict"] = Field(
+        default="warn",
+        description=(
+            "Policy when a skill requires sandbox: off, warn, or strict."
+        ),
+    )
+    auto_tag_risky_skills: bool = Field(
+        default=True,
+        description=(
+            "When true, scanner recommendations write requires_sandbox "
+            "into skill manifests."
+        ),
+    )
+    session_container_enabled: bool = Field(
+        default=False,
+        description="Reuse long-lived Docker containers per chat session.",
+    )
+    session_idle_seconds: int = Field(
+        default=900,
+        ge=60,
+        description="Idle time before session containers are destroyed.",
+    )
+    session_max_containers: int = Field(
+        default=32,
+        ge=1,
+        description="Global cap on concurrent session containers (LRU evict).",
+    )
+    sandbox_readonly_roots: List[str] = Field(
+        default_factory=lambda: ["skills"],
+        description=(
+            "Workspace-relative directories readable (but not writable) "
+            "while sandbox is active."
+        ),
+    )
+    allow_enabled_skill_dirs: bool = Field(
+        default=True,
+        description=(
+            "When true, enabled skill directories are added to readonly "
+            "roots for the current request."
+        ),
     )
 
 

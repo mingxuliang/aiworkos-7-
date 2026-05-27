@@ -43,45 +43,7 @@ router = APIRouter(prefix="/agents", tags=["agents"])
 # ---------------------------------------------------------------------------
 
 
-async def _get_jwt_user_id(request: Request) -> str | None:
-    """Return authenticated user_id from JWT, with fallback decoding.
-
-    Tries ``request.state.user_id`` first (set by middleware).  Falls back to
-    decoding the ``Authorization`` header directly when the middleware's
-    ``request.state`` did not propagate (known Starlette BaseHTTPMiddleware
-    issue with ``call_next`` and ``_CachedRequest``).
-    """
-    jwt_user = getattr(request.state, "user_id", None)
-    if jwt_user:
-        return jwt_user
-    # Fallback: decode JWT directly from the Authorization header
-    from ..auth_jwt.jwt_utils import decode_token as jwt_decode_token
-    from ..auth_jwt.middleware import JWTAuthMiddleware
-    from ..auth_jwt.redis_client import get_session_user_info
-
-    token = JWTAuthMiddleware._extract_token(request)
-    if not token:
-        return None
-    try:
-        payload = await jwt_decode_token(token)
-    except Exception:
-        return None
-    if not payload:
-        return None
-
-    # Try Redis session cache first (source of truth)
-    jti = payload.get("jti", "")
-    if jti:
-        user_info = await get_session_user_info(jti)
-        if user_info:
-            return (
-                str(user_info.get("user_id", ""))
-                or user_info.get("username", "")
-            )
-
-    # Fallback to JWT payload
-    return payload.get("sub") or payload.get("username")
-
+from ..auth_identity import get_jwt_user_key as _get_jwt_user_id
 
 def _check_agent_ownership(
     agent_ref,

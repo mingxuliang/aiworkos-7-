@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAppMessage } from "../../hooks/useAppMessage";
 import { authApi } from "../../api/modules/auth";
 import { setAuthToken } from "../../api/config";
+import { syncAuthenticatedUserKeyFromToken } from "../../utils/authUsername";
 
 // ── Particles ────────────────────────────────────────────────────────────
 const PARTICLES = Array.from({ length: 24 }, (_, i) => ({
@@ -68,6 +69,7 @@ export default function LoginPage() {
   const [mounted,    setMounted]    = useState(false);
   const [loading,    setLoading]    = useState(false);
   const [isRegister, setIsRegister] = useState(false);
+  const [authMode,   setAuthMode]   = useState<"legacy" | "jwt">("legacy");
   const [account,    setAccount]    = useState("");
   const [password,   setPassword]   = useState("");
   const [showPwd,    setShowPwd]    = useState(false);
@@ -85,7 +87,10 @@ export default function LoginPage() {
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 60);
     authApi.getStatus()
-      .then((res) => { if (res.enabled && !res.has_users) setIsRegister(true); })
+      .then((res) => {
+        if (res.mode === "jwt") setAuthMode("jwt");
+        if (res.enabled && !res.has_users) setIsRegister(true);
+      })
       .catch(() => {});
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,6 +104,7 @@ export default function LoginPage() {
         const res = await authApi.register(account, password);
         if (res.token) {
           setAuthToken(res.token);
+          syncAuthenticatedUserKeyFromToken(res.token);
           navigate(redirect, { replace: true });
         } else {
           message.error("注册成功但未返回令牌，请重试");
@@ -107,6 +113,7 @@ export default function LoginPage() {
         const res = await authApi.login(account, password);
         if (res.token) {
           setAuthToken(res.token);
+          syncAuthenticatedUserKeyFromToken(res.token);
           navigate(redirect, { replace: true });
         } else {
           message.error("登录成功但未返回令牌，请检查服务端认证配置");
@@ -424,8 +431,25 @@ export default function LoginPage() {
               </form>
 
               <div style={{ marginTop: 18, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 12, color: "rgba(147,197,253,.26)" }}>还没有账号？</span>
-                <a href="#" style={{ fontSize: 12, color: "rgba(96,165,250,.52)", textDecoration: "none", fontWeight: 500 }}>联系管理员开通</a>
+                {authMode === "jwt" ? (
+                  <>
+                    <span style={{ fontSize: 12, color: "rgba(147,197,253,.26)" }}>
+                      {isRegister ? "已有账号？" : "还没有账号？"}
+                    </span>
+                    <a
+                      href="#"
+                      onClick={(e) => { e.preventDefault(); setIsRegister((v) => !v); }}
+                      style={{ fontSize: 12, color: "rgba(96,165,250,.72)", textDecoration: "none", fontWeight: 500 }}
+                    >
+                      {isRegister ? "去登录" : "注册新账号"}
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: 12, color: "rgba(147,197,253,.26)" }}>还没有账号？</span>
+                    <a href="#" style={{ fontSize: 12, color: "rgba(96,165,250,.52)", textDecoration: "none", fontWeight: 500 }}>联系管理员开通</a>
+                  </>
+                )}
               </div>
 
               <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(96,165,250,.08)" }}>

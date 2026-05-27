@@ -760,6 +760,7 @@ class ExecutionSandboxStatusResponse(BaseModel):
     docker_image: str
     env_enabled: Optional[str] = None
     env_backend: Optional[str] = None
+    session_containers: dict
 
 
 @router.get(
@@ -800,7 +801,26 @@ async def get_execution_sandbox_status() -> ExecutionSandboxStatusResponse:
     from ...security.sandbox.status import get_execution_sandbox_status
 
     status = await get_execution_sandbox_status()
-    return ExecutionSandboxStatusResponse(**status.to_dict())
+    payload = status.to_dict()
+    return ExecutionSandboxStatusResponse(**payload)
+
+
+@router.delete(
+    "/security/execution-sandbox/session-containers/{session_key:path}",
+    summary="Destroy one session container",
+)
+async def destroy_session_container(session_key: str) -> dict[str, bool]:
+    from ...security.sandbox.session_container_manager import (
+        get_session_container_manager,
+    )
+
+    destroyed = await get_session_container_manager().destroy(session_key)
+    if not destroyed:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Session container not found: {session_key}",
+        )
+    return {"destroyed": True}
 
 
 # ── Security / Skill Scanner ────────────────────────────────────────

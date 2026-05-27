@@ -35,9 +35,6 @@ def _docker_volume_path(path: Path) -> str:
 class DockerSandboxRunner:
     """Execute shell commands inside ephemeral Docker containers."""
 
-    def __init__(self, settings: ResolvedSandboxSettings | None = None) -> None:
-        self._settings = settings or load_sandbox_settings()
-
     async def is_available(self) -> bool:
         """Return True when the Docker CLI responds successfully."""
         try:
@@ -63,22 +60,23 @@ class DockerSandboxRunner:
         sandbox_root: Path,
         *,
         workspace_dir: Path | None = None,
+        settings: ResolvedSandboxSettings | None = None,
     ) -> list[str]:
         """Build the ``docker run`` argv for a single shell invocation."""
-        settings = self._settings
+        resolved = settings or load_sandbox_settings()
         sandbox_host = _docker_volume_path(sandbox_root)
         cmd = [
             "docker",
             "run",
             "--rm",
             "--network",
-            settings.docker_network,
+            resolved.docker_network,
             "--memory",
-            settings.docker_memory,
+            resolved.docker_memory,
             "--cpus",
-            settings.docker_cpus,
+            resolved.docker_cpus,
             "--pids-limit",
-            str(settings.docker_pids_limit),
+            str(resolved.docker_pids_limit),
             "-v",
             f"{sandbox_host}:/work:rw",
             "-w",
@@ -98,7 +96,7 @@ class DockerSandboxRunner:
 
         cmd.extend(
             [
-                settings.docker_image,
+                resolved.docker_image,
                 "/bin/sh",
                 "-c",
                 command,
@@ -113,21 +111,23 @@ class DockerSandboxRunner:
         *,
         timeout: float | None = None,
         workspace_dir: Path | None = None,
+        settings: ResolvedSandboxSettings | None = None,
     ) -> SandboxRunResult:
         """Run *command* inside a one-shot Docker container."""
-        settings = self._settings
+        resolved = settings or load_sandbox_settings()
         effective_timeout = float(
-            timeout if timeout is not None else settings.docker_timeout_seconds,
+            timeout if timeout is not None else resolved.docker_timeout_seconds,
         )
         argv = self.build_run_command(
             command,
             sandbox_root,
             workspace_dir=workspace_dir,
+            settings=resolved,
         )
         started = time.perf_counter()
         logger.info(
             "[SANDBOX] docker shell start image=%s cwd=%s cmd=%s",
-            settings.docker_image,
+            resolved.docker_image,
             sandbox_root,
             command[:200],
         )
@@ -180,3 +180,41 @@ class DockerSandboxRunner:
     def format_audit_command(self, argv: list[str]) -> str:
         """Return a log-safe representation of the docker argv."""
         return " ".join(shlex.quote(part) for part in argv)
+
+
+EphemeralDockerRunner = DockerSandboxRunner
+
+
+class SessionDockerRunner:
+    """Execute shell commands via ``docker exec`` in session containers."""
+
+    def __init__(self, settings: ResolvedSandboxSettings | None = None) -> None:
+        self._settings = settings or load_sandbox_settings()
+
+    async def is_available(self) -> bool:
+        return await DockerSandboxRunner().is_available()
+
+    async def run_shell(
+        self,
+        command: str,
+        sandbox_root: Path,
+        *,
+        timeout: float | None = None,
+        workspace_dir: Path | None = None,
+        session_key: str | None = None,
+    ) -> SandboxRunResult:
+        del workspace_dir  # session container only mounts sandbox_root
+        from .session_container import build_session_key_from_context
+        from .session_container_manager import get_session_container_manager
+
+        key = session_key or build_session_key_from_context()
+        if not key:
+            raise RuntimeError("Session container key is not available")
+        manager = get_session_container_manager()
+        await manager.acquire(key, sandbox_root, self._settings)
+        return await manager.exec_shell(
+            key,
+            command,
+            timeout=timeout,
+            settings=self._settings,
+        )

@@ -66,6 +66,7 @@ __all__ = [
     "SkillFile",
     "SkillScanner",
     "SkillScanError",
+    "SkillSandboxRequiredError",
     "ThreatCategory",
     "compute_skill_content_hash",
     "get_blocked_history",
@@ -73,6 +74,7 @@ __all__ = [
     "remove_blocked_entry",
     "is_skill_whitelisted",
     "scan_skill_directory",
+    "should_recommend_sandbox",
 ]
 
 # ---------------------------------------------------------------------------
@@ -419,6 +421,43 @@ class SkillScanError(Exception):
             f"(max severity: {result.max_severity.value}): "
             f"{findings_summary}{truncated}",
         )
+
+
+class SkillSandboxRequiredError(Exception):
+    """Raised when a skill requires sandbox but sandbox is disabled (strict)."""
+
+    def __init__(self, skill_name: str, message: str | None = None) -> None:
+        self.skill_name = skill_name
+        self.message = message or (
+            f"Skill '{skill_name}' requires execution sandbox but sandbox "
+            "is disabled. Enable execution sandbox or remove requires_sandbox."
+        )
+        super().__init__(self.message)
+
+
+def should_recommend_sandbox(result: ScanResult) -> bool:
+    """Return True when scan findings meet configured sandbox thresholds."""
+    if not result.findings:
+        return False
+    cfg = _load_scanner_config()
+    allowed = {
+        str(sev).strip().upper()
+        for sev in (
+            getattr(cfg, "sandbox_required_severities", None)
+            or ["HIGH", "CRITICAL"]
+        )
+    }
+    risky_categories = {
+        ThreatCategory.COMMAND_INJECTION,
+        ThreatCategory.DATA_EXFILTRATION,
+        ThreatCategory.UNAUTHORIZED_TOOL_USE,
+        ThreatCategory.RESOURCE_ABUSE,
+        ThreatCategory.MALWARE,
+    }
+    return any(
+        f.severity.value in allowed and f.category in risky_categories
+        for f in result.findings
+    )
 
 
 def scan_skill_directory(
