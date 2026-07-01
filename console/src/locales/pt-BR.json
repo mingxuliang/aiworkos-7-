@@ -30,7 +30,9 @@
     "paste": "Colar",
     "yes": "Sim",
     "no": "Nao",
-    "systemName": "AI Work OS"
+    "systemName": "AI Work OS",
+    "configure": "Configurar",
+    "noData": "Sem dados"
   },
   "hero": {
     "titleleft": "Your Personal",
@@ -887,7 +889,24 @@
     "wechatLoginSuccess": "WeChat login successful, token has been filled in",
     "wechatQrcodeExpired": "QR code expired, please get a new one",
     "onebotShareSessionInGroup": "Share Session in Group",
-    "onebotShareSessionInGroupTooltip": "When enabled, all group members share the same conversation session. When disabled, each member has their own session."
+    "onebotShareSessionInGroupTooltip": "When enabled, all group members share the same conversation session. When disabled, each member has their own session.",
+    "feishuSetupGuide": "Escaneie o QR code com o Feishu para criar um bot. App ID e App Secret serão obtidos automaticamente.",
+    "feishuScanAuth": "Autorizar por QR",
+    "feishuGetQrcode": "Obter QR Code",
+    "feishuScanHint": "Escaneie com o Feishu para criar e configurar o bot automaticamente.",
+    "feishuQrcodeFailed": "Falha ao obter QR code, tente novamente",
+    "feishuAuthSuccess": "Autorização Feishu bem-sucedida",
+    "feishuQrcodeExpired": "QR code expirado, obtenha um novo",
+    "qqSetupGuide": "Escaneie o QR code com o QQ para criar um bot automaticamente.",
+    "qqScanAuth": "Autorizar por QR",
+    "qqGetQrcode": "Obter QR Code",
+    "qqScanHint": "Escaneie com o QQ para criar e configurar o bot automaticamente.",
+    "qqQrcodeFailed": "Falha ao obter QR code, tente novamente",
+    "qqAuthSuccess": "Autorização QQ bem-sucedida",
+    "qqQrcodeExpired": "QR code expirado, obtenha um novo",
+    "editConfig": "Editar configuração",
+    "removeConfig": "Remover configuração",
+    "removeConfigSuccess": "Configuração do canal removida"
   },
   "sessions": {
     "title": "Sessoes",

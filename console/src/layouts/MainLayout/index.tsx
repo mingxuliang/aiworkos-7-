@@ -44,6 +44,8 @@ const OrgChartPage = lazyImportWithRetry("../../pages/OrgChart");
 const AiOkrPage = lazyImportWithRetry("../../pages/AiOkr");
 const OrgBuilderPage = lazyImportWithRetry("../../pages/OrgBuilder");
 const UsersPage = lazyImportWithRetry("../../pages/Settings/Users");
+const MaterialCenterPage = lazyImportWithRetry("../../pages/MaterialCenter");
+const KnowledgeBasePage = lazyImportWithRetry("../../pages/KnowledgeBase");
 
 const { Content } = Layout;
 
@@ -75,6 +77,8 @@ const pathToKey: Record<string, string> = {
   "/ai-okr": "ai-okr",
   "/org-builder": "org-builder",
   "/users": "users",
+  "/material-center": "material-center",
+  "/knowledge-base": "knowledge-base",
 };
 
 export default function MainLayout() {
@@ -143,6 +147,14 @@ export default function MainLayout() {
                   <Route path="/ai-okr" element={<AiOkrPage />} />
                   <Route path="/org-builder" element={<OrgBuilderPage />} />
                   <Route path="/users" element={<UsersPage />} />
+                  <Route
+                    path="/material-center"
+                    element={<MaterialCenterPage />}
+                  />
+                  <Route
+                    path="/knowledge-base"
+                    element={<KnowledgeBasePage />}
+                  />
                   {pluginRoutes.map((route) => (
                     <Route
                       key={route.path}

@@ -30,7 +30,9 @@
     "paste": "Paste",
     "yes": "Yes",
     "no": "No",
-    "systemName": "AI Work OS"
+    "systemName": "AI Work OS",
+    "configure": "Configure",
+    "noData": "No data"
   },
   "hero": {
     "titleleft": "Your Personal",
@@ -79,7 +81,38 @@
     "news": "News Center",
     "orgChart": "AI Digital Dashboard",
     "aiOkr": "AI-OKR",
-    "orgBuilder": "Org Structure"
+    "orgBuilder": "Org Structure",
+    "materialCenter": "Material Center",
+    "knowledgeBase": "Knowledge Base"
+  },
+  "materialCenter": {
+    "upload": "Upload",
+    "searchPlaceholder": "Search files, tags...",
+    "sort": "Sort:",
+    "sortUpdated": "Recently updated",
+    "sortName": "File name",
+    "sortSize": "File size",
+    "selected": "{{count}} selected",
+    "batchDownload": "Batch download",
+    "fileName": "File name",
+    "size": "Size",
+    "pagesOrDuration": "Pages/Duration",
+    "updatedAt": "Updated",
+    "empty": "No matching files",
+    "clearSearch": "Clear search",
+    "totalFiles": "{{count}} files",
+    "totalSize": "Total ~1.1 GB"
+  },
+  "knowledgeBase": {
+    "qa": "Q&A",
+    "newChat": "New chat",
+    "history": "History",
+    "uploadDoc": "Upload document",
+    "assistant": "Knowledge assistant",
+    "connected": "{{count}} knowledge bases connected",
+    "documents": "documents",
+    "online": "Online",
+    "selectWarning": "Select at least one knowledge base to start"
   },
   "workbench": {
     "title": "Workbench",
@@ -910,7 +943,24 @@
     "wechatLoginSuccess": "WeChat login successful, token has been filled in",
     "wechatQrcodeExpired": "QR code expired, please get a new one",
     "onebotShareSessionInGroup": "Share Session in Group",
-    "onebotShareSessionInGroupTooltip": "When enabled, all group members share the same conversation session. When disabled, each member has their own session."
+    "onebotShareSessionInGroupTooltip": "When enabled, all group members share the same conversation session. When disabled, each member has their own session.",
+    "feishuSetupGuide": "Scan QR code with Feishu to create a bot in one click. App ID and App Secret will be retrieved automatically.",
+    "feishuScanAuth": "Scan to Authorize",
+    "feishuGetQrcode": "Get Authorization QR Code",
+    "feishuScanHint": "Scan with Feishu to automatically create and configure the bot.",
+    "feishuQrcodeFailed": "Failed to get QR code, please try again",
+    "feishuAuthSuccess": "Feishu scan authorization successful, credentials filled in",
+    "feishuQrcodeExpired": "QR code expired, please get a new one",
+    "qqSetupGuide": "Scan QR code with QQ to create a bot in one click. App ID and Client Secret will be retrieved automatically.",
+    "qqScanAuth": "Scan to Authorize",
+    "qqGetQrcode": "Get Authorization QR Code",
+    "qqScanHint": "Scan with QQ. Bot will be created and configured automatically after scan.",
+    "qqQrcodeFailed": "Failed to get QR code, please try again",
+    "qqAuthSuccess": "QQ scan authorization successful, credentials filled in",
+    "qqQrcodeExpired": "QR code expired, please get a new one",
+    "editConfig": "Edit Config",
+    "removeConfig": "Remove Config",
+    "removeConfigSuccess": "Channel configuration cleared"
   },
   "sessions": {
     "title": "Sessions",

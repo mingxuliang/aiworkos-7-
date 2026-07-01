@@ -69,6 +69,18 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       label: t("nav.news", "新闻中心"),
     },
     {
+      key: "material-center",
+      icon: <SparkLocalFileLine size={18} />,
+      path: "/material-center",
+      label: t("nav.materialCenter", "素材管理中心"),
+    },
+    {
+      key: "knowledge-base",
+      icon: <SparkBrowseLine size={18} />,
+      path: "/knowledge-base",
+      label: t("nav.knowledgeBase", "知识库"),
+    },
+    {
       key: "org-chart",
       icon: <SparkSearchUserLine size={18} />,
       path: "/org-chart",
@@ -239,6 +251,16 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       key: "news",
       label: collapsed ? null : t("nav.news", "新闻中心"),
       icon: <SparkBarChartLine size={16} />,
+    },
+    {
+      key: "material-center",
+      label: collapsed ? null : t("nav.materialCenter", "素材管理中心"),
+      icon: <SparkLocalFileLine size={16} />,
+    },
+    {
+      key: "knowledge-base",
+      label: collapsed ? null : t("nav.knowledgeBase", "知识库"),
+      icon: <SparkBrowseLine size={16} />,
     },
     {
       key: "org-chart",

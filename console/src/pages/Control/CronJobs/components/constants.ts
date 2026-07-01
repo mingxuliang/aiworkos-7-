@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
 
 export const DEFAULT_FORM_VALUES = {
-  enabled: false,
+  enabled: true,
   schedule: {
     type: "cron" as const,
     cron: "0 9 * * *",
-    timezone: "UTC",
+    timezone: "Asia/Shanghai",
   },
   cronType: "daily",
   cronTime: dayjs().hour(9).minute(0),
@@ -26,9 +26,8 @@ export const DEFAULT_FORM_VALUES = {
     mode: "final" as const,
   },
   runtime: {
-    share_session: true,
     max_concurrency: 1,
-    timeout_seconds: 120,
+    timeout_seconds: 300,
     misfire_grace_seconds: 60,
   },
 };

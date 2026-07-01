@@ -28,7 +28,9 @@
     "total": "合計 {{count}} 件",
     "clear": "クリア",
     "paste": "貼り付け",
-    "systemName": "AI Work OS"
+    "systemName": "AI Work OS",
+    "configure": "設定",
+    "noData": "データなし"
   },
   "hero": {
     "titleleft": "Your Personal",
@@ -697,7 +699,24 @@
     "wechatLoginSuccess": "WeChat ログイン成功、トークンが入力されました",
     "wechatQrcodeExpired": "QRコードが期限切れです。再取得してください",
     "onebotShareSessionInGroup": "グループでセッション共有",
-    "onebotShareSessionInGroupTooltip": "有効にすると、グループの全メンバーが同じ会話セッションを共有します。無効にすると、各メンバーが独自のセッションを持ちます。"
+    "onebotShareSessionInGroupTooltip": "有効にすると、グループの全メンバーが同じ会話セッションを共有します。無効にすると、各メンバーが独自のセッションを持ちます。",
+    "feishuSetupGuide": "Feishuでスキャンしてボットをワンクリックで作成します。App IDとApp Secretが自動取得されます。",
+    "feishuScanAuth": "スキャン認証",
+    "feishuGetQrcode": "認証QRコードを取得",
+    "feishuScanHint": "Feishuでスキャンして、ボットを自動作成・設定します。",
+    "feishuQrcodeFailed": "QRコードの取得に失敗しました。後でお試しください",
+    "feishuAuthSuccess": "Feishuスキャン認証成功",
+    "feishuQrcodeExpired": "QRコードが期限切れです。新しいコードを取得してください",
+    "qqSetupGuide": "QQでスキャンしてボットをワンクリックで作成します。",
+    "qqScanAuth": "スキャン認証",
+    "qqGetQrcode": "認証QRコードを取得",
+    "qqScanHint": "QQでスキャンして、ボットを自動作成・設定します。",
+    "qqQrcodeFailed": "QRコードの取得に失敗しました。後でお試しください",
+    "qqAuthSuccess": "QQスキャン認証成功",
+    "qqQrcodeExpired": "QRコードが期限切れです。新しいコードを取得してください",
+    "editConfig": "設定を編集",
+    "removeConfig": "設定を削除",
+    "removeConfigSuccess": "チャンネル設定がクリアされました"
   },
   "sessions": {
     "title": "セッション",

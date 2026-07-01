@@ -34,7 +34,6 @@ export function useChannels() {
   // Built-in channels come first (in a fixed order), then custom channels
   const builtinOrder = useMemo(
     () => [
-      "console",
       "dingtalk",
       "feishu",
       "imessage",
@@ -48,10 +47,13 @@ export function useChannels() {
     [],
   );
 
+  // Channels to hide from the UI
+  const HIDDEN_CHANNELS = new Set(["console"]);
+
   const orderedKeys = useMemo(
     () => [
-      ...builtinOrder.filter((k) => channelTypes.includes(k)),
-      ...channelTypes.filter((k) => !builtinOrder.includes(k)),
+      ...builtinOrder.filter((k) => channelTypes.includes(k) && !HIDDEN_CHANNELS.has(k)),
+      ...channelTypes.filter((k) => !builtinOrder.includes(k) && !HIDDEN_CHANNELS.has(k)),
     ],
     [builtinOrder, channelTypes],
   );
@@ -62,6 +64,14 @@ export function useChannels() {
     [channels],
   );
 
+  // Optimistic local update — avoids full-page refresh flash
+  const updateChannel = useCallback(
+    (key: string, config: Record<string, unknown>) => {
+      setChannels((prev) => ({ ...prev, [key]: config }));
+    },
+    [],
+  );
+
   return {
     channels,
     channelTypes,
@@ -69,5 +79,6 @@ export function useChannels() {
     isBuiltin,
     loading,
     fetchChannels,
+    updateChannel,
   };
 }

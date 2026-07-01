@@ -54,6 +54,8 @@ import ExecutionEnvironmentSelector from "./components/ExecutionEnvironmentSelec
 import ChatSenderPrefixActions from "./components/ChatSenderPrefixActions";
 import { useExecutionEnvironment } from "../../hooks/useExecutionEnvironment";
 import { useAuthenticatedUserId } from "../../hooks/useAuthenticatedUserId";
+import { usePendingChatFilesStore } from "../../stores/pendingChatFilesStore";
+import PendingFilesBar from "./components/PendingFilesBar";
 
 import {
   toDisplayUrl,
@@ -512,6 +514,9 @@ export default function ChatPage() {
   }, [location.pathname]);
   const [showModelPrompt, setShowModelPrompt] = useState(false);
   const { selectedAgent, setSelectedAgent } = useAgentStore();
+  const pendingFiles = usePendingChatFilesStore((s) => s.files);
+  const removePendingFile = usePendingChatFilesStore((s) => s.removeFile);
+  const clearPendingFiles = usePendingChatFilesStore((s) => s.clear);
   const { toolRenderConfig } = usePlugins();
   const { mode: executionMode, sandboxEnabled, setMode: setExecutionMode } =
     useExecutionEnvironment();
@@ -741,6 +746,19 @@ export default function ChatPage() {
       />
     ),
     [executionMode, setExecutionMode],
+  );
+
+  /** File chips rendered INSIDE the input box via sender.beforeUI */
+  const pendingFilesUI = useMemo(
+    () =>
+      pendingFiles.length > 0 ? (
+        <PendingFilesBar
+          files={pendingFiles}
+          onRemove={removePendingFile}
+          onClear={clearPendingFiles}
+        />
+      ) : undefined,
+    [pendingFiles, removePendingFile, clearPendingFiles],
   );
 
   const senderPrefixActions = useMemo(
@@ -1081,6 +1099,29 @@ export default function ChatPage() {
 
     const handleBeforeSubmit = async () => {
       if (isComposingRef.current) return false;
+
+      // If pending files from Material Center exist, intercept, inject them, and re-submit.
+      const pending = usePendingChatFilesStore.getState().files;
+      if (pending.length > 0) {
+        const senderContainer = document.querySelector('[class*="sender"]');
+        const textarea = senderContainer?.querySelector('textarea') as HTMLTextAreaElement | null;
+        const query = textarea?.value ?? '';
+
+        const fileList = pending.map((f) => ({
+          uid: f.id,
+          name: f.filename,
+          size: f.size,
+          type: f.mimeType,
+          status: 'done' as const,
+          response: { url: f.url },
+          percent: 100,
+        }));
+
+        usePendingChatFilesStore.getState().clear();
+        chatRef.current?.input.submit({ query, fileList });
+        return false;
+      }
+
       return true;
     };
 
@@ -1114,7 +1155,7 @@ export default function ChatPage() {
       sender: {
         ...(i18nConfig as any)?.sender,
         beforeSubmit: handleBeforeSubmit,
-        beforeUI: senderTypingWaveform,
+        beforeUI: pendingFilesUI ?? senderTypingWaveform,
         allowSpeech: !whisperEnabled,
         prefix: senderPrefixActions,
         attachments: {
@@ -1222,6 +1263,7 @@ export default function ChatPage() {
     scheduleHistoryClear,
     planEnabled,
     senderTypingWaveform,
+    pendingFilesUI,
     senderPrefixActions,
     sandboxEnabled,
     whisperEnabled,

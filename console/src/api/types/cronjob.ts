@@ -27,6 +27,7 @@ export interface CronJobRequest {
   input: unknown;
   session_id?: string | null;
   user_id?: string | null;
+  channel?: string | null;
   [key: string]: unknown;
 }
 
@@ -41,15 +42,50 @@ export interface CronJobSpecInput {
   dispatch: CronJobDispatch;
   runtime?: CronJobRuntime;
   meta?: Record<string, unknown>;
+  owner_user_id?: string | null;
 }
 
 export type CronJobSpecOutput = CronJobSpecInput;
 
-export interface CronJobView extends CronJobSpecOutput {
-  // Extended view with runtime state
-  state?: unknown;
-  next_run_time?: number;
-  last_run_time?: number;
+export interface CronJobState {
+  next_run_at?: string | null;
+  last_run_at?: string | null;
+  last_status?: "success" | "error" | "running" | "skipped" | "cancelled" | null;
+  last_error?: string | null;
+}
+
+/** 后端返回的 CronJobView = { spec, state } */
+export interface CronJobView {
+  spec: CronJobSpecOutput;
+  state: CronJobState;
+}
+
+// ── Dispatch target (from /cron/targets) ─────────────────────────────────────
+export interface CronTarget {
+  name: string;
+  channel: string;
+  session_id: string;
+  out_sender_id: string;
+  user_id: string;
+  chat_type: string;
+}
+
+// ── Execution records ─────────────────────────────────────────────────────────
+export type ExecutionStatus = "success" | "error" | "cancelled" | "skipped";
+export type TriggerType = "scheduled" | "manual";
+
+export interface ExecutionRecord {
+  id: string;
+  job_id: string;
+  job_name: string;
+  executed_at: string;
+  completed_at: string;
+  status: ExecutionStatus;
+  error_message?: string | null;
+  duration_seconds?: number | null;
+  trigger_type: TriggerType;
+  owner_user_id?: string | null;
+  output_file?: string | null;
 }
 
 export type CronJobSpecInputLegacy = Record<string, unknown>;

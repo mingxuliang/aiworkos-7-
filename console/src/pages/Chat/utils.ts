@@ -2,6 +2,7 @@
 // Types
 // ---------------------------------------------------------------------------
 import { chatApi } from "../../api/modules/chat";
+import { getApiToken } from "../../api/config";
 export type CopyableContent = {
   type?: string;
   text?: string;
@@ -181,6 +182,16 @@ export function toDisplayUrl(url: string | undefined): string {
   if (!url) return "";
   if (url.startsWith("http://") || url.startsWith("https://")) return url;
   if (url.startsWith("file://")) url = url.replace("file://", "");
+  // Backend proxy API URLs (e.g. /api/llm-outputs/123/download) — pass
+  // through as-is with the auth token so window.open navigation works.
+  // Unlike /files/preview/ paths, these are already valid API endpoints
+  // and must NOT be re-wrapped with the /files/preview/ prefix.
+  if (url.startsWith("/api/")) {
+    const token = getApiToken();
+    return token
+      ? `${url}?token=${encodeURIComponent(token)}`
+      : url;
+  }
   return chatApi.filePreviewUrl(url.startsWith("/") ? url : `/${url}`);
 }
 

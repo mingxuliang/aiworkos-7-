@@ -43,10 +43,13 @@ export function useCronJobs() {
     };
   }, [selectedAgent]);
 
-  const createJob = async (values: CronJob) => {
+  const createJob = async (values: CronJob, agentId?: string) => {
     try {
-      const created = await api.createCronJob(values);
-      setJobs((prev) => [created as CronJob, ...prev]);
+      const created = await api.createCronJob(values, agentId);
+      // 只有目标 agent 和当前 selectedAgent 相同时才更新列表（避免显示其他 agent 的任务）
+      if (!agentId || agentId === selectedAgent) {
+        setJobs((prev) => [created as CronJob, ...prev]);
+      }
       message.success("Created successfully");
       return true;
     } catch (error) {
@@ -56,13 +59,13 @@ export function useCronJobs() {
     }
   };
 
-  const updateJob = async (jobId: string, values: CronJob) => {
+  const updateJob = async (jobId: string, values: CronJob, agentId?: string) => {
     const original = jobs.find((j) => j.id === jobId);
     const optimisticUpdate = { ...original, ...values };
     setJobs((prev) => prev.map((j) => (j.id === jobId ? optimisticUpdate : j)));
 
     try {
-      const updated = await api.replaceCronJob(jobId, values);
+      const updated = await api.replaceCronJob(jobId, values, agentId);
       setJobs((prev) =>
         prev.map((j) => (j.id === jobId ? (updated as CronJob) : j)),
       );

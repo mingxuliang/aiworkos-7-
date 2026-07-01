@@ -4,7 +4,7 @@ import {
   bailianDarkTheme,
   bailianTheme,
 } from "@agentscope-ai/design";
-import { App as AntdApp } from "antd";
+import { App as AntdApp, Spin } from "antd";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -78,11 +78,9 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
           return;
         }
         try {
-          const r = await fetch(getApiUrl("/auth/verify"), {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const valid = await authApi.verifyToken(token);
           if (cancelled) return;
-          if (r.ok) {
+          if (valid) {
             syncAuthenticatedUserKeyFromToken(token);
             setStatus("ok");
           } else {
@@ -104,7 +102,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  if (status === "loading") return null;
+  if (status === "loading") {
+    return (
+      <Spin
+        tip="加载中..."
+        style={{ display: "block", margin: "30vh auto" }}
+      />
+    );
+  }
   if (status === "auth-required")
     return (
       <Navigate

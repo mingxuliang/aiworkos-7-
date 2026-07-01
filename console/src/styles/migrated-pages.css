@@ -1,0 +1,57 @@
+/* ─── Migrated-page base reset ─────────────────────────────────────────────
+   Tailwind preflight is disabled in console, so we restore sane defaults
+   for form controls only within migrated page trees.
+   All visual styling (colours, fonts, radii) is done via inline styles.
+──────────────────────────────────────────────────────────────────────────── */
+
+/* Normalise form controls so they inherit font and don't show OS borders */
+.migrated-page :is(button, input, textarea, select) {
+  font: inherit;
+  box-sizing: border-box;
+  border-style: solid;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Remove default blue outline on focus; use explicit focus-visible ring */
+.migrated-page :is(button, input, textarea, select):focus {
+  outline: none;
+}
+
+.migrated-page :is(button, input, textarea, select):focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+/* ─── Page-shell layout ─────────────────────────────────────────────────── */
+
+/* Strip default padding/border from the outer page-content wrapper        */
+.page-content:has(.migrated-page) {
+  padding: 0;
+  overflow: hidden;
+  min-height: 0;
+  border: none;
+  background: transparent;
+  border-radius: 0;
+}
+
+.page-container:has(.migrated-page) {
+  overflow: hidden;
+  padding: 0;
+  min-height: 0;
+}
+
+/* ─── Stable scrollbar helper ──────────────────────────────────────────── */
+.migrated-page .migrated-scroll {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+/* ─── Group-hover delete button in sidebar business items ───────────────── */
+.group\/biz:hover .group-hover\/biz\:opacity-100 {
+  opacity: 1 !important;
+}
+
+/* ─── Grid card checkbox appears on card hover ───────────────────────────── */
+/* We handle card hover via JS (onMouseEnter/Leave) for full cross-browser
+   support, so no CSS rule is needed here. */

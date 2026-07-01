@@ -28,7 +28,9 @@
     "total": "Всего {{count}}",
     "clear": "Очистить",
     "paste": "Вставить",
-    "systemName": "AI Work OS"
+    "systemName": "AI Work OS",
+    "configure": "Настроить",
+    "noData": "Нет данных"
   },
   "hero": {
     "titleleft": "Your Personal",
@@ -697,7 +699,24 @@
     "wechatLoginSuccess": "Вход через WeChat выполнен, токен заполнен",
     "wechatQrcodeExpired": "QR-код истёк, получите новый",
     "onebotShareSessionInGroup": "Общий сеанс в группе",
-    "onebotShareSessionInGroupTooltip": "Если включено, все участники группы используют один сеанс разговора. Если выключено, у каждого участника свой сеанс."
+    "onebotShareSessionInGroupTooltip": "Если включено, все участники группы используют один сеанс разговора. Если выключено, у каждого участника свой сеанс.",
+    "feishuSetupGuide": "Отсканируйте QR-код с помощью Feishu для создания бота. App ID и App Secret будут получены автоматически.",
+    "feishuScanAuth": "Авторизация по QR",
+    "feishuGetQrcode": "Получить QR-код",
+    "feishuScanHint": "Отсканируйте QR-код в Feishu для автоматической настройки бота.",
+    "feishuQrcodeFailed": "Не удалось получить QR-код, попробуйте позже",
+    "feishuAuthSuccess": "Авторизация Feishu успешна",
+    "feishuQrcodeExpired": "QR-код истёк, получите новый",
+    "qqSetupGuide": "Отсканируйте QR-код с помощью QQ для создания бота.",
+    "qqScanAuth": "Авторизация по QR",
+    "qqGetQrcode": "Получить QR-код",
+    "qqScanHint": "Отсканируйте QR-код в QQ для автоматической настройки бота.",
+    "qqQrcodeFailed": "Не удалось получить QR-код, попробуйте позже",
+    "qqAuthSuccess": "Авторизация QQ успешна",
+    "qqQrcodeExpired": "QR-код истёк, получите новый",
+    "editConfig": "Редактировать",
+    "removeConfig": "Удалить настройки",
+    "removeConfigSuccess": "Настройки канала очищены"
   },
   "sessions": {
     "title": "Сессии",

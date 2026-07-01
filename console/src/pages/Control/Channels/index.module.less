@@ -143,6 +143,32 @@
   align-items: flex-start;
 }
 
+.cardTopRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.switchWrapper {
+  display: inline-flex;
+  padding: 2px;
+  background: transparent;
+  border-radius: 14px;
+  transition: background 0.2s ease;
+
+  :global {
+    .qwenpaw-switch-checked,
+    .ant-switch-checked {
+      background: #1677ff;
+    }
+  }
+}
+
+.switchWrapperOn {
+  background: rgba(24, 144, 255, 0.4);
+}
+
 .channelIcon {
   display: flex;
   align-items: center;
@@ -422,6 +448,10 @@
 
   .cardHint {
     color: rgba(255, 255, 255, 0.42);
+  }
+
+  .switchWrapper {
+    background: rgba(24, 144, 255, 0.15);
   }
 
   .drawerHeaderActions {

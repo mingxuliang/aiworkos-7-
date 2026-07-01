@@ -44,6 +44,8 @@ export const KEY_TO_PATH: Record<string, string> = {
   "org-chart": "/org-chart",
   "ai-okr": "/ai-okr",
   "org-builder": "/org-builder",
+  "material-center": "/material-center",
+  "knowledge-base": "/knowledge-base",
   users: "/users",
 };
 
@@ -72,7 +74,8 @@ export const KEY_TO_LABEL: Record<string, string> = {
   "org-chart": "nav.orgChart",
   "ai-okr": "nav.aiOkr",
   "org-builder": "nav.orgBuilder",
-
+  "material-center": "nav.materialCenter",
+  "knowledge-base": "nav.knowledgeBase",
 };
 
 // ── URL helpers ───────────────────────────────────────────────────────────

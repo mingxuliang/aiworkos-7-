@@ -111,9 +111,24 @@ export const authApi = {
    * The backend /auth/status endpoint handles both cases automatically.
    */
   getStatus: async (): Promise<AuthStatusResponse> => {
+    const jwtEnabled = await fetchJwtAuthEnabled();
+    if (jwtEnabled) {
+      return { enabled: true, has_users: true, mode: "jwt" };
+    }
     const res = await fetch(getApiUrl("/auth/status"));
     if (!res.ok) throw new Error("Failed to check auth status");
     return res.json();
+  },
+
+  /** 校验当前 token 是否有效（自动区分 JWT / legacy） */
+  verifyToken: async (token: string): Promise<boolean> => {
+    const useJwt = (await fetchJwtAuthEnabled()) || isJwtToken(token);
+    const path = useJwt ? "/auth/jwt/verify" : "/auth/verify";
+    const res = await fetch(getApiUrl(path), {
+      method: useJwt ? "POST" : "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return res.ok;
   },
 
   updateProfile: async (

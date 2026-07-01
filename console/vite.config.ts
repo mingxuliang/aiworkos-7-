@@ -26,6 +26,23 @@ export default defineConfig(({ mode }) => {
   // does not enable CORSMiddleware unless QWENPAW_CORS_ORIGINS is set).
   const devApiProxyTarget =
     env.VITE_DEV_API_PROXY_TARGET || "http://127.0.0.1:8088";
+  const filesApiProxyTarget =
+    env.VITE_FILES_API_PROXY_TARGET || "http://101.36.143.21:8088";
+
+  const proxyErrorHandler = (target: string) => (proxy: import("http-proxy").Server) => {
+    proxy.on("error", (err, _req, res) => {
+      const r = res as ServerResponse | undefined;
+      if (r && typeof r.writeHead === "function" && !r.headersSent) {
+        const msg = err instanceof Error ? err.message : String(err);
+        r.writeHead(502, { "Content-Type": "application/json" });
+        r.end(
+          JSON.stringify({
+            detail: `Development proxy cannot reach backend at ${target}. (${msg})`,
+          }),
+        );
+      }
+    });
+  };
 
   return {
     define: {
@@ -56,31 +73,17 @@ export default defineConfig(({ mode }) => {
       ...(mode === "development" && !apiBaseUrl
         ? {
             proxy: {
-              // 本地后端（认证、聊天、Agent 等所有内部 API）
+              // 文件素材库 API → 测试环境（须写在 /api 之前，优先匹配）
+              "/api/files": {
+                target: filesApiProxyTarget,
+                changeOrigin: true,
+                configure: proxyErrorHandler(filesApiProxyTarget),
+              },
+              // 其余 API → 本地后端
               "/api": {
                 target: devApiProxyTarget,
                 changeOrigin: true,
-                configure(proxy) {
-                  proxy.on("error", (err, _req, res) => {
-                    const r = res as ServerResponse | undefined;
-                    if (
-                      r &&
-                      typeof r.writeHead === "function" &&
-                      !r.headersSent
-                    ) {
-                      const msg =
-                        err instanceof Error ? err.message : String(err);
-                      r.writeHead(502, {
-                        "Content-Type": "application/json",
-                      });
-                      r.end(
-                        JSON.stringify({
-                          detail: `Development proxy cannot reach backend at ${devApiProxyTarget}. Start the QwenPaw server or set VITE_DEV_API_PROXY_TARGET in .env.development. (${msg})`,
-                        }),
-                      );
-                    }
-                  });
-                },
+                configure: proxyErrorHandler(devApiProxyTarget),
               },
             },
           }
