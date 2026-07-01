@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { orgData as defaultOrgData, collectConnections, type OrgNode } from './orgData';
 import NodeCard from './NodeCard';
-import NodeDetailPanel from './NodeDetailPanel';
 import NodeModal from './NodeModal';
 
 interface OrgChartProps {
@@ -141,7 +140,7 @@ function SVGParticles({ paths, svgSize }: {
 }
 
 export default function OrgChart({ data = defaultOrgData }: OrgChartProps) {
-  const [hoveredNode, setHoveredNode] = useState<OrgNode | null>(null);
+  const [, setHoveredNode] = useState<OrgNode | null>(null);
   const [activeId, setActiveId] = useState<string | undefined>();
   const [modalNode, setModalNode] = useState<OrgNode | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

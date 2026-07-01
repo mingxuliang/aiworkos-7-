@@ -38,7 +38,7 @@ export function PoolSkillCard({
   onDelete,
 }: PoolSkillCardProps) {
   const { t } = useTranslation();
-  const [isHover, setIsHover] = useState(false);
+  const [, setIsHover] = useState(false);
   const syncTone = getPoolBuiltinStatusTone(skill.sync_status);
   const isBuiltin = isSkillBuiltin(skill.source);
   const showSyncedGlow = skill.sync_status === "synced";

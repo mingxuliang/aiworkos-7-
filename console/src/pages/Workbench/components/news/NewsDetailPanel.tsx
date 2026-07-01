@@ -1,14 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import type { NewsItem } from "./types";
 
-/** Map tagVariant to Tailwind colour classes */
-const TAG_CLASSES: Record<string, { color: string; bg: string }> = {
-  important: { color: "text-red-500",   bg: "bg-red-50 border-red-100" },
-  tech:      { color: "text-sky-600",   bg: "bg-sky-50 border-sky-100" },
-  announce:  { color: "text-amber-600", bg: "bg-amber-50 border-amber-100" },
-  data:      { color: "text-teal-600",  bg: "bg-teal-50 border-teal-100" },
-};
-
 /** Render markdown-lite content with Tailwind */
 function RichContentTw({ content }: { content: string }) {
   const lines = content.split("\n");
@@ -117,8 +109,6 @@ export default function NewsDetailPanel({ news, onClose }: Props) {
   }, [news]);
 
   if (!news) return null;
-
-  const tagStyle = TAG_CLASSES[news.tagVariant] ?? { color: "text-slate-500", bg: "bg-slate-50 border-slate-100" };
 
   return (
     <>

@@ -47,6 +47,31 @@ export interface CronJobSpecInput {
 
 export type CronJobSpecOutput = CronJobSpecInput;
 
+/**
+ * Ant Design 表单使用的值类型：在后端 spec 字段基础上，
+ * 追加仅用于 UI 的排程字段（cronType / cronTime 等），
+ * 并把 request.input 收窄为字符串，便于表单输入框绑定。
+ */
+export interface CronFormValues
+  extends Omit<CronJobSpecInput, "id" | "name" | "schedule" | "dispatch" | "request"> {
+  id?: string;
+  name?: string;
+  schedule?: CronJobSchedule;
+  dispatch?: CronJobDispatch;
+  request?: {
+    input?: string;
+    session_id?: string | null;
+    user_id?: string | null;
+    channel?: string | null;
+    [key: string]: unknown;
+  };
+  cronType?: string;
+  cronTime?: unknown;
+  cronDaysOfWeek?: string[];
+  cronCustom?: string;
+  _jobAgentId?: string;
+}
+
 export interface CronJobState {
   next_run_at?: string | null;
   last_run_at?: string | null;

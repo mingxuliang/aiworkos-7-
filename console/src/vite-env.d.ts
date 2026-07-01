@@ -21,6 +21,7 @@ declare global {
     pywebview?: {
       api: PyWebViewAPI;
     };
+    currentUserId?: string;
   }
 }
 

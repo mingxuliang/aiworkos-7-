@@ -29,8 +29,14 @@ export default defineConfig(({ mode }) => {
   const filesApiProxyTarget =
     env.VITE_FILES_API_PROXY_TARGET || "http://101.36.143.21:8088";
 
-  const proxyErrorHandler = (target: string) => (proxy: import("http-proxy").Server) => {
-    proxy.on("error", (err, _req, res) => {
+  type ProxyLike = {
+    on: (
+      event: "error",
+      cb: (err: unknown, req: unknown, res: unknown) => void,
+    ) => void;
+  };
+  const proxyErrorHandler = (target: string) => (proxy: ProxyLike) => {
+    proxy.on("error", (err: unknown, _req: unknown, res: unknown) => {
       const r = res as ServerResponse | undefined;
       if (r && typeof r.writeHead === "function" && !r.headersSent) {
         const msg = err instanceof Error ? err.message : String(err);

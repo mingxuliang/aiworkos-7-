@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Spin } from "antd";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -11,7 +11,7 @@ import WorkbenchNewsCarousel from "./components/WorkbenchNewsCarousel";
 export default function WorkbenchPage() {
   const { isDark } = useTheme();
   const { t } = useTranslation();
-  const { agents, todayStats, recentChats, loading } = useWorkbench();
+  const { agents, recentChats, loading } = useWorkbench();
   const [searchVal, setSearchVal] = useState("");
 
   const filteredAgents = searchVal

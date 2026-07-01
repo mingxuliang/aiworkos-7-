@@ -21,18 +21,17 @@ import { useEffect, useState, useMemo } from "react";
 import type { FormInstance } from "antd";
 import { useAgentStore } from "../../../../stores/agentStore";
 import { BindChannelModal } from "./BindChannelModal";
-import type { CronJobSpecOutput, CronTarget } from "../../../../api/types";
+import type { CronJobSpecOutput, CronTarget, CronFormValues } from "../../../../api/types";
 import { DEFAULT_FORM_VALUES } from "./constants";
 import { useTimezoneOptions } from "../../../../hooks/useTimezoneOptions";
 import api from "../../../../api";
-import styles from "../index.module.less";
 
 type CronJob = CronJobSpecOutput;
 
 interface JobDrawerProps {
   open: boolean;
   editingJob: CronJob | null;
-  form: FormInstance<CronJob>;
+  form: FormInstance<CronFormValues>;
   saving: boolean;
   onClose: () => void;
   onSubmit: (values: CronJob & Record<string, unknown>) => void | Promise<void>;
@@ -362,13 +361,13 @@ export function JobDrawer({
 
   const handleTargetSelect = (tgt: CronTarget) => {
     setSelectedTargetKey(targetKey(tgt));
-    form.setFieldsValue({ dispatch: { channel: tgt.channel, target: { user_id: tgt.out_sender_id || tgt.user_id, session_id: tgt.session_id } } } as unknown as CronJob);
+    form.setFieldsValue({ dispatch: { channel: tgt.channel, target: { user_id: tgt.out_sender_id || tgt.user_id, session_id: tgt.session_id } } });
   };
 
   const handleChannelSelect = (ch: string) => {
     setSelectedChannel(ch);
     setSelectedTargetKey(null);
-    form.setFieldsValue({ dispatch: { channel: ch, target: { user_id: "", session_id: "" } } } as unknown as CronJob);
+    form.setFieldsValue({ dispatch: { channel: ch, target: { user_id: "", session_id: "" } } });
     const chTargets = channelGroups[ch] ?? [];
     if (chTargets.length === 1) handleTargetSelect(chTargets[0]);
   };
@@ -453,7 +452,7 @@ export function JobDrawer({
       <Form
         form={form}
         layout="vertical"
-        onFinish={(values) => onSubmit({ ...values, _jobAgentId: jobAgentId })}
+        onFinish={(values) => onSubmit({ ...values, _jobAgentId: jobAgentId } as unknown as CronJob & Record<string, unknown>)}
         initialValues={DEFAULT_FORM_VALUES}
         onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
       >

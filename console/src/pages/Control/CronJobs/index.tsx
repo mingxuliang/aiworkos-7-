@@ -8,7 +8,7 @@ import {
   PlusCircleOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import type { CronJobSpecOutput } from "../../../api/types";
+import type { CronJobSpecOutput, CronFormValues } from "../../../api/types";
 import { useTranslation } from "react-i18next";
 import api from "../../../api";
 import {
@@ -45,7 +45,7 @@ function CronJobsPage() {
   const [saving, setSaving] = useState(false);
   const [recordsDrawerOpen, setRecordsDrawerOpen] = useState(false);
   const [recordsJob, setRecordsJob] = useState<CronJob | null>(null);
-  const [form] = Form.useForm<CronJob>();
+  const [form] = Form.useForm<CronFormValues>();
   const userTimezoneRef = useRef("UTC");
 
   useEffect(() => {

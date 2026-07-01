@@ -30,7 +30,7 @@ import { lazyImportWithRetry } from "./utils/lazyWithRetry";
 const LoginPage = lazyImportWithRetry("./pages/Login/index");
 import { authApi } from "./api/modules/auth";
 import { languageApi } from "./api/modules/language";
-import { getApiUrl, getApiToken, clearAuthToken } from "./api/config";
+import { getApiToken, clearAuthToken } from "./api/config";
 import { syncAuthenticatedUserKeyFromToken } from "./utils/authUsername";
 import "./styles/layout.css";
 import "./styles/agent-team-port.css";

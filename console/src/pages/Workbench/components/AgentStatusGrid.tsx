@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -158,7 +158,7 @@ export default function AgentStatusGrid({ agents }: Props) {
           const sc = statusConfig[st];
           const runningTasks = agent.runtimeStatus?.running_task_count ?? 0;
           const lastActive = timeAgo(
-            agent.runtimeStatus?.last_finish_at ?? agent.runtimeStatus?.last_run_at,
+            agent.runtimeStatus?.last_finish_at ?? agent.runtimeStatus?.last_run_at ?? null,
           );
 
           return (
