@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import api from "../../../api";
 import { useAgentStore } from "../../../stores/agentStore";
+import { VISIBLE_CHANNEL_KEYS } from "./components/constants";
 
 export function useChannels() {
   const { selectedAgent } = useAgentStore();
@@ -31,30 +32,17 @@ export function useChannels() {
     fetchChannels();
   }, [fetchChannels, selectedAgent]);
 
-  // Built-in channels come first (in a fixed order), then custom channels
+  // Built-in channels display order (only visible ones are shown)
   const builtinOrder = useMemo(
-    () => [
-      "dingtalk",
-      "feishu",
-      "imessage",
-      "discord",
-      "telegram",
-      "qq",
-      "matrix",
-      "sip",
-      "xiaoyi",
-    ],
+    () => ["dingtalk", "feishu", "wechat", "wecom"],
     [],
   );
 
-  // Channels to hide from the UI
-  const HIDDEN_CHANNELS = new Set(["console"]);
-
   const orderedKeys = useMemo(
-    () => [
-      ...builtinOrder.filter((k) => channelTypes.includes(k) && !HIDDEN_CHANNELS.has(k)),
-      ...channelTypes.filter((k) => !builtinOrder.includes(k) && !HIDDEN_CHANNELS.has(k)),
-    ],
+    () =>
+      builtinOrder.filter(
+        (k) => channelTypes.includes(k) && VISIBLE_CHANNEL_KEYS.has(k),
+      ),
     [builtinOrder, channelTypes],
   );
 

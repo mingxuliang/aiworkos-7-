@@ -31,7 +31,7 @@ import {
 import { usePlugins } from "../plugins/PluginContext";
 import styles from "./index.module.less";
 import { useTheme } from "../contexts/ThemeContext";
-import { KEY_TO_PATH, DEFAULT_OPEN_KEYS } from "./constants";
+import { KEY_TO_PATH, DEFAULT_OPEN_KEYS, HIDDEN_NAV_KEYS } from "./constants";
 import { Bot } from "lucide-react";
 
 // ── Layout ────────────────────────────────────────────────────────────────
@@ -42,6 +42,22 @@ const { Sider } = Layout;
 
 interface SidebarProps {
   selectedKey: string;
+}
+
+function filterMenuItems(
+  items: MenuProps["items"],
+  hidden: Set<string>,
+): MenuProps["items"] {
+  if (!items) return items;
+  return items
+    .filter((item) => item && "key" in item && !hidden.has(String(item.key)))
+    .map((item) => {
+      if (!item || !("children" in item) || !item.children) return item;
+      return {
+        ...item,
+        children: filterMenuItems(item.children, hidden),
+      };
+    });
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
@@ -63,40 +79,22 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       label: t("nav.workbench", "岗位工作台"),
     },
     {
-      key: "news",
-      icon: <SparkBarChartLine size={18} />,
-      path: "/news",
-      label: t("nav.news", "新闻中心"),
+      key: "chat",
+      icon: <Bot size={18} strokeWidth={1.85} aria-hidden />,
+      path: "/chat",
+      label: t("nav.chat"),
     },
     {
       key: "material-center",
-      icon: <SparkLocalFileLine size={18} />,
-      path: "/material-center",
-      label: t("nav.materialCenter", "素材管理中心"),
-    },
-    {
-      key: "knowledge-base",
       icon: <SparkBrowseLine size={18} />,
-      path: "/knowledge-base",
-      label: t("nav.knowledgeBase", "知识库"),
+      path: "/material-center",
+      label: t("nav.materialCenter", "知识库"),
     },
     {
       key: "org-chart",
       icon: <SparkSearchUserLine size={18} />,
       path: "/org-chart",
       label: t("nav.orgChart", "AI数字化看板"),
-    },
-    {
-      key: "ai-okr",
-      icon: <SparkBarChartLine size={18} />,
-      path: "/ai-okr",
-      label: t("nav.aiOkr", "AI-OKR 考核"),
-    },
-    {
-      key: "chat",
-      icon: <Bot size={18} strokeWidth={1.85} aria-hidden />,
-      path: "/chat",
-      label: t("nav.chat"),
     },
     {
       key: "channels",
@@ -121,12 +119,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       icon: <SparkVoiceChat01Line size={18} />,
       path: "/heartbeat",
       label: t("nav.heartbeat"),
-    },
-    {
-      key: "workspace",
-      icon: <SparkLocalFileLine size={18} />,
-      path: "/workspace",
-      label: t("nav.workspace"),
     },
     {
       key: "skills",
@@ -237,11 +229,12 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       path: route.path,
       label: route.label,
     })),
-  ];
+  ].filter((item) => !HIDDEN_NAV_KEYS.has(item.key));
 
   // ── Menu items — agent-scoped (Chat + Control + Workspace) ──────────────
 
-  const agentMenuItems: MenuProps["items"] = [
+  const agentMenuItems: MenuProps["items"] = filterMenuItems(
+    [
     {
       key: "workbench",
       label: collapsed ? null : t("nav.workbench", "岗位工作台"),
@@ -251,11 +244,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       key: "news",
       label: collapsed ? null : t("nav.news", "新闻中心"),
       icon: <SparkBarChartLine size={16} />,
-    },
-    {
-      key: "material-center",
-      label: collapsed ? null : t("nav.materialCenter", "素材管理中心"),
-      icon: <SparkLocalFileLine size={16} />,
     },
     {
       key: "knowledge-base",
@@ -276,6 +264,11 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       key: "chat",
       label: collapsed ? null : t("nav.chat"),
       icon: <Bot size={16} strokeWidth={1.85} aria-hidden />,
+    },
+    {
+      key: "material-center",
+      label: collapsed ? null : t("nav.materialCenter", "知识库"),
+      icon: <SparkBrowseLine size={16} />,
     },
     {
       key: "control-group",
@@ -344,11 +337,14 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
         },
       ],
     },
-  ];
+  ],
+    HIDDEN_NAV_KEYS,
+  );
 
   // ── Menu items — global settings ──────────────────────────────────────
 
-  const settingsMenuItems: MenuProps["items"] = [
+  let settingsMenuItems: MenuProps["items"] = filterMenuItems(
+    [
     {
       key: "settings-group",
       label: collapsed ? null : t("nav.settings"),
@@ -410,7 +406,9 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
         },
       ],
     },
-  ];
+  ],
+    HIDDEN_NAV_KEYS,
+  );
 
   // Append plugin menu items as a group (only when there are plugins)
   if (pluginRoutes.length > 0) {

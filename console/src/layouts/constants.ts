@@ -17,6 +17,18 @@ export const DEFAULT_OPEN_KEYS = [
   "settings-group",
 ];
 
+/** 侧栏隐藏的功能模块（保留路由，仅不展示入口） */
+export const HIDDEN_NAV_KEYS = new Set([
+  "news",
+  "knowledge-base",
+  "ai-okr",
+  "workspace",
+  "org-chart",
+  "heartbeat",
+  "backups",
+  "debug",
+]);
+
 export const KEY_TO_PATH: Record<string, string> = {
   chat: "/chat",
   channels: "/channels",

@@ -23,6 +23,14 @@ export const CHANNEL_LABELS: Record<string, string> = {
   onebot: "OneBot",
 };
 
+/** 频道配置页展示的内置频道（其余隐藏） */
+export const VISIBLE_CHANNEL_KEYS = new Set([
+  "dingtalk",
+  "feishu",
+  "wechat",
+  "wecom",
+]);
+
 function formatCustomChannelKey(key: string): string {
   return key
     .split(/[_-]/)

@@ -280,7 +280,7 @@ export default function MaterialCenterPage() {
           <span style={{ fontSize: 12, color: SYS.textMuted }}>{t("nav.workbench", "岗位工作台")}</span>
           <i className="ri-arrow-right-s-line" style={{ fontSize: 12, color: SYS.textMuted }} />
           <span style={{ fontSize: 14, fontWeight: 600, color: SYS.textMain }}>
-            {t("nav.materialCenter", "素材管理中心")}
+            {t("nav.materialCenter", "知识库")}
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

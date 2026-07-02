@@ -85,11 +85,6 @@ export const ChannelCard = React.memo(function ChannelCard({
     onToggle(channelKey, checked);
   };
 
-  const handleConfigure = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onClick();
-  };
-
   const menuItems: MenuProps["items"] = [
     {
       key: "edit",
@@ -132,32 +127,24 @@ export const ChannelCard = React.memo(function ChannelCard({
           >
             <ChannelIcon channelKey={channelKey} size={26} />
           </div>
-          {enabled || hasConfig ? (
-            <div className={styles.cardTopRight}>
+          <div className={styles.cardTopRight}>
+            {hasConfig ? (
               <Dropdown menu={{ items: menuItems }} placement="bottomRight">
                 <Button type="text" size="small">
                   ...
                 </Button>
               </Dropdown>
-              <span
-                className={`${styles.switchWrapper} ${enabled ? styles.switchWrapperOn : ""}`}
-              >
-                <Switch
-                  checked={enabled}
-                  onChange={handleToggle}
-                  size="small"
-                />
-              </span>
-            </div>
-          ) : (
-            <Button
-              type="primary"
-              size="small"
-              onClick={handleConfigure}
+            ) : null}
+            <span
+              className={`${styles.switchWrapper} ${enabled ? styles.switchWrapperOn : ""}`}
             >
-              {t("common.configure")}
-            </Button>
-          )}
+              <Switch
+                checked={enabled}
+                onChange={handleToggle}
+                size="small"
+              />
+            </span>
+          </div>
         </div>
 
         <div className={styles.cardMiddleSection}>
