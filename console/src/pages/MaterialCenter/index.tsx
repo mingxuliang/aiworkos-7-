@@ -12,7 +12,6 @@ import { formatFileSize } from "./materialAdapter";
 import { llmOutputsApi, type LlmOutputItem } from "@/api/modules/llmOutputs";
 import { chatApi } from "@/api/modules/chat";
 import { buildAuthHeaders } from "@/api/authHeaders";
-import { getApiUrl } from "@/api/config";
 import { usePendingChatFilesStore } from "@/stores/pendingChatFilesStore";
 import "@/styles/migrated-pages.css";
 
@@ -159,11 +158,10 @@ export default function MaterialCenterPage() {
       video: 'video/mp4', image: 'image/jpeg', audio: 'audio/mpeg',
     };
     const mime = mimeMap[file.type] ?? 'application/octet-stream';
+    // 使用相对路径让请求走 Vite 代理（/api/files → 远程文件库）
     const apiPath = file.downloadUrl ?? `/api/files/${file.id}/download`;
-    const downloadRes = await fetch(
-      apiPath.startsWith('http') ? apiPath : getApiUrl(apiPath.replace(/^\/api/, '')),
-      { headers: buildAuthHeaders() },
-    );
+    const proxyPath = apiPath.startsWith('http') ? apiPath : apiPath;
+    const downloadRes = await fetch(proxyPath, { headers: buildAuthHeaders() });
     if (!downloadRes.ok) throw new Error(`下载失败 (${downloadRes.status})`);
     const blob = await downloadRes.blob();
     const fileObj = new File([blob], file.name, { type: mime });
@@ -183,25 +181,12 @@ export default function MaterialCenterPage() {
   const handleAddToTask = useCallback(async (file: import("@/mocks/materialCenter").MaterialFile) => {
     const key = `add-to-task-mat-${file.id}`;
     try {
-      void message.loading({ content: `正在准备 "${file.name}"...`, key, duration: 0 });
+      message.loading({ content: `正在准备 "${file.name}"...`, key, duration: 0 });
       await prepareMaterialFileForChat(file);
-      void message.success({
-        content: (
-          <span>
-            <span style={{ marginRight: 8 }}>{`"${file.name}" 已加入待发送`}</span>
-            <span
-              style={{ color: '#6366f1', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
-              onClick={() => { message.destroy(key); navigate('/chat'); }}
-            >
-              去聊天发送
-            </span>
-          </span>
-        ),
-        key,
-        duration: 4,
-      });
+      message.destroy(key);
+      navigate('/chat');
     } catch (e) {
-      void message.error({ content: e instanceof Error ? e.message : '添加到任务失败', key });
+      message.error({ content: e instanceof Error ? e.message : '添加到任务失败', key });
     }
   }, [navigate, prepareMaterialFileForChat]);
 

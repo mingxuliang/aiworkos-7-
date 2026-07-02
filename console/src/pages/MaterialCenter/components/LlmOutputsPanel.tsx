@@ -474,22 +474,8 @@ export default function LlmOutputsPanel({
     try {
       message.loading({ content: `正在准备 "${item.original_filename}"...`, key, duration: 0 });
       await prepareLlmOutputForChat(item);
-
-      message.success({
-        content: (
-          <span>
-            <span style={{ marginRight: 8 }}>{`"${item.original_filename}" 已加入待发送`}</span>
-            <span
-              style={{ color: '#6366f1', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
-              onClick={() => { message.destroy(key); navigate('/chat'); }}
-            >
-              去聊天发送
-            </span>
-          </span>
-        ),
-        key,
-        duration: 4,
-      });
+      message.destroy(key);
+      navigate('/chat');
     } catch (e) {
       message.error({ content: e instanceof Error ? e.message : '添加到任务失败', key });
     }
