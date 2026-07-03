@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Tests for ModelInfo class-identity resilience (issues #3301 / #3375).
 
 When the same module is loaded via two different import paths (e.g.
@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from qwenpaw.providers.provider import ModelInfo, Provider, ProviderInfo
+from aiwork.providers.provider import ModelInfo, Provider, ProviderInfo
 
 
 # ---------------------------------------------------------------------------

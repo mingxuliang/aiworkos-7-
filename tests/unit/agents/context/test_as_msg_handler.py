@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # flake8: noqa: E501
 # pylint: disable=line-too-long,unused-argument,unused-variable,redefined-outer-name
 """Unit tests for AsMsgHandler context_check with tool_use/tool_result alignment."""
@@ -6,8 +6,8 @@
 import pytest
 from agentscope.message import Msg
 
-from qwenpaw.agents.context.as_msg_handler import AsMsgHandler
-from qwenpaw.agents.utils.estimate_token_counter import EstimatedTokenCounter
+from aiwork.agents.context.as_msg_handler import AsMsgHandler
+from aiwork.agents.utils.estimate_token_counter import EstimatedTokenCounter
 
 
 class MockTokenCounter(EstimatedTokenCounter):

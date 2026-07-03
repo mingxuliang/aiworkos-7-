@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Integration tests for cross-provider message normalization.
 
 Simulates a conversation that starts on one provider and is then formatted
@@ -24,7 +24,7 @@ try:
 except ImportError:  # pragma: no cover
     GeminiChatFormatter = None
 
-from qwenpaw.agents import model_factory
+from aiwork.agents import model_factory
 
 
 def _gemini_session_history() -> list[Msg]:

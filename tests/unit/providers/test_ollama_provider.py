@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import pytest
 
-from qwenpaw.providers.ollama_provider import OllamaProvider
+from aiwork.providers.ollama_provider import OllamaProvider
 
 
 def _make_provider(base_url: str = "http://localhost:11434") -> OllamaProvider:
@@ -89,7 +89,7 @@ def test_client_uses_single_v1_suffix(monkeypatch, base_url: str) -> None:
             captured["timeout"] = timeout
 
     monkeypatch.setattr(
-        "qwenpaw.providers.ollama_provider.AsyncOpenAI",
+        "aiwork.providers.ollama_provider.AsyncOpenAI",
         FakeAsyncOpenAI,
     )
 
@@ -123,7 +123,7 @@ def test_get_chat_model_instance_uses_single_v1_suffix(
             captured.update(kwargs)
 
     monkeypatch.setattr(
-        "qwenpaw.providers.openai_chat_model_compat.OpenAIChatModelCompat",
+        "aiwork.providers.openai_chat_model_compat.OpenAIChatModelCompat",
         FakeOpenAIChatModelCompat,
     )
 

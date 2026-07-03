@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Feishu Channel Contract Test
 
@@ -19,7 +19,7 @@ import pytest
 from tests.contract.channels import ChannelContractTest
 
 if TYPE_CHECKING:
-    from qwenpaw.app.channels.base import BaseChannel
+    from aiwork.app.channels.base import BaseChannel
 
 
 class TestFeishuChannelContract(ChannelContractTest):
@@ -32,7 +32,7 @@ class TestFeishuChannelContract(ChannelContractTest):
 
     def create_instance(self) -> "BaseChannel":
         """Provide a FeishuChannel instance for contract testing."""
-        from qwenpaw.app.channels.feishu.channel import FeishuChannel
+        from aiwork.app.channels.feishu.channel import FeishuChannel
 
         process = AsyncMock()
 

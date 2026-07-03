@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Mattermost Channel Contract Test
 
@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock
 from tests.contract.channels import ChannelContractTest
 
 if TYPE_CHECKING:
-    from qwenpaw.app.channels.base import BaseChannel
+    from aiwork.app.channels.base import BaseChannel
 
 
 class TestMattermostChannelContract(ChannelContractTest):
@@ -28,7 +28,7 @@ class TestMattermostChannelContract(ChannelContractTest):
 
     def create_instance(self) -> "BaseChannel":
         """Provide a MattermostChannel instance for contract testing."""
-        from qwenpaw.app.channels.mattermost.channel import MattermostChannel
+        from aiwork.app.channels.mattermost.channel import MattermostChannel
 
         process = AsyncMock()
 

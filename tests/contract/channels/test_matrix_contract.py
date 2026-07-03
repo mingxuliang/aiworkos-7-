@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Matrix Channel Contract Test
 
@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock
 from tests.contract.channels import ChannelContractTest
 
 if TYPE_CHECKING:
-    from qwenpaw.app.channels.base import BaseChannel
+    from aiwork.app.channels.base import BaseChannel
 
 
 class TestMatrixChannelContract(ChannelContractTest):
@@ -28,9 +28,9 @@ class TestMatrixChannelContract(ChannelContractTest):
 
     def create_instance(self) -> "BaseChannel":
         """Provide a MatrixChannel instance for contract testing."""
-        from qwenpaw.app.channels.matrix.channel import MatrixChannel
+        from aiwork.app.channels.matrix.channel import MatrixChannel
 
-        from qwenpaw.app.channels.matrix.channel import MatrixChannelConfig
+        from aiwork.app.channels.matrix.channel import MatrixChannelConfig
 
         process = AsyncMock()
         config = MatrixChannelConfig(

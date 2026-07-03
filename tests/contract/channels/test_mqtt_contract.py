@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 MQTT Channel Contract Test
 
@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock
 from tests.contract.channels import ChannelContractTest
 
 if TYPE_CHECKING:
-    from qwenpaw.app.channels.base import BaseChannel
+    from aiwork.app.channels.base import BaseChannel
 
 
 class TestMQTTChannelContract(ChannelContractTest):
@@ -28,7 +28,7 @@ class TestMQTTChannelContract(ChannelContractTest):
 
     def create_instance(self) -> "BaseChannel":
         """Provide a MQTTChannel instance for contract testing."""
-        from qwenpaw.app.channels.mqtt.channel import MQTTChannel
+        from aiwork.app.channels.mqtt.channel import MQTTChannel
 
         process = AsyncMock()
 

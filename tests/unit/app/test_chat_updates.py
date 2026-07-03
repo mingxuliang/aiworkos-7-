@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=redefined-outer-name
 """Regression tests for chat update semantics."""
 from __future__ import annotations
@@ -10,11 +10,11 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from qwenpaw.app.runner import manager as chat_manager_module
-from qwenpaw.app.runner.api import get_chat_manager, router
-from qwenpaw.app.runner.manager import ChatManager
-from qwenpaw.app.runner.models import ChatSpec, ChatUpdate
-from qwenpaw.app.runner.repo.json_repo import JsonChatRepository
+from aiwork.app.runner import manager as chat_manager_module
+from aiwork.app.runner.api import get_chat_manager, router
+from aiwork.app.runner.manager import ChatManager
+from aiwork.app.runner.models import ChatSpec, ChatUpdate
+from aiwork.app.runner.repo.json_repo import JsonChatRepository
 
 
 @pytest.fixture

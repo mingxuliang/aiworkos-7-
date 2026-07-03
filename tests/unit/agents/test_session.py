@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Tests for SafeJSONSession JSON corruption resilience."""
 # pylint: disable=redefined-outer-name
 import json
@@ -8,7 +8,7 @@ import tempfile
 
 import pytest
 
-from qwenpaw.app.runner.session import SafeJSONSession
+from aiwork.app.runner.session import SafeJSONSession
 
 
 @pytest.fixture

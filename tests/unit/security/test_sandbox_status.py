@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Unit tests for execution sandbox status probes."""
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from qwenpaw.security.sandbox.settings import ResolvedSandboxSettings
-from qwenpaw.security.sandbox.status import (
+from aiwork.security.sandbox.settings import ResolvedSandboxSettings
+from aiwork.security.sandbox.status import (
     get_execution_sandbox_status,
     probe_docker_image_present,
 )
@@ -20,7 +20,7 @@ def _settings(**overrides: object) -> ResolvedSandboxSettings:
         use_user_subdir=True,
         fail_closed=True,
         fallback_backend="local",
-        docker_image="qwenpaw-sandbox:latest",
+        docker_image="aiwork-sandbox:latest",
         docker_network="none",
         docker_memory="512m",
         docker_cpus="1",
@@ -43,10 +43,10 @@ async def test_probe_docker_image_present_true() -> None:
     proc.wait = AsyncMock()
 
     with patch(
-        "qwenpaw.security.sandbox.status.asyncio.create_subprocess_exec",
+        "aiwork.security.sandbox.status.asyncio.create_subprocess_exec",
         new=AsyncMock(return_value=proc),
     ):
-        assert await probe_docker_image_present("qwenpaw-sandbox:latest") is True
+        assert await probe_docker_image_present("aiwork-sandbox:latest") is True
 
 
 @pytest.mark.asyncio
@@ -56,16 +56,16 @@ async def test_get_execution_sandbox_status_reports_docker_health() -> None:
     runner.is_available = AsyncMock(return_value=True)
 
     with patch(
-        "qwenpaw.security.sandbox.status.DockerSandboxRunner",
+        "aiwork.security.sandbox.status.DockerSandboxRunner",
         return_value=runner,
     ), patch(
-        "qwenpaw.security.sandbox.status.probe_docker_image_present",
+        "aiwork.security.sandbox.status.probe_docker_image_present",
         new=AsyncMock(return_value=True),
     ), patch(
-        "qwenpaw.security.sandbox.status.EnvVarLoader.get_str",
+        "aiwork.security.sandbox.status.EnvVarLoader.get_str",
         side_effect=lambda key: {
-            "QWENPAW_EXECUTION_SANDBOX_ENABLED": "true",
-            "QWENPAW_EXECUTION_SANDBOX_BACKEND": "docker",
+            "aiwork_EXECUTION_SANDBOX_ENABLED": "true",
+            "aiwork_EXECUTION_SANDBOX_BACKEND": "docker",
         }.get(key),
     ):
         status = await get_execution_sandbox_status(settings)

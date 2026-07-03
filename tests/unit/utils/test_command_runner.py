@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=protected-access
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from qwenpaw.utils import command_runner
-from qwenpaw.utils.command_runner import (
+from aiwork.utils import command_runner
+from aiwork.utils.command_runner import (
     CommandExecutionError,
     ManagedProcess,
     ProcessLaunchError,
@@ -303,13 +303,13 @@ def test_start_multiprocessing_process_wraps_process() -> None:
 
     managed = start_multiprocessing_process(
         raw_process,
-        command=["qwenpaw-model-download", "demo/repo", "modelscope"],
+        command=["aiwork-model-download", "demo/repo", "modelscope"],
     )
 
     assert isinstance(managed, ManagedProcess)
     assert managed.creation_mode == "multiprocessing"
     assert managed.command == [
-        "qwenpaw-model-download",
+        "aiwork-model-download",
         "demo/repo",
         "modelscope",
     ]

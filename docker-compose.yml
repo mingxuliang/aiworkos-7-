@@ -1,28 +1,26 @@
 version: '3.8'
 
 volumes:
-  qwenpaw-data:
-    name: qwenpaw-data
-  qwenpaw-secrets:
-    name: qwenpaw-secrets
-  qwenpaw-backups:
-    name: qwenpaw-backups
+  aiwork-backups:
+    name: aiwork-backups
 
 services:
-  qwenpaw:
-    build:
-      context: .
-      dockerfile: deploy/Dockerfile
-    image: qwenpaw:custom
-    container_name: qwenpaw
+  aiwork:
+    # 镜像构建职责由 scripts/docker_build.sh / deploy/deploy.sh 承担（方案 C：镜像外构建前端），
+    # 这里不再声明 build: 段，避免 compose 在镜像缺失时自行触发一次未携带前端产物的构建。
+    # 镜像 tag 通过 AIWORK_IMAGE 环境变量注入，与 deploy.sh 的 IMAGE 保持一致；缺省回落 aiwork:latest。
+    image: ${AIWORK_IMAGE:-aiwork:latest}
+    container_name: aiwork
     restart: always
     ports:
       - "8088:8088"
-    # environment:
-    #   - QWENPAW_AUTH_ENABLED=true
-    #   - QWENPAW_AUTH_USERNAME=admin
-    #   - QWENPAW_AUTH_PASSWORD=yourpassword
+    env_file:
+      - .env
     volumes:
-      - qwenpaw-data:/app/working
-      - qwenpaw-secrets:/app/working.secret
-      - qwenpaw-backups:/app/working.backups
+      # 映射 .aiwork 工作目录到容器的 /app/working
+      - ~/.aiwork:/app/working
+      # 映射 .aiwork.secret 敏感数据目录到容器的 /app/working.secret
+      - ~/.aiwork.secret:/app/working.secret
+      - aiwork-backups:/app/working.backups
+      # 容器日志挂载到宿主机 ./logs，按天滚动（见 deploy/config/aiwork.logrotate）
+      - ./logs:/app/logs

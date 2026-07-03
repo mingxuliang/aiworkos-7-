@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=redefined-outer-name,unused-argument,protected-access
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from google.genai import errors as genai_errors
 
-from qwenpaw.providers.gemini_provider import GeminiProvider
+from aiwork.providers.gemini_provider import GeminiProvider
 
 
 def _make_provider() -> GeminiProvider:

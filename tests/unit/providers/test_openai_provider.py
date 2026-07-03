@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 from types import SimpleNamespace
 
-import qwenpaw.providers.openai_provider as openai_provider_module
-from qwenpaw.providers.openai_provider import OpenAIProvider
+import aiwork.providers.openai_provider as openai_provider_module
+from aiwork.providers.openai_provider import OpenAIProvider
 
 
 def _make_provider(is_custom: bool = False) -> OpenAIProvider:

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Tests for agent discovery and inter-agent chat helpers."""
 
 from __future__ import annotations
@@ -6,7 +6,7 @@ from __future__ import annotations
 import httpx
 from agentscope.tool import Toolkit
 
-from qwenpaw.agents.tools import agent_management
+from aiwork.agents.tools import agent_management
 
 
 class _FakeResponse:

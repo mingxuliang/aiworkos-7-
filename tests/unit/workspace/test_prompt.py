@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Tests for agent identity in system prompt."""
 import tempfile
 from pathlib import Path
 import pytest
-from qwenpaw.agents.prompt import build_system_prompt_from_working_dir
+from aiwork.agents.prompt import build_system_prompt_from_working_dir
 
 
 @pytest.fixture

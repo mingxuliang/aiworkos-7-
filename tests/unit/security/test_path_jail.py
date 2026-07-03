@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Unit tests for execution sandbox path jail."""
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from qwenpaw.security.sandbox.context import (
+from aiwork.security.sandbox.context import (
     set_current_readonly_roots,
     set_current_sandbox_root,
 )
-from qwenpaw.security.sandbox.path_jail import (
+from aiwork.security.sandbox.path_jail import (
     SandboxBoundaryError,
     assert_path_in_jail,
     assert_path_readable,
@@ -23,8 +23,8 @@ from qwenpaw.security.sandbox.path_jail import (
     resolve_path_in_jail,
     resolve_tool_path_string,
 )
-from qwenpaw.security.sandbox.resolver import resolve_sandbox_root
-from qwenpaw.security.tool_guard.guardians.path_jail_guardian import (
+from aiwork.security.sandbox.resolver import resolve_sandbox_root
+from aiwork.security.tool_guard.guardians.path_jail_guardian import (
     PathJailGuardian,
 )
 
@@ -76,7 +76,7 @@ def test_path_jail_guardian_blocks_outside_file(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
     set_current_sandbox_root(workspace.resolve())
 
     assert is_sandbox_enabled()
@@ -96,10 +96,10 @@ def test_path_jail_guardian_blocks_outside_file(
 def test_is_sandbox_enabled_reads_config_without_env(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
+    monkeypatch.delenv("aiwork_EXECUTION_SANDBOX_ENABLED", raising=False)
     monkeypatch.delenv("COPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
 
-    from qwenpaw.config import load_config, save_config
+    from aiwork.config import load_config, save_config
 
     config = load_config()
     config.security.execution_sandbox.enabled = True
@@ -112,11 +112,11 @@ def test_is_sandbox_enabled_reads_config_without_env(
 def test_is_sandbox_enabled_respects_request_override(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
+    monkeypatch.delenv("aiwork_EXECUTION_SANDBOX_ENABLED", raising=False)
     monkeypatch.delenv("COPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
 
-    from qwenpaw.config import load_config, save_config
-    from qwenpaw.security.sandbox.context import set_sandbox_enabled_override
+    from aiwork.config import load_config, save_config
+    from aiwork.security.sandbox.context import set_sandbox_enabled_override
 
     config = load_config()
     config.security.execution_sandbox.enabled = False
@@ -136,12 +136,12 @@ def test_is_sandbox_enabled_respects_request_override(
 def test_load_sandbox_settings_honors_request_override(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
-    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_BACKEND", raising=False)
+    monkeypatch.delenv("aiwork_EXECUTION_SANDBOX_ENABLED", raising=False)
+    monkeypatch.delenv("aiwork_EXECUTION_SANDBOX_BACKEND", raising=False)
 
-    from qwenpaw.config import load_config, save_config
-    from qwenpaw.security.sandbox.context import set_sandbox_enabled_override
-    from qwenpaw.security.sandbox.settings import load_sandbox_settings
+    from aiwork.config import load_config, save_config
+    from aiwork.security.sandbox.context import set_sandbox_enabled_override
+    from aiwork.security.sandbox.settings import load_sandbox_settings
 
     config = load_config()
     config.security.execution_sandbox.enabled = False
@@ -160,7 +160,7 @@ def test_path_jail_guardian_allows_inside_file(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
     set_current_sandbox_root(workspace.resolve())
 
     inside = workspace / "allowed.txt"
@@ -192,10 +192,10 @@ async def test_user_b_cannot_read_user_a_file_via_file_io(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
 
-    from qwenpaw.agents.tools.file_io import read_file
-    from qwenpaw.config.context import set_current_workspace_dir
+    from aiwork.agents.tools.file_io import read_file
+    from aiwork.config.context import set_current_workspace_dir
 
     root_a = resolve_sandbox_root(workspace, "117")
     root_b = resolve_sandbox_root(workspace, "118")
@@ -221,9 +221,9 @@ def test_skills_dir_readable_from_user_sandbox(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
 
-    from qwenpaw.config.context import set_current_workspace_dir
+    from aiwork.config.context import set_current_workspace_dir
 
     skills_dir = workspace / "skills" / "demo-skill"
     skills_dir.mkdir(parents=True)
@@ -247,9 +247,9 @@ def test_skills_dir_not_writable_from_user_sandbox(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
 
-    from qwenpaw.config.context import set_current_workspace_dir
+    from aiwork.config.context import set_current_workspace_dir
 
     skills_dir = workspace / "skills" / "demo-skill"
     skills_dir.mkdir(parents=True)
@@ -273,9 +273,9 @@ def test_enabled_skill_dirs_extend_readonly_roots(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
 
-    from qwenpaw.config.context import set_current_workspace_dir
+    from aiwork.config.context import set_current_workspace_dir
 
     custom_skill_dir = workspace / "skills" / "custom-skill"
     custom_skill_dir.mkdir(parents=True)
@@ -296,10 +296,10 @@ async def test_user_can_read_skill_via_file_io(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
 
-    from qwenpaw.agents.tools.file_io import read_file
-    from qwenpaw.config.context import set_current_workspace_dir
+    from aiwork.agents.tools.file_io import read_file
+    from aiwork.config.context import set_current_workspace_dir
 
     skills_dir = workspace / "skills" / "demo-skill"
     skills_dir.mkdir(parents=True)
@@ -327,10 +327,10 @@ async def test_write_to_skills_blocked_via_file_io(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
 
-    from qwenpaw.agents.tools.file_io import write_file
-    from qwenpaw.config.context import set_current_workspace_dir
+    from aiwork.agents.tools.file_io import write_file
+    from aiwork.config.context import set_current_workspace_dir
 
     skills_dir = workspace / "skills" / "demo-skill"
     skills_dir.mkdir(parents=True)
@@ -358,9 +358,9 @@ def test_path_jail_guardian_allows_skill_read(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
 
-    from qwenpaw.config.context import set_current_workspace_dir
+    from aiwork.config.context import set_current_workspace_dir
 
     skills_dir = workspace / "skills" / "demo-skill"
     skills_dir.mkdir(parents=True)
@@ -382,9 +382,9 @@ def test_path_jail_guardian_blocks_skill_write(
     workspace: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
 
-    from qwenpaw.config.context import set_current_workspace_dir
+    from aiwork.config.context import set_current_workspace_dir
 
     skills_dir = workspace / "skills" / "demo-skill"
     skills_dir.mkdir(parents=True)

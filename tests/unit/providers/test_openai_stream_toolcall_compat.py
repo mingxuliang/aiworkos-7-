@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import json
@@ -6,7 +6,7 @@ from datetime import datetime
 from types import SimpleNamespace
 from typing import Any
 
-from qwenpaw.providers.openai_chat_model_compat import (
+from aiwork.providers.openai_chat_model_compat import (
     OpenAIChatModelCompat,
     _sanitize_tool_call,
 )

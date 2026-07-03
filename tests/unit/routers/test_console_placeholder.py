@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Unit tests for ``console._extract_placeholder_name``.
 
 The console handler picks an immediate placeholder name for a new chat
@@ -10,7 +10,7 @@ labels like ``{"type": ...`` in the session drawer (regression for PR #3).
 """
 from __future__ import annotations
 
-from qwenpaw.app.routers.console import _extract_placeholder_name
+from aiwork.app.routers.console import _extract_placeholder_name
 
 
 class _TextBlock:
@@ -91,7 +91,7 @@ def test_falsy_first_part_is_media() -> None:
 def test_extract_session_payload_reads_sandbox_flag_from_agent_request() -> None:
     from agentscope_runtime.engine.schemas.agent_schemas import AgentRequest
 
-    from qwenpaw.app.routers.console import _extract_session_and_payload
+    from aiwork.app.routers.console import _extract_session_and_payload
 
     payload = _extract_session_and_payload(
         AgentRequest(
@@ -105,7 +105,7 @@ def test_extract_session_payload_reads_sandbox_flag_from_agent_request() -> None
 
 
 def test_extract_session_payload_reads_sandbox_flag_from_dict() -> None:
-    from qwenpaw.app.routers.console import _extract_session_and_payload
+    from aiwork.app.routers.console import _extract_session_and_payload
 
     payload = _extract_session_and_payload(
         {
@@ -119,7 +119,7 @@ def test_extract_session_payload_reads_sandbox_flag_from_dict() -> None:
 
 
 def test_extract_session_payload_preserves_client_user_id_before_auth_override() -> None:
-    from qwenpaw.app.routers.console import _extract_session_and_payload
+    from aiwork.app.routers.console import _extract_session_and_payload
 
     payload = _extract_session_and_payload(
         {

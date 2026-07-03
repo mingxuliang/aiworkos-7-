@@ -1,18 +1,18 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Tests for message_request_normalizer module."""
 
 # pylint: disable=redefined-outer-name,protected-access
 import pytest
 from agentscope.message import Msg, ToolResultBlock
 
-from qwenpaw.agents.utils.message_request_normalizer import (
+from aiwork.agents.utils.message_request_normalizer import (
     _clean_provider_specific_fields,
     _clone_msg,
     _clone_messages,
     _strip_media_blocks_in_place,
     normalize_messages_for_model_request,
 )
-from qwenpaw.constant import MEDIA_UNSUPPORTED_PLACEHOLDER
+from aiwork.constant import MEDIA_UNSUPPORTED_PLACEHOLDER
 
 
 # -----------------------------------------------------------------------------

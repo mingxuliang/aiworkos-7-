@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=protected-access
 """Unit tests for OneBot v11 channel."""
 from __future__ import annotations
@@ -11,7 +11,7 @@ from agentscope_runtime.engine.schemas.agent_schemas import (
     TextContent,
 )
 
-from qwenpaw.app.channels.onebot.channel import OneBotChannel
+from aiwork.app.channels.onebot.channel import OneBotChannel
 
 
 # ---------------------------------------------------------------------------

@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Unit tests for skill sandbox metadata and scanner linkage."""
 from __future__ import annotations
 
-from qwenpaw.agents.skills_manager import (
+from aiwork.agents.skills_manager import (
     SkillRequirements,
     _extract_requirements,
     _parse_requires_sandbox,
     _skill_entry_requires_sandbox,
 )
-from qwenpaw.security.skill_scanner import should_recommend_sandbox
-from qwenpaw.security.skill_scanner.models import (
+from aiwork.security.skill_scanner import should_recommend_sandbox
+from aiwork.security.skill_scanner.models import (
     Finding,
     ScanResult,
     Severity,

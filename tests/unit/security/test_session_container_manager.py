@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Unit tests for SessionContainerManager."""
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from qwenpaw.security.sandbox.session_container import SessionContainer
-from qwenpaw.security.sandbox.session_container_manager import (
+from aiwork.security.sandbox.session_container import SessionContainer
+from aiwork.security.sandbox.session_container_manager import (
     SessionContainerManager,
 )
-from qwenpaw.security.sandbox.settings import ResolvedSandboxSettings
+from aiwork.security.sandbox.settings import ResolvedSandboxSettings
 
 
 def _settings(**overrides: object) -> ResolvedSandboxSettings:
@@ -21,7 +21,7 @@ def _settings(**overrides: object) -> ResolvedSandboxSettings:
         use_user_subdir=True,
         fail_closed=True,
         fallback_backend="local",
-        docker_image="qwenpaw-sandbox:latest",
+        docker_image="aiwork-sandbox:latest",
         docker_network="none",
         docker_memory="512m",
         docker_cpus="1",
@@ -44,7 +44,7 @@ async def test_acquire_reuses_running_container() -> None:
     sandbox_root = Path("/tmp/sandbox")
     container = SessionContainer(
         container_id="abc123",
-        container_name="qwenpaw-sbx-test",
+        container_name="aiwork-sbx-test",
         session_key="agent:1:session",
         sandbox_root=sandbox_root,
         last_used=1.0,
@@ -69,7 +69,7 @@ async def test_reap_idle_destroys_stale_container() -> None:
     manager = SessionContainerManager()
     manager._containers["agent:1:session"] = SessionContainer(
         container_id="abc123",
-        container_name="qwenpaw-sbx-test",
+        container_name="aiwork-sbx-test",
         session_key="agent:1:session",
         sandbox_root=Path("/tmp/sandbox"),
         last_used=0.0,
@@ -78,10 +78,10 @@ async def test_reap_idle_destroys_stale_container() -> None:
     manager.destroy = AsyncMock(return_value=True)  # type: ignore[method-assign]
 
     with patch(
-        "qwenpaw.security.sandbox.session_container_manager.load_sandbox_settings",
+        "aiwork.security.sandbox.session_container_manager.load_sandbox_settings",
         return_value=_settings(session_idle_seconds=1),
     ), patch(
-        "qwenpaw.security.sandbox.session_container_manager.time.time",
+        "aiwork.security.sandbox.session_container_manager.time.time",
         return_value=1000.0,
     ):
         destroyed = await manager.reap_idle()

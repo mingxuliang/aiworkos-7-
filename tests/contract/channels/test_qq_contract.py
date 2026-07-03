@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 QQ Channel Contract Test
 
@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock
 from tests.contract.channels import ChannelContractTest
 
 if TYPE_CHECKING:
-    from qwenpaw.app.channels.base import BaseChannel
+    from aiwork.app.channels.base import BaseChannel
 
 
 class TestQQChannelContract(ChannelContractTest):
@@ -28,7 +28,7 @@ class TestQQChannelContract(ChannelContractTest):
 
     def create_instance(self) -> "BaseChannel":
         """Provide a QQChannel instance for contract testing."""
-        from qwenpaw.app.channels.qq.channel import QQChannel
+        from aiwork.app.channels.qq.channel import QQChannel
 
         process = AsyncMock()
 

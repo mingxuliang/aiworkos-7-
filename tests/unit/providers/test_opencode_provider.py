@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=redefined-outer-name,unused-argument,protected-access
 """Tests for the OpenCode built-in provider."""
 from __future__ import annotations
@@ -7,9 +7,9 @@ from types import SimpleNamespace
 
 import pytest
 
-import qwenpaw.providers.provider_manager as provider_manager_module
-from qwenpaw.providers.openai_provider import OpenAIProvider
-from qwenpaw.providers.provider_manager import (
+import aiwork.providers.provider_manager as provider_manager_module
+from aiwork.providers.openai_provider import OpenAIProvider
+from aiwork.providers.provider_manager import (
     PROVIDER_OPENCODE,
     ProviderManager,
 )
@@ -31,7 +31,7 @@ def test_opencode_provider_config() -> None:
 
 @pytest.fixture
 def isolated_secret_dir(monkeypatch, tmp_path):
-    secret_dir = tmp_path / ".qwenpaw.secret"
+    secret_dir = tmp_path / ".aiwork.secret"
     monkeypatch.setattr(provider_manager_module, "SECRET_DIR", secret_dir)
     return secret_dir
 

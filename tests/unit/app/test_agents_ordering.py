@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Tests for persisted agent ordering."""
 
 from types import SimpleNamespace
@@ -6,12 +6,12 @@ from types import SimpleNamespace
 import pytest
 from fastapi import HTTPException
 
-from qwenpaw.config.config import (
+from aiwork.config.config import (
     AgentProfileConfig,
     AgentProfileRef,
     Config,
 )
-from qwenpaw.app.routers import agents as agents_router
+from aiwork.app.routers import agents as agents_router
 
 
 def _build_config(

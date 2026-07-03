@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Tests for agent ID generation, sanitization, and validation."""
 import pytest
 
-from qwenpaw.config.config import (
+from aiwork.config.config import (
     generate_short_agent_id,
     sanitize_agent_id,
     validate_agent_id,

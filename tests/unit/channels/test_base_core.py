@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 BaseChannel Core Unit Tests
 ============================
@@ -24,8 +24,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 # Import BaseChannel directly for internal logic testing
-from qwenpaw.app.channels.base import BaseChannel, ProcessHandler
-from qwenpaw.app.channels.console.channel import ConsoleChannel
+from aiwork.app.channels.base import BaseChannel, ProcessHandler
+from aiwork.app.channels.console.channel import ConsoleChannel
 
 
 # =============================================================================

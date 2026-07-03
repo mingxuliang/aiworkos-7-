@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # pylint: disable=redefined-outer-name,protected-access,unused-argument
 """Tests for BaseMemoryManager abstract base class."""
 import asyncio
@@ -14,7 +14,7 @@ import pytest
 
 def _make_concrete_class():
     """Return a minimal concrete subclass of BaseMemoryManager."""
-    from qwenpaw.agents.memory.base_memory_manager import (
+    from aiwork.agents.memory.base_memory_manager import (
         BaseMemoryManager,
     )
 

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
 Provider Contract Tests
 
@@ -92,5 +92,5 @@ class ProviderContractTest(BaseContractTest):
 # Example usage:
 # class TestOpenAIProviderContract(ProviderContractTest):
 #     def create_instance(self):
-#         from qwenpaw.providers.openai_provider import OpenAIProvider
+#         from aiwork.providers.openai_provider import OpenAIProvider
 #         return OpenAIProvider(...)

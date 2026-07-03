@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 from __future__ import annotations
 
@@ -8,15 +8,15 @@ from typing import cast
 
 import pytest
 
-from qwenpaw.local_models import manager as local_model_manager_module
-from qwenpaw.local_models.llamacpp import LlamaCppServerSetupResult
-from qwenpaw.local_models.manager import (
+from aiwork.local_models import manager as local_model_manager_module
+from aiwork.local_models.llamacpp import LlamaCppServerSetupResult
+from aiwork.local_models.manager import (
     DownloadSource,
     LocalModelManager,
 )
-from qwenpaw.local_models.llamacpp import LlamaCppBackend
-from qwenpaw.local_models.model_manager import ModelManager
-from qwenpaw.providers.provider import ModelInfo
+from aiwork.local_models.llamacpp import LlamaCppBackend
+from aiwork.local_models.model_manager import ModelManager
+from aiwork.providers.provider import ModelInfo
 
 
 class _FakeLlamaCppBackend:

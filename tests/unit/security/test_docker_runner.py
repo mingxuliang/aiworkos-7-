@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """Unit tests for Docker sandbox runner (Plan B)."""
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from qwenpaw.security.sandbox.docker_runner import DockerSandboxRunner
-from qwenpaw.security.sandbox.settings import (
+from aiwork.security.sandbox.docker_runner import DockerSandboxRunner
+from aiwork.security.sandbox.settings import (
     ResolvedSandboxSettings,
     load_sandbox_settings,
     use_docker_shell_backend,
@@ -23,7 +23,7 @@ def _settings(**overrides: object) -> ResolvedSandboxSettings:
         use_user_subdir=True,
         fail_closed=True,
         fallback_backend="local",
-        docker_image="qwenpaw-sandbox:latest",
+        docker_image="aiwork-sandbox:latest",
         docker_network="none",
         docker_memory="512m",
         docker_cpus="1",
@@ -61,7 +61,7 @@ def test_build_run_command_basic(sandbox_root: Path) -> None:
     vol_idx = argv.index("-v")
     assert argv[vol_idx + 1].endswith(":/work:rw")
     assert argv[-4:] == [
-        "qwenpaw-sandbox:latest",
+        "aiwork-sandbox:latest",
         "/bin/sh",
         "-c",
         "echo hi",
@@ -94,7 +94,7 @@ async def test_is_available_true_when_docker_responds() -> None:
     proc.communicate = AsyncMock(return_value=(b"24.0.0", b""))
 
     with patch(
-        "qwenpaw.security.sandbox.docker_runner.asyncio.create_subprocess_exec",
+        "aiwork.security.sandbox.docker_runner.asyncio.create_subprocess_exec",
         new=AsyncMock(return_value=proc),
     ):
         runner = DockerSandboxRunner(_settings())
@@ -104,7 +104,7 @@ async def test_is_available_true_when_docker_responds() -> None:
 @pytest.mark.asyncio
 async def test_is_available_false_when_docker_missing() -> None:
     with patch(
-        "qwenpaw.security.sandbox.docker_runner.asyncio.create_subprocess_exec",
+        "aiwork.security.sandbox.docker_runner.asyncio.create_subprocess_exec",
         side_effect=FileNotFoundError,
     ):
         runner = DockerSandboxRunner(_settings())
@@ -120,7 +120,7 @@ async def test_run_shell_success(sandbox_root: Path) -> None:
     proc.wait = AsyncMock()
 
     with patch(
-        "qwenpaw.security.sandbox.docker_runner.asyncio.create_subprocess_exec",
+        "aiwork.security.sandbox.docker_runner.asyncio.create_subprocess_exec",
         new=AsyncMock(return_value=proc),
     ):
         runner = DockerSandboxRunner(_settings(docker_timeout_seconds=30))
@@ -141,7 +141,7 @@ async def test_run_shell_timeout(sandbox_root: Path) -> None:
     proc.wait = AsyncMock()
 
     with patch(
-        "qwenpaw.security.sandbox.docker_runner.asyncio.create_subprocess_exec",
+        "aiwork.security.sandbox.docker_runner.asyncio.create_subprocess_exec",
         new=AsyncMock(return_value=proc),
     ):
         runner = DockerSandboxRunner(_settings(docker_timeout_seconds=1))
@@ -155,8 +155,8 @@ async def test_run_shell_timeout(sandbox_root: Path) -> None:
 def test_load_sandbox_settings_env_backend(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "true")
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_BACKEND", "docker")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "true")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_BACKEND", "docker")
 
     settings = load_sandbox_settings()
     assert settings.enabled is True
@@ -167,8 +167,8 @@ def test_load_sandbox_settings_env_backend(
 def test_load_sandbox_settings_from_config_when_env_unset(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", raising=False)
-    monkeypatch.delenv("QWENPAW_EXECUTION_SANDBOX_BACKEND", raising=False)
+    monkeypatch.delenv("aiwork_EXECUTION_SANDBOX_ENABLED", raising=False)
+    monkeypatch.delenv("aiwork_EXECUTION_SANDBOX_BACKEND", raising=False)
 
     settings = load_sandbox_settings()
     assert settings.backend in {"off", "local", "docker"}
@@ -177,8 +177,8 @@ def test_load_sandbox_settings_from_config_when_env_unset(
 def test_load_sandbox_settings_disabled_forces_off_backend(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_ENABLED", "false")
-    monkeypatch.setenv("QWENPAW_EXECUTION_SANDBOX_BACKEND", "docker")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_ENABLED", "false")
+    monkeypatch.setenv("aiwork_EXECUTION_SANDBOX_BACKEND", "docker")
 
     settings = load_sandbox_settings()
     assert settings.enabled is False
