@@ -566,16 +566,18 @@ def memory_embedding_notes(cfg: Config) -> list[str]:
             ac = load_agent_config(agent_id)
         except Exception:  # pylint: disable=broad-exception-caught
             continue
-        emb = ac.running.reme_light_memory_config.embedding_model_config
-        ms = ac.running.reme_light_memory_config.auto_memory_search_config
+        mem_cfg = ac.running.get_active_memory_config()
+        emb = mem_cfg.embedding_model_config
+        ms = mem_cfg.auto_memory_search_config
         if ms.enabled and not _embedding_has_credentials(
             emb.api_key,
         ):
+            backend = ac.running.memory_manager_backend
             notes.append(
                 f"{agent_id}: "
-                "reme_light_memory_config.auto_memory_search_config.enabled "
+                f"{backend}_memory_config.auto_memory_search_config.enabled "
                 "is on but no embedding API key is set in "
-                "reme_light_memory_config.embedding_model_config.api_key "
+                f"{backend}_memory_config.embedding_model_config.api_key "
                 "and no common OPENAI_/DASHSCOPE_/ANTHROPIC_ "
                 "API key env was found.",
             )

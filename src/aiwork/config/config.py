@@ -32,6 +32,7 @@ from ..constant import (
     LLM_RATE_LIMIT_JITTER,
     LLM_RATE_LIMIT_PAUSE,
     WORKING_DIR,
+    EnvVarLoader,
 )
 
 
@@ -634,6 +635,114 @@ class ReMeLightMemoryConfig(BaseModel):
     )
 
 
+class Mem0MemoryConfig(BaseModel):
+    """mem0 memory manager configuration.
+
+    Supports multiple vector store backends: pgvector, redis, qdrant, chroma.
+    Set ``mem0_vector_store_provider`` to choose the backend.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    # --- Vector store provider ---
+    mem0_vector_store_provider: str = Field(
+        default="",
+        description="Vector store provider: pgvector, redis, qdrant, chroma. "
+        "When empty, reads MEM0_VECTOR_STORE_PROVIDER env var or "
+        "defaults to 'pgvector'.",
+    )
+
+    # --- 通用连接 URL（pgvector: postgresql://..., redis: redis://...） ---
+    mem0_db_url: str = Field(
+        default="",
+        description="Connection URL for mem0 vector store. "
+        "For pgvector: postgresql://user:pass@host:port/db. "
+        "For redis: redis://user:pass@host:port/db. "
+        "When empty, reads AIWORK_MEM0_DB_URL env var.",
+    )
+
+    # --- Redis 专用（向后兼容） ---
+    redis_url: str = Field(
+        default="",
+        description="[DEPRECATED] Use mem0_db_url instead. "
+        "Redis connection URL. "
+        "When empty, reads AIWORK_MEM0_REDIS_URL env var.",
+    )
+
+    # --- pgvector 专用 ---
+    mem0_pgvector_host: str = Field(
+        default="",
+        description="pgvector host. When empty, reads MEM0_PGVECTOR_HOST env var.",
+    )
+    mem0_pgvector_port: int = Field(
+        default=0,
+        description="pgvector port. When 0, reads MEM0_PGVECTOR_PORT env var (default 5432).",
+    )
+    mem0_pgvector_db: str = Field(
+        default="",
+        description="pgvector database name. When empty, reads MEM0_PGVECTOR_DB env var.",
+    )
+    mem0_pgvector_user: str = Field(
+        default="",
+        description="pgvector user. When empty, reads MEM0_PGVECTOR_USER env var.",
+    )
+    mem0_pgvector_password: str = Field(
+        default="",
+        description="pgvector password. When empty, reads MEM0_PGVECTOR_PASSWORD env var.",
+    )
+
+    # --- Collection ---
+    mem0_collection_name: str = Field(
+        default="",
+        description="mem0 collection/table name. "
+        "When empty, reads MEM0_COLLECTION_NAME env var or "
+        "defaults to 'aiwork_memory'.",
+    )
+
+    embedding_model_config: EmbeddingModelConfig = Field(
+        default_factory=EmbeddingModelConfig,
+    )
+
+    auto_memory_search_config: AutoMemorySearchConfig = Field(
+        default_factory=AutoMemorySearchConfig,
+    )
+
+    auto_memory_interval: int | None = Field(
+        default=None,
+        description="Auto memory every N user queries. None disables.",
+    )
+
+    dream_cron: str = Field(
+        default="0 23 * * *",
+        description="Cron expression for dream-based memory optimization",
+    )
+
+    summarize_when_compact: bool = Field(
+        default=True,
+        description="Whether to trigger summarization during compaction",
+    )
+
+    mem0_llm_model: str = Field(
+        default="",
+        description="LLM model for mem0 internal fact extraction. "
+        "When empty, reads MEM0_LLM_MODEL env var.",
+    )
+
+    mem0_llm_api_key: str = Field(
+        default="",
+        description="API key for mem0 internal LLM. "
+        "When empty, reads MEM0_LLM_API_KEY env var "
+        "(falls back to OPENAI_API_KEY).",
+    )
+
+    mem0_llm_base_url: str = Field(
+        default="",
+        description="Base URL for mem0 internal LLM. "
+        "When empty, reads MEM0_LLM_BASE_URL env var "
+        "(falls back to OPENAI_BASE_URL).",
+    )
+
+
 class ContextCompactConfig(BaseModel):
     """Context compaction configuration."""
 
@@ -941,10 +1050,20 @@ class AgentsRunningConfig(BaseModel):
         ),
     )
 
-    memory_manager_backend: str = Field(default="remelight")
+    memory_manager_backend: str = Field(
+        default_factory=lambda: EnvVarLoader.get_str(
+            "MEMORY_MANAGER_BACKEND",
+        ) or "mem0",
+        description="Memory manager backend. "
+        "Reads MEMORY_MANAGER_BACKEND env var, defaults to 'mem0'.",
+    )
 
     reme_light_memory_config: ReMeLightMemoryConfig = Field(
         default_factory=ReMeLightMemoryConfig,
+    )
+
+    mem0_memory_config: Mem0MemoryConfig = Field(
+        default_factory=Mem0MemoryConfig,
     )
 
     daily_memory_dir: str = Field(
@@ -960,6 +1079,20 @@ class AgentsRunningConfig(BaseModel):
             "the value is written back to the agent profile."
         ),
     )
+
+    def get_active_memory_config(
+        self,
+    ) -> "ReMeLightMemoryConfig | Mem0MemoryConfig":
+        """Return the memory config for the currently active backend.
+
+        Both ``ReMeLightMemoryConfig`` and ``Mem0MemoryConfig`` expose
+        ``auto_memory_search_config``, ``dream_cron``,
+        ``auto_memory_interval``, and ``summarize_when_compact`` fields,
+        so callers can access them without checking which backend is active.
+        """
+        if self.memory_manager_backend == "mem0":
+            return self.mem0_memory_config
+        return self.reme_light_memory_config
 
 
 class AgentsLLMRoutingConfig(BaseModel):
@@ -1731,10 +1864,9 @@ class SecurityConfig(BaseModel):
     allow_no_auth_hosts: List[str] = Field(
         default_factory=lambda: ["127.0.0.1", "::1"],
         description=(
-            "List of client IP addresses that can access API endpoints "
-            "without authentication. By default, localhost addresses "
-            "(127.0.0.1 for IPv4, ::1 for IPv6) are allowed. "
-            "WARNING: Only add trusted IP addresses to this list."
+            "DEPRECATED: No longer used since legacy auth was removed. "
+            "JWT authentication is identity-based (username/roles/permissions), "
+            "not host-based."
         ),
     )
 

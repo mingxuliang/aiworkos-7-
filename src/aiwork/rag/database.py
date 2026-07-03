@@ -146,7 +146,7 @@ async def init_pg_db() -> None:
     """Create tables and HNSW vector index.
 
     Called once during application startup when
-    ``AIWORK_PGVECTOR_DB_URL`` is configured and ``AUTH_MODE=jwt``.
+    ``AIWORK_PGVECTOR_DB_URL`` is configured.
     """
     engine = get_pg_engine()
 

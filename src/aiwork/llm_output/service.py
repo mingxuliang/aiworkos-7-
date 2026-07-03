@@ -373,6 +373,111 @@ async def download_output_file(
 
 
 # ---------------------------------------------------------------------------
+# Download to local (for chat URL resolution)
+# ---------------------------------------------------------------------------
+
+
+async def download_to_local(
+    output_id: int,
+    user_id: str,
+    dest_dir: str,
+) -> Optional[str]:
+    """Download an LLM output file from MinIO to a local directory.
+
+    Looks up the record (checks ``user_id`` + ``is_deleted=False``),
+    fetches the object from MinIO, and writes it to ``dest_dir`` with
+    the naming pattern ``{output_id}_{original_filename}``.
+
+    Returns the absolute local path on success, or ``None`` if the
+    record doesn't exist / is inaccessible / download fails.
+    """
+    import os as _os
+
+    from ..app.auth_jwt.database import get_session_factory
+
+    minio = get_llm_output_minio_client()
+    if minio is None:
+        logger.warning("LLM output MinIO client not available for download")
+        return None
+
+    factory = get_session_factory()
+    async with factory() as db:
+        # Step 1: check existence (without user_id, to distinguish
+        # "not found" from "permission denied").
+        q = select(LlmOutputRecord).where(
+            LlmOutputRecord.id == output_id,
+            LlmOutputRecord.is_deleted == False,  # noqa: E712
+        )
+        record = (await db.execute(q)).scalar_one_or_none()
+        if record is None:
+            return None  # not found / already deleted
+
+        # Step 2: check ownership
+        if record.user_id != user_id:
+            raise PermissionError(
+                f"User {user_id} does not own output {output_id}",
+            )
+
+        # Build local path: {dest_dir}/{filename}_{output_id}
+        _os.makedirs(dest_dir, exist_ok=True)
+        safe_name = _sanitize_filename(record.original_filename)
+        # Split stem and extension so the suffix stays after output_id
+        stem, ext = _os.path.splitext(safe_name)
+        local_path = _os.path.join(
+            dest_dir, f"{stem}_{output_id}{ext}",
+        )
+
+        # Already cached on disk — skip download
+        if _os.path.isfile(local_path):
+            logger.debug(
+                "LLM output file already cached: %s", local_path,
+            )
+            return _os.path.abspath(local_path)
+
+        try:
+            result = await minio.get_object(record.object_key)
+        except Exception:
+            logger.warning(
+                "Failed to fetch MinIO object for local download: %s",
+                record.object_key,
+                exc_info=True,
+            )
+            return None
+
+        if result is None:
+            logger.warning(
+                "MinIO object not found for local download: %s",
+                record.object_key,
+            )
+            return None
+
+        data, _content_type = result
+        try:
+            await asyncio.to_thread(
+                lambda: __write_file(local_path, data),
+            )
+        except Exception:
+            logger.warning(
+                "Failed to write LLM output file to disk: %s",
+                local_path,
+                exc_info=True,
+            )
+            return None
+
+        logger.info(
+            "Downloaded LLM output file to local: %s (%d bytes)",
+            local_path, len(data),
+        )
+        return _os.path.abspath(local_path)
+
+
+def __write_file(path: str, data: bytes) -> None:
+    """Synchronous helper — writes bytes to a file path."""
+    with open(path, "wb") as f:
+        f.write(data)
+
+
+# ---------------------------------------------------------------------------
 # Delete
 # ---------------------------------------------------------------------------
 

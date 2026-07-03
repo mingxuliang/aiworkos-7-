@@ -26,7 +26,6 @@ import { userTimezoneApi } from "./modules/userTimezone";
 import { languageApi } from "./modules/language";
 import { backupApi } from "./modules/backup";
 import { departmentApi } from "./modules/department";
-import { filesApi } from "./modules/files";
 import { usersApi } from "./modules/users";
 import { jwtRolesApi } from "./modules/jwtRoles";
 
@@ -100,5 +99,4 @@ export default api;
 
 // Export individual APIs for direct access
 export { agentsApi };
-export { filesApi };
 export { usersApi, jwtRolesApi };

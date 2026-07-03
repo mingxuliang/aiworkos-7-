@@ -194,7 +194,7 @@ class CronJobSpec(BaseModel):
                 raise ConfigurationException(
                     message="agent request input can't be empty",
                 )
-            # Keep request fields in sync with dispatch target and channel
+            # Keep request fields in sync with dispatch target and channel            
             target = self.dispatch.target
             self.request = self.request.model_copy(
                 update={

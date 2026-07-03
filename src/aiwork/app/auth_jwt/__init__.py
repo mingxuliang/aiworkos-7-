@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""JWT + Redis + MySQL authentication module.
-
-Activated when ``AIWORK_AUTH_MODE=jwt``.  When set to ``legacy``
-(the default), the original auth.json / HMAC flow is used instead.
-"""
+"""JWT + Redis + MySQL authentication module — the only auth mode."""
 
 # Lazy import to avoid pulling PyJWT/redis/sqlalchemy when not in jwt mode
 

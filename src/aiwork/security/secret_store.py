@@ -296,7 +296,7 @@ def reload_master_key_from_disk() -> None:
 # Fields that should be encrypted when persisting provider JSON.
 PROVIDER_SECRET_FIELDS: frozenset[str] = frozenset({"api_key"})
 
-# Fields that should be encrypted when persisting auth.json.
+# Fields that should be encrypted when persisting JWT auth data.
 AUTH_SECRET_FIELDS: frozenset[str] = frozenset({"jwt_secret"})
 
 

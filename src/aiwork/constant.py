@@ -340,10 +340,8 @@ MEDIA_UNSUPPORTED_PLACEHOLDER = (
 )
 
 # ---------------------------------------------------------------------------
-# JWT + Redis + MySQL authentication mode
+# JWT + Redis + MySQL authentication (always enabled)
 # ---------------------------------------------------------------------------
-
-AUTH_MODE = EnvVarLoader.get_str("AIWORK_AUTH_MODE", "legacy")
 
 JWT_SECRET = EnvVarLoader.get_str("AIWORK_JWT_SECRET", "")
 

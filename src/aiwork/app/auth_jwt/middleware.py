@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """JWT authentication middleware for FastAPI.
 
-Validates Bearer tokens on protected routes.  Shares the same public-path
-whitelist as the legacy auth middleware.
+Validates Bearer tokens on protected routes.
 """
 from __future__ import annotations
 
@@ -13,19 +12,15 @@ from typing import Optional
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ...constant import EnvVarLoader
 from .jwt_utils import decode_token
 from .internal_token import is_internal_token
 from .redis_client import get_session_user_info
 
 logger = logging.getLogger(__name__)
 
-# Paths that do NOT require authentication (same as legacy auth.py)
+# Paths that do NOT require authentication
 _PUBLIC_PATHS: frozenset[str] = frozenset(
     {
-        "/api/auth/login",
-        "/api/auth/status",
-        "/api/auth/register",
         "/api/auth/jwt/login",
         "/api/auth/jwt/status",
         "/api/auth/jwt/register",
@@ -96,17 +91,12 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
             request.state.roles = payload.get("roles", [])
         request.state.jti = jti
 
-        logger.debug(
-            "中间件日志：当前登录用户为 %s (%s) roles=%s",
-            request.state.user,
-            request.state.user_id,
-            request.state.roles,
-        )
         return await call_next(request)
 
     # ------------------------------------------------------------------
-    # Static entry-point so AuthMiddleware can delegate without
-    # instantiating a BaseHTTPMiddleware subclass (which requires `app`).
+    # Static utility method that can be used without instantiating
+    # the middleware (avoids the ``app`` argument required by
+    # :class:`BaseHTTPMiddleware`).
     # ------------------------------------------------------------------
     @staticmethod
     async def dispatch_static(

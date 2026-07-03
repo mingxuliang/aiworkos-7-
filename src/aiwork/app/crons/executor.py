@@ -137,8 +137,6 @@ class CronExecutor:
         # user id.
         req["owner_user_id"] = job.owner_user_id or ""
         req["session_id"] = target_session_id or f"cron:{job.id}"
-        # Ensure channel is always explicitly set so runner never falls back
-        # to DEFAULT_CHANNEL ("console") when the job targets another channel.
         req["channel"] = job.dispatch.channel
 
         output_parts: list[str] = []

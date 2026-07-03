@@ -36,7 +36,7 @@ from ..utils.logging import (
     LOG_FILE_PATH,
 )
 from ..utils.system_info import summarize_python_environment
-from .auth import AuthMiddleware
+from .auth_jwt.middleware import JWTAuthMiddleware
 from .routers import router as api_router, create_agent_scoped_router
 from .routers.agent_scoped import AgentContextMiddleware
 from .routers.approval import router as approval_router
@@ -287,17 +287,10 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
     # Everything here must be lightweight so the server starts quickly.
     # ================================================================
 
-    from .auth import auto_register_from_env
+    # Ensure internal CLI token exists
+    from .auth_jwt.internal_token import get_internal_token
 
-    auto_register_from_env()
-
-    # Ensure internal CLI token exists for JWT mode
-    from ..constant import AUTH_MODE
-
-    if AUTH_MODE.lower() == "jwt":
-        from .auth_jwt.internal_token import get_internal_token
-
-        get_internal_token()
+    get_internal_token()
 
     try:
         from ..utils.telemetry import (
@@ -360,29 +353,26 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
     # here so they are ready before the first API request arrives.
     # ================================================================
 
-    auth_mode = EnvVarLoader.get_str("AIWORK_AUTH_MODE", "legacy").lower()
-
     # -- JWT Auth (MySQL + Redis) --
-    if auth_mode == "jwt":
-        try:
-            from .auth_jwt.database import init_db
-            from .auth_jwt.redis_client import init_redis
+    try:
+        from .auth_jwt.database import init_db
+        from .auth_jwt.redis_client import init_redis
 
-            await init_db()
-            await init_redis()
-            logger.info("JWT auth initialized (MySQL + Redis)")
-        except Exception as exc:
-            logger.error(
-                "JWT auth initialization failed: %s",
-                exc,
-                exc_info=True,
-            )
+        await init_db()
+        await init_redis()
+        logger.info("JWT auth initialized (MySQL + Redis)")
+    except Exception as exc:
+        logger.error(
+            "JWT auth initialization failed: %s",
+            exc,
+            exc_info=True,
+        )
 
     # -- MinIO File Library --
     minio_endpoint = EnvVarLoader.get_str(
         "AIWORK_MINIO_ENDPOINT", "",
     ).strip()
-    if minio_endpoint and auth_mode == "jwt":
+    if minio_endpoint:
         try:
             from ..file_library.minio_client import init_minio_client
             from ..file_library.cleanup import run_cleanup_loop
@@ -429,24 +419,9 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
                 exc_info=True,
             )
 
-    # -- LLM Output MinIO (独立于 RAG，只需 JWT 模式 + MinIO 端点) --
-    if auth_mode == "jwt" and EnvVarLoader.get_str("AIWORK_MINIO_ENDPOINT", "").strip():
-        try:
-            from ..llm_output.minio_client import init_llm_output_minio
-            llm_output_client = await init_llm_output_minio()
-            if llm_output_client:
-                logger.info(
-                    "LLM output MinIO initialized (bucket=%s)",
-                    llm_output_client.bucket,
-                )
-            else:
-                logger.info("LLM output MinIO skipped (endpoint not configured)")
-        except Exception as exc:
-            logger.error("LLM output MinIO initialization failed: %s", exc, exc_info=True)
-
     # -- pgvector RAG Knowledge Base --
     pgvector_url = EnvVarLoader.get_str("AIWORK_PGVECTOR_DB_URL", "").strip()
-    if pgvector_url and auth_mode == "jwt":
+    if pgvector_url:
         try:
             from ..rag import is_rag_available
             if is_rag_available():
@@ -457,6 +432,17 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
                 # Initialize RAG MinIO client (separate buckets)
                 from ..rag.rag_minio import init_rag_minio
                 rag_minio = await init_rag_minio()
+
+                # Initialize LLM output MinIO client (separate bucket)
+                from ..llm_output.minio_client import init_llm_output_minio
+                llm_output_client = await init_llm_output_minio()
+                if llm_output_client:
+                    logger.info(
+                        "LLM output MinIO initialized (bucket=%s)",
+                        llm_output_client.bucket,
+                    )
+                else:
+                    logger.info("LLM output MinIO skipped (endpoint not configured)")
 
                 # Recover stale documents stuck in processing/pending
                 if rag_minio is not None:
@@ -826,16 +812,14 @@ async def lifespan(  # pylint: disable=too-many-statements,too-many-branches
             logger.error(f"Error closing RAG MinerU client: {e}")
 
         # ---- JWT Auth cleanup ----
-        auth_mode = EnvVarLoader.get_str("AIWORK_AUTH_MODE", "legacy").lower()
-        if auth_mode == "jwt":
-            try:
-                from .auth_jwt.database import close_db
-                from .auth_jwt.redis_client import close_redis
+        try:
+            from .auth_jwt.database import close_db
+            from .auth_jwt.redis_client import close_redis
 
-                await close_db()
-                await close_redis()
-            except Exception as e:
-                logger.error(f"Error closing JWT auth resources: {e}")
+            await close_db()
+            await close_redis()
+        except Exception as e:
+            logger.error(f"Error closing JWT auth resources: {e}")
 
         logger.info("Application shutdown complete")
 
@@ -889,7 +873,7 @@ else:
 # Add agent context middleware for agent-scoped routes
 app.add_middleware(AgentContextMiddleware)
 
-app.add_middleware(AuthMiddleware)
+app.add_middleware(JWTAuthMiddleware)
 
 # Apply CORS middleware if CORS_ORIGINS is set
 if CORS_ORIGINS:

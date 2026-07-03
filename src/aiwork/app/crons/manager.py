@@ -293,6 +293,24 @@ class CronManager:
         The actual execution happens asynchronously; errors are logged
         and reflected in the job state but NOT propagated to the caller.
         """
+        # Handle built-in system jobs that live in the scheduler, not
+        # the user-visible job repository.
+        if job_id == DREAM_JOB_ID:
+            logger.info(
+                "Manual trigger of built-in dream job for agent %s",
+                self._agent_id,
+            )
+            task = asyncio.create_task(
+                self._dream_callback(),
+                name=f"cron-run-{job_id}",
+            )
+            task.add_done_callback(
+                lambda t: logger.info(
+                    "Dream job completed for agent %s", self._agent_id,
+                ) if not t.cancelled() and not t.exception() else None,
+            )
+            return
+
         job = await self._repo.get_job(job_id)
         if not job:
             raise KeyError(f"Job not found: {job_id}")

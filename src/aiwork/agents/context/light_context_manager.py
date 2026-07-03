@@ -683,7 +683,7 @@ class LightContextManager(BaseContextManager):
             return None
 
         agent_config = load_agent_config(self.agent_id)
-        rlmc = agent_config.running.reme_light_memory_config
+        rlmc = agent_config.running.get_active_memory_config()
         ms = rlmc.auto_memory_search_config
 
         if not ms.enabled:
@@ -924,7 +924,7 @@ class LightContextManager(BaseContextManager):
             )
             logger.info(f"Marked {updated_count} messages as compacted")
 
-            rlmc = running_config.reme_light_memory_config
+            rlmc = running_config.get_active_memory_config()
             if messages_to_compact and rlmc.summarize_when_compact:
                 memory_manager.add_summarize_task(
                     messages=messages_to_compact,
@@ -990,7 +990,7 @@ class LightContextManager(BaseContextManager):
                 return None
 
             agent_config = load_agent_config(self.agent_id)
-            rlmc = agent_config.running.reme_light_memory_config
+            rlmc = agent_config.running.get_active_memory_config()
             auto_memory_interval = rlmc.auto_memory_interval
 
             if auto_memory_interval is None or auto_memory_interval <= 0:

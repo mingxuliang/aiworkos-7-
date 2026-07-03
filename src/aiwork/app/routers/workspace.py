@@ -27,7 +27,7 @@ from ...config import (
     AgentsRunningConfig,
 )
 from ...config.config import load_agent_config, save_agent_config
-from ...agents.memory.agent_md_manager import AgentMdManager
+from ...agents.memory.reme_light.agent_md_manager import AgentMdManager
 from ...agents.templates import get_workspace_md_template_id
 from ...agents.utils import copy_workspace_md_files
 from ...constant import BUILTIN_QA_AGENT_ID, SUPPORTED_AGENT_LANGUAGES

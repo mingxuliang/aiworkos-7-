@@ -18,7 +18,6 @@ from ..runner.api import router as runner_router
 from .console import router as console_router
 from .token_usage import router as token_usage_router
 from .agent_stats import router as agent_stats_router
-from .auth import router as auth_router
 from .messages import router as messages_router
 from .files import router as files_router
 from .settings import router as settings_router
@@ -45,7 +44,6 @@ router.include_router(workspace_router)
 router.include_router(envs_router)
 router.include_router(token_usage_router)
 router.include_router(agent_stats_router)
-router.include_router(auth_router)
 router.include_router(files_router)
 router.include_router(settings_router)
 router.include_router(plugins_router)
@@ -53,28 +51,27 @@ router.include_router(backup_router)
 router.include_router(plan_router)
 router.include_router(rss_proxy_router)
 
-# Conditionally register JWT auth routes when AIWORK_AUTH_MODE=jwt
+# Always register JWT auth routes
+from ..auth_jwt import get_router
+
+router.include_router(get_router())
+
+from .department import router as department_router
+
+router.include_router(department_router)
+
+# File library — optional, only when MinIO is configured
 from ...constant import EnvVarLoader
 
-if EnvVarLoader.get_str("AIWORK_AUTH_MODE", "legacy").lower() == "jwt":
-    from ..auth_jwt import get_router
+if EnvVarLoader.get_str("AIWORK_MINIO_ENDPOINT", "").strip():
+    from ...file_library import is_minio_available
+    if is_minio_available():
+        from .file_library import router as file_library_router
+        router.include_router(file_library_router)
 
-    router.include_router(get_router())
-
-    from .department import router as department_router
-
-    router.include_router(department_router)
-
-    # File library — optional, only when MinIO is configured
-    if EnvVarLoader.get_str("AIWORK_MINIO_ENDPOINT", "").strip():
-        from ...file_library import is_minio_available
-        if is_minio_available():
-            from .file_library import router as file_library_router
-            router.include_router(file_library_router)
-
-            # Presale template library — same conditions as file library
-            from .presale_template import router as presale_template_router
-            router.include_router(presale_template_router)
+        # Presale template library — same conditions as file library
+        from .presale_template import router as presale_template_router
+        router.include_router(presale_template_router)
 
     # LLM output files — gated on MinIO endpoint (same as file library).
     # The MinIO client is initialised at startup (Phase 1.5), NOT at import
@@ -83,12 +80,12 @@ if EnvVarLoader.get_str("AIWORK_AUTH_MODE", "legacy").lower() == "jwt":
         from .llm_output import router as llm_output_router
         router.include_router(llm_output_router)
 
-    # RAG Knowledge Base — optional, when pgvector is configured
-    if EnvVarLoader.get_str("AIWORK_PGVECTOR_DB_URL", "").strip():
-        from ...rag import is_rag_available
-        if is_rag_available():
-            from .rag import router as rag_router
-            router.include_router(rag_router)
+# RAG Knowledge Base — optional, when pgvector is configured
+if EnvVarLoader.get_str("AIWORK_PGVECTOR_DB_URL", "").strip():
+    from ...rag import is_rag_available
+    if is_rag_available():
+        from .rag import router as rag_router
+        router.include_router(rag_router)
 
 
 def create_agent_scoped_router() -> APIRouter:

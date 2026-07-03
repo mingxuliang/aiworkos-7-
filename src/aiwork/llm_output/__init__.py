@@ -17,6 +17,7 @@ from .service import (
     upload_and_record,
     list_user_outputs,
     get_output_with_url,
+    download_to_local,
     soft_delete_output,
     batch_soft_delete_outputs,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "upload_and_record",
     "list_user_outputs",
     "get_output_with_url",
+    "download_to_local",
     "soft_delete_output",
     "batch_soft_delete_outputs",
 ]

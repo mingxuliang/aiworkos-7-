@@ -57,7 +57,7 @@ from .tools import (
     view_video,
     write_file,
 )
-from .utils import process_file_and_media_blocks_in_message
+from .utils import process_file_and_media_blocks_in_message, process_llm_output_urls_in_message
 from ..constant import (
     MEDIA_UNSUPPORTED_PLACEHOLDER,
     WORKING_DIR,
@@ -1317,6 +1317,13 @@ class AiWorkAgent(ToolGuardMixin, ReActAgent):
         # Process file and media blocks in messages
         if msg is not None:
             await process_file_and_media_blocks_in_message(msg)
+
+        # Resolve /api/llm-outputs/{id}/download URLs in text blocks.
+        # Cache goes under the user working dir, not the agent workspace.
+        if msg is not None:
+            user_root = self._user_working_dir or sandbox_root
+            cache_dir = str(Path(user_root) / ".llm_output_cache")
+            await process_llm_output_urls_in_message(msg, cache_dir)
 
         # Check if message is a system command
         last_msg = msg[-1] if isinstance(msg, list) else msg

@@ -133,7 +133,6 @@ class LazyGroup(click.Group):
             "shutdown_cmd",
             ".shutdown_cmd",
         ),
-        "auth": ("aiwork.cli.auth_cmd", "auth_group", ".auth_cmd"),
         "agents": ("aiwork.cli.agents_cmd", "agents_group", ".agents_cmd"),
         "agent": ("aiwork.cli.agents_cmd", "agents_group", ".agents_cmd"),
         "plugin": (

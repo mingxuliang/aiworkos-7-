@@ -33,6 +33,7 @@ from .file_handling import (
 # Message processing
 from .message_processing import (
     process_file_and_media_blocks_in_message,
+    process_llm_output_urls_in_message,
 )
 
 # Message request normalizer
@@ -76,6 +77,7 @@ __all__ = [
     "download_file_from_url",
     # Message processing
     "process_file_and_media_blocks_in_message",
+    "process_llm_output_urls_in_message",
     # Message request normalizer
     "normalize_messages_for_model_request",
     # Registry

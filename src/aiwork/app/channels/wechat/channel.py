@@ -23,6 +23,7 @@ import os
 import stat
 import sys
 import threading
+import time
 from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -140,6 +141,9 @@ class WeChatChannel(BaseChannel):
 
         # Cursor for long-polling (get_updates_buf)
         self._cursor: str = ""
+
+        # Throttle getupdates timeout debug log to once per 30s
+        self._last_timeout_log_time: float = 0.0
 
         # Message dedup (context_token or derived id)
         self._processed_ids: OrderedDict[str, None] = OrderedDict()
@@ -525,10 +529,16 @@ class WeChatChannel(BaseChannel):
                     # ret=-1 is normal long-poll timeout (no new messages)
                     if ret != 0 and not msgs:
                         if ret == -1:
-                            logger.debug(
-                                "wechat getupdates timeout (ret=-1)"
-                                ", continue polling",
-                            )
+                            now = time.time()
+                            if now - self._last_timeout_log_time >= 30:
+                                logger.debug(
+                                    "wechat getupdates timeout (ret=-1)"
+                                    ", continue polling",
+                                )
+                                self._last_timeout_log_time = now
+                            # Prevent tight loop when server returns
+                            # immediately instead of long-polling
+                            await asyncio.sleep(0.5)
                         else:
                             logger.warning(
                                 "wechat getupdates non-zero ret=%s"

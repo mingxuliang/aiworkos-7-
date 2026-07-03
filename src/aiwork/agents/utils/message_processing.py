@@ -8,7 +8,10 @@ This module handles:
 """
 import asyncio
 import logging
+import mimetypes
 import os
+import re
+import time
 import urllib.parse
 from pathlib import Path
 from typing import Optional
@@ -421,5 +424,271 @@ async def process_file_and_media_blocks_in_message(msg) -> None:
                 )
                 text_block = {"type": "text", "text": text}
                 message.content.insert(i + 1, text_block)
+
+
+# ---------------------------------------------------------------------------
+# LLM output URL resolution
+# ---------------------------------------------------------------------------
+
+# Pattern to match llm-output download URLs in chat text.
+# Handles:
+#   /api/llm-outputs/429/download
+#   /api/llm-outputs/429/download?token=eyJ...
+#   http://localhost:5173/api/llm-outputs/429/download?token=eyJ...
+# The full match (group 0) is replaced so no URL fragments remain.
+_LLM_OUTPUT_URL_RE = re.compile(
+    r"(?:https?://\S*?)?"                 # optional http(s)://host:port prefix
+    r"/api/llm-outputs/(\d+)/download"    # core path + capture output_id
+    r"(?:\?\S*)?",                        # optional ?query string
+)
+
+CACHE_TTL_SECONDS = 7 * 24 * 3600  # 7 days
+CLEANUP_INTERVAL_SECONDS = 3600    # debounce: 1 hour
+
+_last_cleanup_at: float = 0.0
+
+
+async def _cleanup_expired_cache(cache_dir: Path, ttl: int) -> None:
+    """Async delete files in *cache_dir* whose mtime exceeds *ttl* seconds."""
+    try:
+        if not cache_dir.is_dir():
+            return
+        now = time.time()
+        for f in cache_dir.iterdir():
+            if f.is_file() and now - f.stat().st_mtime > ttl:
+                await asyncio.to_thread(f.unlink, missing_ok=True)
+    except Exception:
+        logger.debug("Cache cleanup failed", exc_info=True)
+
+
+def _schedule_cache_cleanup(cache_dir: Path) -> None:
+    """Fire-and-forget cache cleanup with a 1-hour debounce."""
+    global _last_cleanup_at
+    now = time.time()
+    if now - _last_cleanup_at < CLEANUP_INTERVAL_SECONDS:
+        return
+    _last_cleanup_at = now
+    asyncio.create_task(_cleanup_expired_cache(cache_dir, CACHE_TTL_SECONDS))
+
+
+def _mime_to_block_type(mime_type: str) -> str:
+    """Map a MIME type to a content block type."""
+    if not mime_type:
+        return "file"
+    if mime_type.startswith("image/"):
+        return "image"
+    if mime_type.startswith("video/"):
+        return "video"
+    if mime_type.startswith("audio/"):
+        return "audio"
+    return "file"
+
+
+def _build_local_block(
+    block_type: str,
+    local_path: str,
+    filename: str,
+    mime_type: str,
+) -> dict:
+    """Build a content block for a locally-available file.
+
+    Follows the same format as :func:`_update_block_with_local_path`.
+    """
+    if block_type == "file":
+        return {
+            "type": "file",
+            "source": local_path,
+            "filename": filename or os.path.basename(local_path),
+        }
+    if block_type == "audio":
+        return {
+            "type": "audio",
+            "source": {
+                "type": "url",
+                "url": Path(local_path).as_uri(),
+                "media_type": mime_type or _media_type_from_path(local_path),
+            },
+        }
+    # image / video
+    return {
+        "type": block_type,
+        "source": {
+            "type": "url",
+            "url": Path(local_path).as_uri(),
+        },
+    }
+
+
+async def process_llm_output_urls_in_message(
+    msg,
+    cache_dir: str,
+) -> None:
+    """Scan text blocks for ``/api/llm-outputs/{id}/download`` URLs,
+    resolve them to local files (cache or MinIO download), and replace
+    each URL with a content block the LLM can consume.
+
+    Args:
+        msg: A single ``Msg`` or a list of ``Msg`` objects.
+        cache_dir: Local directory for cached downloads.
+    """
+    from ...llm_output import download_to_local
+    from ...app.agent_context import get_current_user_id
+
+    messages = (
+        [msg] if isinstance(msg, Msg) else msg if isinstance(msg, list) else []
+    )
+
+    cache_path = Path(cache_dir)
+
+    # Schedule a lazy cleanup in the background (debounced)
+    _schedule_cache_cleanup(cache_path)
+
+    user_id = get_current_user_id()
+    if not user_id:
+        logger.warning(
+            "Cannot resolve LLM output URLs without a current user_id",
+        )
+        return
+
+    for message in messages:
+        if not isinstance(message, Msg):
+            continue
+        if not isinstance(message.content, list):
+            continue
+
+        # Track which output_ids we've already handled in this message
+        seen_ids: set[int] = set()
+        # Collected blocks to append at the end of the message content.
+        # Each entry is (insert_after_position, block_dict).
+        appended_blocks: list[tuple[int, dict]] = []
+
+        for i, block in enumerate(message.content):
+            if not isinstance(block, dict):
+                continue
+            if block.get("type") != "text":
+                continue
+
+            text: str = block.get("text", "")
+            if not text:
+                continue
+
+            matches = list(_LLM_OUTPUT_URL_RE.finditer(text))
+            if not matches:
+                continue
+
+            for match in matches:
+                output_id = int(match.group(1))
+
+                if output_id in seen_ids:
+                    continue
+                seen_ids.add(output_id)
+
+                # --- Resolve file ---
+                local_path: Optional[str] = None
+                fallback_presigned_url: Optional[str] = None
+                fallback_filename: str = f"file_{output_id}"
+
+                permission_denied = False
+                try:
+                    local_path = await download_to_local(
+                        output_id, user_id, str(cache_path),
+                    )
+                except PermissionError:
+                    permission_denied = True
+                    local_path = None
+                    logger.debug(
+                        "Permission denied for output_id=%d user=%s",
+                        output_id, user_id,
+                    )
+                except Exception:
+                    logger.debug(
+                        "download_to_local failed for output_id=%d",
+                        output_id, exc_info=True,
+                    )
+
+                if local_path is None and not permission_denied:
+                    # Try to generate a presigned URL fallback.
+                    try:
+                        from ...llm_output.minio_client import (
+                            get_llm_output_minio_client,
+                        )
+                        from ...app.auth_jwt.database import (
+                            get_session_factory,
+                        )
+                        from ...llm_output.models import LlmOutputRecord
+                        from sqlalchemy import select
+
+                        factory = get_session_factory()
+                        async with factory() as db:
+                            q = select(LlmOutputRecord).where(
+                                LlmOutputRecord.id == output_id,
+                                LlmOutputRecord.user_id == user_id,
+                                LlmOutputRecord.is_deleted == False,  # noqa: E712
+                            )
+                            record = (await db.execute(q)).scalar_one_or_none()
+
+                        if record is not None:
+                            fallback_filename = record.original_filename
+                            minio = get_llm_output_minio_client()
+                            if minio is not None:
+                                fallback_presigned_url = (
+                                    await minio.presigned_get_url(
+                                        record.object_key,
+                                    )
+                                )
+                    except Exception:
+                        logger.debug(
+                            "Presigned URL fallback failed for output_id=%d",
+                            output_id, exc_info=True,
+                        )
+
+                # --- Append notice / content block ---
+                # Original text is NEVER modified.  File info is delivered
+                # via additional blocks so the user's chat history stays
+                # intact.
+                if local_path is not None:
+                    mime_type, _ = mimetypes.guess_type(local_path)
+                    block_type = _mime_to_block_type(mime_type or "")
+                    filename = os.path.basename(local_path)
+
+                    if block_type == "file":
+                        # Formatters skip "file" blocks — embed path in a
+                        # text notice so the LLM can use read_file.
+                        appended_blocks.append((i, {
+                            "type": "text",
+                            "text": (
+                                f"[文件引用] {filename}"
+                                f" 已下载到 {local_path}"
+                            ),
+                        }))
+                    else:
+                        # image / video / audio → formatter handles natively
+                        content_block = _build_local_block(
+                            block_type, local_path, filename, mime_type or "",
+                        )
+                        appended_blocks.append((i, content_block))
+                elif fallback_presigned_url is not None:
+                    appended_blocks.append((i, {
+                        "type": "text",
+                        "text": (
+                            f"[文件引用] {fallback_filename}"
+                            f" 可通过以下链接获取: {fallback_presigned_url}"
+                        ),
+                    }))
+                elif permission_denied:
+                    appended_blocks.append((i, {
+                        "type": "text",
+                        "text": "[文件引用] 没有文件加载权限",
+                    }))
+                else:
+                    appended_blocks.append((i, {
+                        "type": "text",
+                        "text": f"[文件引用] 文件不可用: {fallback_filename}",
+                    }))
+
+        # Insert appended blocks after their originating text block.
+        # Process in reverse so earlier insertions don't shift later indices.
+        for pos, new_block in reversed(appended_blocks):
+            message.content.insert(pos + 1, new_block)
 
 

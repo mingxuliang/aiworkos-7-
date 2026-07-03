@@ -109,6 +109,16 @@ class Workspace:
         return self._service_manager.services.get("memory_manager")
 
     @property
+    def memory_manager_backend(self) -> str:
+        """Get memory manager backend name from env var.
+
+        Reads ``MEMORY_MANAGER_BACKEND`` from .env, defaults to ``"remelight"``.
+        """
+        from ...constant import EnvVarLoader
+
+        return EnvVarLoader.get_str("MEMORY_MANAGER_BACKEND") or "mem0"
+
+    @property
     def context_manager(self):
         """Get context manager instance from ServiceManager."""
         return self._service_manager.services.get("context_manager")
@@ -257,11 +267,18 @@ class Workspace:
 
             user_dir = self.get_user_working_dir(user_id)
             backend_class = get_memory_manager_backend(
-                self._config.running.memory_manager_backend,
+                self.memory_manager_backend,
             )
+            extra_args = {}
+            if self.memory_manager_backend == "mem0":
+                extra_args["config"] = (
+                    self._config.running.mem0_memory_config
+                )
+                extra_args["user_id"] = user_id
             mm = backend_class(
                 working_dir=str(user_dir),
                 agent_id=self.agent_id,
+                **extra_args,
             )
             await mm.start()
             self._user_memory_managers[user_id] = (mm, time.monotonic())
@@ -487,11 +504,18 @@ class Workspace:
             ServiceDescriptor(
                 name="memory_manager",
                 service_class=lambda ws: get_memory_manager_backend(
-                    ws._config.running.memory_manager_backend,
+                    ws.memory_manager_backend,
                 ),
                 init_args=lambda ws: {
                     "working_dir": str(ws.workspace_dir),
                     "agent_id": ws.agent_id,
+                    **(
+                        {
+                            "config": ws._config.running.mem0_memory_config,
+                        }
+                        if ws.memory_manager_backend == "mem0"
+                        else {}
+                    ),
                 },
                 post_init=lambda ws, mm: setattr(
                     ws._service_manager.services["runner"],

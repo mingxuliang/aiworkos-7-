@@ -189,12 +189,21 @@ async def run_job(
     request: Request,
     mgr: CronManager = Depends(get_cron_manager),
 ):
-    # 所有权检查
-    job = await mgr.get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="job not found")
+    BUILTIN_JOB_IDS = {"_dream", "_heartbeat"}
     current_user_id = await _get_jwt_user_id(request)
-    _check_cron_ownership(job, current_user_id)
+
+    if job_id in BUILTIN_JOB_IDS:
+        # Built-in jobs are agent-scoped (not user-scoped), so there is
+        # no per-job owner to check.  Require the caller to be
+        # authenticated — the agent identity is already resolved from
+        # the request context.
+        if not current_user_id:
+            raise HTTPException(status_code=401, detail="Authentication required")
+    else:
+        job = await mgr.get_job(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="job not found")
+        _check_cron_ownership(job, current_user_id)
     try:
         await mgr.run_job(job_id)
     except KeyError as e:

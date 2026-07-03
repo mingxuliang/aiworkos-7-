@@ -118,7 +118,7 @@ async def _migrate_department_schema(engine) -> None:
 async def init_db() -> None:
     """Create tables and seed default roles / permissions.
 
-    Called once during application startup when ``AIWORK_AUTH_MODE=jwt``.
+    Called once during application startup.
     """
     engine = get_engine()
 

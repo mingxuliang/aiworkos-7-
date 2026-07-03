@@ -44,8 +44,6 @@ from ...department.service import (
     set_user_department,
     get_user_department,
 )
-from ...constant import AUTH_MODE
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth/jwt", tags=["auth-jwt"])
@@ -298,8 +296,8 @@ async def jwt_register(
 async def jwt_status():
     """Check JWT authentication mode status."""
     return JWTStatusResponse(
-        mode=AUTH_MODE,
-        enabled=AUTH_MODE == "jwt",
+        mode="jwt",
+        enabled=True,
     )
 
 
