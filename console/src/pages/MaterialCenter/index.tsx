@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, type CSSProperties } from "react";
-import { Spin, message } from "antd";
+import { Spin } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MaterialSidebar from "./components/MaterialSidebar";
@@ -13,6 +13,7 @@ import { llmOutputsApi, type LlmOutputItem } from "@/api/modules/llmOutputs";
 import { chatApi } from "@/api/modules/chat";
 import { buildAuthHeaders } from "@/api/authHeaders";
 import { usePendingChatFilesStore } from "@/stores/pendingChatFilesStore";
+import { useAppMessage } from "@/hooks/useAppMessage";
 import "@/styles/migrated-pages.css";
 
 type ViewMode = "grid" | "list";
@@ -93,6 +94,7 @@ async function loadAllLlmOutputs(): Promise<{ items: LlmOutputItem[]; total: num
 
 export default function MaterialCenterPage() {
   const { t } = useTranslation();
+  const { message } = useAppMessage();
   const {
     loading,
     error,
@@ -209,19 +211,19 @@ export default function MaterialCenterPage() {
   const handleAddSelectedToDialog = useCallback(async () => {
     const files = sorted.filter((file) => selectedIds.includes(file.id));
     if (files.length === 0) {
-      void message.info("请先勾选要添加到对话中的文件");
+      message.info("请先勾选要添加到对话中的文件");
       return;
     }
 
     const key = "add-selected-material-files";
     try {
-      void message.loading({ content: `正在添加 ${files.length} 个文件到对话中...`, key, duration: 0 });
+      message.loading({ content: `正在添加 ${files.length} 个文件到对话中...`, key, duration: 0 });
       await Promise.all(files.map((file) => prepareMaterialFileForChat(file)));
       clearSelection();
-      void message.success({ content: `已添加 ${files.length} 个文件到对话中`, key, duration: 2 });
+      message.success({ content: `已添加 ${files.length} 个文件到对话中`, key, duration: 2 });
       navigate("/chat");
     } catch (e) {
-      void message.error({ content: e instanceof Error ? e.message : "批量添加到对话失败", key });
+      message.error({ content: e instanceof Error ? e.message : "批量添加到对话失败", key });
     }
   }, [clearSelection, navigate, prepareMaterialFileForChat, selectedIds, sorted]);
 
@@ -273,7 +275,7 @@ export default function MaterialCenterPage() {
             type="button"
             onClick={() => {
               if (selectedFileCount === 0) {
-                void message.info("请先勾选要添加到对话中的文件");
+                message.info("请先勾选要添加到对话中的文件");
                 return;
               }
               if (isOutputsView) {
@@ -400,16 +402,23 @@ export default function MaterialCenterPage() {
                 <button
                   type="button"
                   onClick={() => void handleDeleteSelected()}
-                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 10px", fontSize: 12, background: "#fef2f2", color: "#ef4444", border: "none", borderRadius: SYS.radiusSM, cursor: "pointer" }}
+                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 10px", fontSize: 12, background: "#fef2f2", color: "#ef4444", border: "1px solid #fca5a5", borderRadius: SYS.radiusSM, cursor: "pointer" }}
                 >
-                  <i className="ri-delete-bin-line" />删除
+                  <i className="ri-delete-bin-line" />批量删除
                 </button>
                 <button
                   type="button"
                   onClick={() => void handleDownloadSelected()}
-                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 10px", fontSize: 12, background: "#f8fafc", color: SYS.textSub, border: "none", borderRadius: SYS.radiusSM, cursor: "pointer" }}
+                  style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 10px", fontSize: 12, background: "#f8fafc", color: SYS.textSub, border: `1px solid ${SYS.borderBase}`, borderRadius: SYS.radiusSM, cursor: "pointer" }}
                 >
                   <i className="ri-download-line" />批量下载
+                </button>
+                <button
+                  type="button"
+                  onClick={() => clearSelection()}
+                  style={{ padding: "3px 10px", fontSize: 12, background: "transparent", color: SYS.textSub, border: "none", cursor: "pointer" }}
+                >
+                  取消选择
                 </button>
               </div>
             )}
@@ -439,9 +448,10 @@ export default function MaterialCenterPage() {
                 type="button"
                 onClick={() => (allSelected ? clearSelection() : selectAll(sorted.map((f) => f.id)))}
                 style={{
-                  width: 16, height: 16, borderRadius: 4, border: `2px solid ${allSelected ? SYS.primary : "#cbd5e1"}`,
-                  background: allSelected ? SYS.primary : "transparent", cursor: "pointer",
+                  width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${allSelected ? SYS.primary : "#94a3b8"}`,
+                  background: allSelected ? SYS.primary : "#fff", cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: allSelected ? "0 0 0 2px rgba(59,130,246,0.14)" : "0 1px 2px rgba(15,23,42,0.10)",
                 }}
               >
                 {allSelected && <i className="ri-check-line" style={{ fontSize: 10, color: "#fff" }} />}

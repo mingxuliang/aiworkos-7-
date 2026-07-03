@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { message, Spin } from 'antd';
+import { Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { llmOutputsApi, type LlmOutputItem } from '@/api/modules/llmOutputs';
 import { chatApi } from '@/api/modules/chat';
 import { buildAuthHeaders } from '@/api/authHeaders';
 import { getApiUrl } from '@/api/config';
 import { usePendingChatFilesStore } from '@/stores/pendingChatFilesStore';
+import { useAppMessage } from '@/hooks/useAppMessage';
 import type { MaterialFile } from '@/mocks/materialCenter';
 import FilePreviewModal from './FilePreviewModal';
 import { formatFileSize, mimeToFileType } from '../materialAdapter';
@@ -142,29 +143,29 @@ function OutputCard({ item, viewMode, selected, onSelect, onPreview, onDownload,
   if (viewMode === 'list') {
     return (
       <div
+        onClick={() => onSelect(item.id)}
         style={{
           display: 'flex', alignItems: 'center', gap: 16,
           borderRadius: SYS.radius,
-          border: `1px solid ${selected ? '#c7d2fe' : SYS.borderBase}`,
+          border: `1.5px solid ${selected ? SYS.primary : SYS.borderBase}`,
           background: selected ? SYS.primaryBg : SYS.bgCard,
-          padding: '10px 16px', cursor: 'default',
-          fontFamily: SYS.fontFamily, transition: 'border-color 0.15s',
+          padding: '10px 16px', cursor: 'pointer',
+          fontFamily: SYS.fontFamily, transition: 'border-color 0.15s, background 0.15s',
+          boxShadow: selected ? '0 0 0 3px rgba(99,102,241,0.10)' : 'none',
         }}
         onMouseEnter={(e) => { if (!selected) e.currentTarget.style.borderColor = '#c7d2fe'; }}
         onMouseLeave={(e) => { if (!selected) e.currentTarget.style.borderColor = SYS.borderBase; }}
       >
-        <button
-          type="button" onClick={() => onSelect(item.id)}
-          style={{
-            width: 16, height: 16, flexShrink: 0, borderRadius: 4,
-            border: `2px solid ${selected ? SYS.primary : '#cbd5e1'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: selected ? SYS.primary : 'transparent',
-            cursor: 'pointer', padding: 0, transition: 'all 0.15s',
-          }}
-        >
-          {selected && <i className="ri-check-line" style={{ fontSize: 10, color: '#fff' }} />}
-        </button>
+        {/* Selected indicator */}
+        <div style={{
+          width: 18, height: 18, flexShrink: 0, borderRadius: '50%',
+          background: selected ? SYS.primary : 'transparent',
+          border: `1.5px solid ${selected ? SYS.primary : '#cbd5e1'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.15s',
+        }}>
+          {selected && <i className="ri-check-line" style={{ fontSize: 11, color: '#fff' }} />}
+        </div>
 
         <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: SYS.radiusSM, display: 'flex', alignItems: 'center', justifyContent: 'center', background: cfg.bg }}>
           <i className={cfg.icon} style={{ fontSize: 22, color: cfg.iconColor }} />
@@ -190,7 +191,11 @@ function OutputCard({ item, viewMode, selected, onSelect, onPreview, onDownload,
         <span style={{ fontSize: 11, color: SYS.textSub, width: 72, textAlign: 'right', flexShrink: 0 }}>{formatFileSize(item.file_size)}</span>
         <span style={{ fontSize: 11, color: SYS.textMuted, width: 128, textAlign: 'right', flexShrink: 0 }}>{formatDate(item.created_at)}</span>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        {/* Actions — stop propagation so they don't toggle selection */}
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {[
             { icon: 'ri-eye-line', title: '预览', onClick: () => onPreview(item), hoverColor: SYS.primary, hoverBg: SYS.primaryBg },
             { icon: 'ri-chat-upload-line', title: '添加到任务', onClick: () => onAddToTask(item), hoverColor: '#8b5cf6', hoverBg: '#f5f3ff' },
@@ -213,28 +218,27 @@ function OutputCard({ item, viewMode, selected, onSelect, onPreview, onDownload,
   // Grid mode
   return (
     <div
+      onClick={() => onSelect(item.id)}
       style={{
         position: 'relative', display: 'flex', flexDirection: 'column',
         borderRadius: SYS.radius, overflow: 'hidden',
-        border: `1px solid ${selected ? '#c7d2fe' : SYS.borderBase}`,
+        border: `1.5px solid ${selected ? SYS.primary : SYS.borderBase}`,
         background: selected ? SYS.primaryBg : SYS.bgCard,
-        fontFamily: SYS.fontFamily, transition: 'border-color 0.15s, box-shadow 0.15s',
+        fontFamily: SYS.fontFamily, transition: 'border-color 0.15s, box-shadow 0.15s, background 0.15s',
+        cursor: 'pointer',
+        boxShadow: selected ? '0 0 0 3px rgba(99,102,241,0.10)' : 'none',
       }}
       onMouseEnter={(e) => {
         if (!selected) e.currentTarget.style.borderColor = '#a5b4fc';
-        e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,0.10)';
+        if (!selected) e.currentTarget.style.boxShadow = '0 4px 16px rgba(99,102,241,0.10)';
         const ov = e.currentTarget.querySelector<HTMLElement>('.lo-card-overlay');
         if (ov) { ov.style.opacity = '1'; ov.style.pointerEvents = 'auto'; }
-        const cb = e.currentTarget.querySelector<HTMLElement>('.lo-card-cb');
-        if (cb && !selected) cb.style.opacity = '1';
       }}
       onMouseLeave={(e) => {
         if (!selected) e.currentTarget.style.borderColor = SYS.borderBase;
-        e.currentTarget.style.boxShadow = 'none';
+        if (!selected) e.currentTarget.style.boxShadow = 'none';
         const ov = e.currentTarget.querySelector<HTMLElement>('.lo-card-overlay');
         if (ov) { ov.style.opacity = '0'; ov.style.pointerEvents = 'none'; }
-        const cb = e.currentTarget.querySelector<HTMLElement>('.lo-card-cb');
-        if (cb && !selected) cb.style.opacity = '0';
       }}
     >
       {/* Icon area */}
@@ -244,13 +248,18 @@ function OutputCard({ item, viewMode, selected, onSelect, onPreview, onDownload,
         <span style={{ position: 'absolute', top: 8, left: 8, fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 9999, background: SYS.primary, color: '#fff', letterSpacing: '0.02em' }}>
           平台产出
         </span>
-        <button
-          type="button" onClick={(e) => { e.stopPropagation(); onSelect(item.id); }}
-          className="lo-card-cb"
-          style={{ position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: 4, border: `2px solid ${selected ? SYS.primary : 'rgba(255,255,255,0.8)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: selected ? SYS.primary : 'rgba(0,0,0,0.18)', cursor: 'pointer', padding: 0, opacity: selected ? 1 : 0, transition: 'opacity 0.15s, background 0.15s' }}
-        >
-          {selected && <i className="ri-check-line" style={{ fontSize: 10, color: '#fff' }} />}
-        </button>
+        {/* Selected check badge — top-right, replaces checkbox */}
+        {selected && (
+          <div style={{
+            position: 'absolute', top: 8, right: 8,
+            width: 20, height: 20, borderRadius: '50%',
+            background: SYS.primary,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 1px 4px rgba(99,102,241,0.35)',
+          }}>
+            <i className="ri-check-line" style={{ fontSize: 12, color: '#fff' }} />
+          </div>
+        )}
       </div>
 
       {/* Info */}
@@ -275,8 +284,12 @@ function OutputCard({ item, viewMode, selected, onSelect, onPreview, onDownload,
         <p style={{ fontSize: 10, color: '#cbd5e1', marginTop: 4 }}>{formatDate(item.created_at).split(' ')[0]}</p>
       </div>
 
-      {/* Hover overlay */}
-      <div className="lo-card-overlay" style={{ position: 'absolute', inset: 'auto 0 0 0', display: 'flex', gap: 6, background: 'linear-gradient(to top, #fff 60%, rgba(255,255,255,0.9) 80%, transparent)', padding: '18px 10px 10px', opacity: 0, pointerEvents: 'none', transition: 'opacity 0.18s' }}>
+      {/* Hover overlay — stop propagation so clicks don't toggle selection */}
+      <div
+        className="lo-card-overlay"
+        onClick={(e) => e.stopPropagation()}
+        style={{ position: 'absolute', inset: 'auto 0 0 0', display: 'flex', gap: 6, background: 'linear-gradient(to top, #fff 60%, rgba(255,255,255,0.9) 80%, transparent)', padding: '18px 10px 10px', opacity: 0, pointerEvents: 'none', transition: 'opacity 0.18s' }}
+      >
         <button type="button" onClick={() => onPreview(item)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: SYS.radiusSM, background: SYS.primaryBg, color: SYS.primary, border: 'none', padding: '6px 0', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: SYS.fontFamily, whiteSpace: 'nowrap' }}>
           <i className="ri-eye-line" style={{ fontSize: 12 }} />预览
         </button>
@@ -331,6 +344,7 @@ export default function LlmOutputsPanel({
   onSelectionCountChange,
 }: Props) {
   const navigate = useNavigate();
+  const { message } = useAppMessage();
   const addPendingFile = usePendingChatFilesStore((s) => s.addFile);
   const lastAddSelectedRequestRef = useRef(0);
   const [loading, setLoading] = useState(true);
@@ -627,7 +641,7 @@ export default function LlmOutputsPanel({
           <button
             type="button"
             onClick={() => allSelected ? setSelectedIds([]) : setSelectedIds(filtered.map((i) => i.id))}
-            style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${allSelected ? SYS.primary : '#cbd5e1'}`, background: allSelected ? SYS.primary : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${allSelected ? SYS.primary : '#94a3b8'}`, background: allSelected ? SYS.primary : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: allSelected ? '0 0 0 2px rgba(99,102,241,0.14)' : '0 1px 2px rgba(15,23,42,0.10)' }}
           >
             {allSelected && <i className="ri-check-line" style={{ fontSize: 10, color: '#fff' }} />}
           </button>

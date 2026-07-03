@@ -53,6 +53,7 @@ const QRCODE_CHANNELS: {
 
 interface BindChannelModalProps {
   open: boolean;
+  agentId?: string;
   onClose: () => void;
   /** 绑定并保存成功后回调（用于刷新目标列表） */
   onBound: () => void;
@@ -61,9 +62,11 @@ interface BindChannelModalProps {
 /* ── 二维码面板（每个频道独立 hook 实例） ─────────────────── */
 function QrcodePanel({
   channelValue,
+  agentId,
   onSuccess,
 }: {
   channelValue: string;
+  agentId?: string;
   onSuccess: () => void;
 }) {
   const { message } = useAppMessage();
@@ -77,7 +80,7 @@ function QrcodePanel({
       setSaveError("");
       try {
         const config = cfg.buildConfig(credentials);
-        await api.updateChannelConfig(channelValue, config as never);
+        await api.updateChannelConfig(channelValue, config as never, agentId);
         message.success(`${cfg.label} 绑定成功！频道配置已保存`);
         onSuccess();
       } catch (err) {
@@ -88,11 +91,12 @@ function QrcodePanel({
         setSaving(false);
       }
     },
-    [channelValue, cfg, message, onSuccess],
+    [agentId, channelValue, cfg, message, onSuccess],
   );
 
   const qrcode = useChannelQrcode({
     channel: cfg.value,
+    agentId,
     successStatus: cfg.successStatus,
     successCredentialKey: cfg.successCredentialKey,
     pollInterval: cfg.pollInterval,
@@ -193,7 +197,7 @@ function QrcodePanel({
 }
 
 /* ── 主弹窗 ──────────────────────────────────────────────── */
-export function BindChannelModal({ open, onClose, onBound }: BindChannelModalProps) {
+export function BindChannelModal({ open, agentId, onClose, onBound }: BindChannelModalProps) {
   const [selectedChannel, setSelectedChannel] = useState<string>("");
   const [bound, setBound] = useState(false);
 
@@ -307,6 +311,7 @@ export function BindChannelModal({ open, onClose, onBound }: BindChannelModalPro
                 <QrcodePanel
                   key={selectedChannel}
                   channelValue={selectedChannel}
+                  agentId={agentId}
                   onSuccess={handleSuccess}
                 />
               ) : (

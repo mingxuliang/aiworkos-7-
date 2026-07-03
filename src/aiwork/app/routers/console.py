@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import re
 import uuid
 from pathlib import Path
@@ -66,7 +67,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/console", tags=["console"])
 
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+_DEFAULT_UPLOAD_MB = 300
+MAX_UPLOAD_BYTES = int(
+    os.environ.get("AIWORK_CONSOLE_UPLOAD_MAX_MB", _DEFAULT_UPLOAD_MB)
+) * 1024 * 1024
 MAX_DEBUG_LOG_LINES = 1000
 
 

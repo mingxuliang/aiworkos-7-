@@ -4,6 +4,8 @@ import { api } from "../../../../api";
 interface ChannelQrcodeConfig {
   /** Channel name used in the API path, e.g. "wechat" or "wecom" */
   channel: string;
+  /** Optional agent scope; defaults to the globally selected agent header */
+  agentId?: string;
   /** Status value that indicates successful authorization */
   successStatus: string;
   /** Key in `credentials` to check for a truthy value on success */
@@ -37,6 +39,7 @@ export function useChannelQrcode(
 ): ChannelQrcodeState {
   const {
     channel,
+    agentId,
     successStatus,
     successCredentialKey,
     pollInterval = 2000,
@@ -67,7 +70,7 @@ export function useChannelQrcode(
     reset();
     setLoading(true);
     try {
-      const data = await api.getChannelQrcode(channel);
+      const data = await api.getChannelQrcode(channel, agentId);
       if (!data.qrcode_img) {
         onError("fetch");
         return;
@@ -81,6 +84,7 @@ export function useChannelQrcode(
             const result = await api.getChannelQrcodeStatus(
               channel,
               data.poll_token,
+              agentId,
             );
             if (
               result.status === successStatus &&
@@ -112,6 +116,7 @@ export function useChannelQrcode(
     }
   }, [
     channel,
+    agentId,
     successStatus,
     successCredentialKey,
     pollInterval,

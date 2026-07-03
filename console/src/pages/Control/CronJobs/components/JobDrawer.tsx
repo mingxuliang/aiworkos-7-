@@ -885,6 +885,7 @@ export function JobDrawer({
     {/* 绑定频道弹窗 */}
     <BindChannelModal
       open={bindModalOpen}
+      agentId={jobAgentId}
       onClose={() => setBindModalOpen(false)}
       onBound={() => {
         setBindModalOpen(false);

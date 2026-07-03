@@ -23,7 +23,6 @@ const SYS = {
   radiusSM: 8,
 };
 
-// type → icon / accent colours
 const typeConfig: Record<FileType, { icon: string; iconColor: string; bg: string; label: string }> = {
   ppt:   { icon: 'ri-slideshow-2-line',   iconColor: '#f97316', bg: '#fff7ed', label: 'PPT' },
   word:  { icon: 'ri-file-word-line',     iconColor: '#3b82f6', bg: '#eff6ff', label: 'Word' },
@@ -41,34 +40,31 @@ export const MaterialFileCard = ({ file, viewMode, selected, onSelect, onPreview
   if (viewMode === 'list') {
     return (
       <div
+        onClick={() => onSelect(file.id)}
         style={{
           display: 'flex', alignItems: 'center', gap: 16,
           borderRadius: SYS.radius,
-          border: `1px solid ${selected ? '#bfdbfe' : SYS.borderBase}`,
-          background: selected ? '#eff6ff' : SYS.bgCard,
+          border: `1.5px solid ${selected ? SYS.primary : SYS.borderBase}`,
+          background: selected ? SYS.primaryBg : SYS.bgCard,
           padding: '10px 16px',
           cursor: 'pointer',
           fontFamily: SYS.fontFamily,
           transition: 'border-color 0.15s, background 0.15s',
+          boxShadow: selected ? '0 0 0 3px rgba(59,130,246,0.10)' : 'none',
         }}
-        onMouseEnter={(e) => { if (!selected) { e.currentTarget.style.borderColor = '#bfdbfe'; } }}
-        onMouseLeave={(e) => { if (!selected) { e.currentTarget.style.borderColor = SYS.borderBase; } }}
+        onMouseEnter={(e) => { if (!selected) e.currentTarget.style.borderColor = '#bfdbfe'; }}
+        onMouseLeave={(e) => { if (!selected) e.currentTarget.style.borderColor = SYS.borderBase; }}
       >
-        {/* Checkbox */}
-        <button
-          type="button"
-          onClick={() => onSelect(file.id)}
-          style={{
-            width: 16, height: 16, flexShrink: 0, borderRadius: 4,
-            border: `2px solid ${selected ? SYS.primary : '#cbd5e1'}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: selected ? SYS.primary : 'transparent',
-            cursor: 'pointer', padding: 0,
-            transition: 'all 0.15s',
-          }}
-        >
-          {selected && <i className="ri-check-line" style={{ fontSize: 10, color: '#fff' }} />}
-        </button>
+        {/* Selected check badge */}
+        <div style={{
+          width: 18, height: 18, flexShrink: 0, borderRadius: '50%',
+          background: selected ? SYS.primary : 'transparent',
+          border: `1.5px solid ${selected ? SYS.primary : '#cbd5e1'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.15s',
+        }}>
+          {selected && <i className="ri-check-line" style={{ fontSize: 11, color: '#fff' }} />}
+        </div>
 
         {/* Icon / Thumb */}
         <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: SYS.radiusSM, overflow: 'hidden' }}>
@@ -103,8 +99,11 @@ export const MaterialFileCard = ({ file, viewMode, selected, onSelect, onPreview
           <span style={{ fontSize: 11, color: SYS.textMuted, width: 112, textAlign: 'right' }}>{file.updatedAt}</span>
         </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        {/* Actions — stop propagation so they don't toggle selection */}
+        <div
+          style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}
+          onClick={(e) => e.stopPropagation()}
+        >
           {[
             { icon: 'ri-eye-line', title: '预览', onClick: () => onPreview(file), hoverColor: SYS.primary, hoverBg: '#eff6ff' },
             { icon: 'ri-download-line', title: '下载', onClick: () => void onDownload?.(file), hoverColor: SYS.primary, hoverBg: '#eff6ff' },
@@ -130,6 +129,7 @@ export const MaterialFileCard = ({ file, viewMode, selected, onSelect, onPreview
   /* ───────── Grid mode ───────── */
   return (
     <div
+      onClick={() => onSelect(file.id)}
       style={{
         position: 'relative',
         display: 'flex',
@@ -137,21 +137,22 @@ export const MaterialFileCard = ({ file, viewMode, selected, onSelect, onPreview
         minHeight: 268,
         borderRadius: SYS.radius,
         overflow: 'hidden',
-        border: `1px solid ${selected ? '#bfdbfe' : SYS.borderBase}`,
-        background: selected ? '#eff6ff' : SYS.bgCard,
+        border: `1.5px solid ${selected ? SYS.primary : SYS.borderBase}`,
+        background: selected ? SYS.primaryBg : SYS.bgCard,
         cursor: 'pointer',
         fontFamily: SYS.fontFamily,
-        transition: 'border-color 0.15s, box-shadow 0.15s',
+        transition: 'border-color 0.15s, box-shadow 0.15s, background 0.15s',
+        boxShadow: selected ? '0 0 0 3px rgba(59,130,246,0.10)' : 'none',
       }}
       onMouseEnter={(e) => {
         if (!selected) e.currentTarget.style.borderColor = '#93c5fd';
-        e.currentTarget.style.boxShadow = '0 4px 16px rgba(59,130,246,0.10)';
+        if (!selected) e.currentTarget.style.boxShadow = '0 4px 16px rgba(59,130,246,0.10)';
         const overlay = e.currentTarget.querySelector<HTMLElement>('.mc-card-overlay');
         if (overlay) { overlay.style.opacity = '1'; overlay.style.pointerEvents = 'auto'; }
       }}
       onMouseLeave={(e) => {
         if (!selected) e.currentTarget.style.borderColor = SYS.borderBase;
-        e.currentTarget.style.boxShadow = 'none';
+        if (!selected) e.currentTarget.style.boxShadow = 'none';
         const overlay = e.currentTarget.querySelector<HTMLElement>('.mc-card-overlay');
         if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
       }}
@@ -185,24 +186,18 @@ export const MaterialFileCard = ({ file, viewMode, selected, onSelect, onPreview
           </span>
         )}
 
-        {/* Checkbox */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onSelect(file.id); }}
-          style={{
+        {/* Selected check badge — top-right, replaces checkbox */}
+        {selected && (
+          <div style={{
             position: 'absolute', top: 8, right: 8,
-            width: 18, height: 18, borderRadius: 4,
-            border: `2px solid ${selected ? SYS.primary : 'rgba(255,255,255,0.8)'}`,
+            width: 20, height: 20, borderRadius: '50%',
+            background: SYS.primary,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: selected ? SYS.primary : 'rgba(0,0,0,0.18)',
-            cursor: 'pointer', padding: 0,
-            opacity: selected ? 1 : 0,
-            transition: 'opacity 0.15s, background 0.15s',
-          }}
-          className="mc-card-checkbox"
-        >
-          {selected && <i className="ri-check-line" style={{ fontSize: 10, color: '#fff' }} />}
-        </button>
+            boxShadow: '0 1px 4px rgba(59,130,246,0.35)',
+          }}>
+            <i className="ri-check-line" style={{ fontSize: 12, color: '#fff' }} />
+          </div>
+        )}
       </div>
 
       {/* Info */}
@@ -220,9 +215,10 @@ export const MaterialFileCard = ({ file, viewMode, selected, onSelect, onPreview
         <p style={{ fontSize: 10, color: '#cbd5e1', marginTop: 4 }}>{file.updatedAt.split(' ')[0]}</p>
       </div>
 
-      {/* Hover action overlay — absolute so it never shifts layout */}
+      {/* Hover action overlay — stop propagation so clicks don't toggle selection */}
       <div
         className="mc-card-overlay"
+        onClick={(e) => e.stopPropagation()}
         style={{
           position: 'absolute', inset: 'auto 0 0 0',
           display: 'flex', gap: 6,
