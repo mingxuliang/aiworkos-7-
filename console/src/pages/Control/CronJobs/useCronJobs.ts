@@ -15,7 +15,7 @@ export function useCronJobs() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const data = await api.listCronJobs();
+      const data = await api.listCronJobs(selectedAgent);
       if (data) {
         setJobs(data as CronJob[]);
       }
@@ -43,9 +43,9 @@ export function useCronJobs() {
     };
   }, [selectedAgent]);
 
-  const createJob = async (values: CronJob) => {
+  const createJob = async (values: CronJob, agentId = selectedAgent) => {
     try {
-      const created = await api.createCronJob(values);
+      const created = await api.createCronJob(values, agentId);
       setJobs((prev) => [created as CronJob, ...prev]);
       message.success("Created successfully");
       return true;
@@ -56,13 +56,13 @@ export function useCronJobs() {
     }
   };
 
-  const updateJob = async (jobId: string, values: CronJob) => {
+  const updateJob = async (jobId: string, values: CronJob, agentId = selectedAgent) => {
     const original = jobs.find((j) => j.id === jobId);
     const optimisticUpdate = { ...original, ...values };
     setJobs((prev) => prev.map((j) => (j.id === jobId ? optimisticUpdate : j)));
 
     try {
-      const updated = await api.replaceCronJob(jobId, values);
+      const updated = await api.replaceCronJob(jobId, values, agentId);
       setJobs((prev) =>
         prev.map((j) => (j.id === jobId ? (updated as CronJob) : j)),
       );
@@ -83,7 +83,7 @@ export function useCronJobs() {
     setJobs((prev) => prev.filter((j) => j.id !== jobId));
 
     try {
-      await api.deleteCronJob(jobId);
+      await api.deleteCronJob(jobId, selectedAgent);
       message.success("Deleted successfully");
       return true;
     } catch (error) {
@@ -101,7 +101,7 @@ export function useCronJobs() {
     setJobs((prev) => prev.map((j) => (j.id === job.id ? updated : j)));
 
     try {
-      const returned = await api.replaceCronJob(job.id, updated);
+      const returned = await api.replaceCronJob(job.id, updated, selectedAgent);
       setJobs((prev) =>
         prev.map((j) => (j.id === job.id ? (returned as CronJob) : j)),
       );
@@ -117,7 +117,7 @@ export function useCronJobs() {
 
   const executeNow = async (jobId: string) => {
     try {
-      await api.triggerCronJob(jobId);
+      await api.triggerCronJob(jobId, selectedAgent);
       message.success("Task triggered successfully");
       return true;
     } catch (error) {

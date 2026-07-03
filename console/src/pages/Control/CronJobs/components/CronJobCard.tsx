@@ -16,6 +16,7 @@ interface CronJobCardProps {
   onToggleEnabled: (job: CronJob) => void;
   onExecuteNow: (job: CronJob) => void;
   onDelete: (jobId: string) => void;
+  onViewRecords: (job: CronJob) => void;
   t: TFunction;
 }
 
@@ -30,6 +31,7 @@ export function CronJobCard({
   onToggleEnabled,
   onExecuteNow,
   onDelete,
+  onViewRecords,
   t,
 }: CronJobCardProps) {
   const themeCls = cbcCardStripeClass(index);
@@ -40,6 +42,11 @@ export function CronJobCard({
       : t("cronJobs.taskTypeOptionAgent");
   const textPreview = (job.text || "").trim();
   const menuItems: MenuProps["items"] = [
+    {
+      key: "records",
+      label: t("cronJobs.executionRecords", "执行记录"),
+      onClick: () => onViewRecords(job),
+    },
     {
       key: "edit",
       label: t("cronJobs.edit"),

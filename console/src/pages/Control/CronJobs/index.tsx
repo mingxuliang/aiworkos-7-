@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Button, Form, Modal } from "@agentscope-ai/design";
-import { Spin, Card } from "antd";
+import { Spin, Card, message } from "antd";
 import {
   ThunderboltOutlined,
   BellOutlined,
@@ -200,6 +200,7 @@ function CronJobsPage() {
     const dispatchTarget = (values as Record<string, unknown>).dispatch as Record<string, unknown> | undefined;
     const hasTarget = dispatchTarget?.session_id || dispatchTarget?.target;
     if (!hasTarget) {
+      message.error("请先配置发送目标（第三步）后再保存");
       return;
     }
 

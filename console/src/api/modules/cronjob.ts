@@ -2,52 +2,90 @@ import { request } from "../request";
 import type {
   CronJobSpecInput,
   CronJobSpecOutput,
+  CronTarget,
   CronJobView,
+  ExecutionRecord,
 } from "../types";
 
-export const cronJobApi = {
-  listCronJobs: () => request<CronJobSpecOutput[]>("/cron/jobs"),
+const cronPath = (path: string, agentId?: string) =>
+  agentId
+    ? `/agents/${encodeURIComponent(agentId)}/cron${path}`
+    : `/cron${path}`;
 
-  createCronJob: (spec: CronJobSpecInput) =>
-    request<CronJobSpecOutput>("/cron/jobs", {
+export const cronJobApi = {
+  listCronJobs: (agentId?: string) =>
+    request<CronJobSpecOutput[]>(cronPath("/jobs", agentId)),
+
+  createCronJob: (spec: CronJobSpecInput, agentId?: string) =>
+    request<CronJobSpecOutput>(cronPath("/jobs", agentId), {
       method: "POST",
       body: JSON.stringify(spec),
     }),
 
-  getCronJob: (jobId: string) =>
-    request<CronJobView>(`/cron/jobs/${encodeURIComponent(jobId)}`),
+  getCronJob: (jobId: string, agentId?: string) =>
+    request<CronJobView>(cronPath(`/jobs/${encodeURIComponent(jobId)}`, agentId)),
 
-  replaceCronJob: (jobId: string, spec: CronJobSpecInput) =>
-    request<CronJobSpecOutput>(`/cron/jobs/${encodeURIComponent(jobId)}`, {
+  replaceCronJob: (jobId: string, spec: CronJobSpecInput, agentId?: string) =>
+    request<CronJobSpecOutput>(cronPath(`/jobs/${encodeURIComponent(jobId)}`, agentId), {
       method: "PUT",
       body: JSON.stringify(spec),
     }),
 
-  deleteCronJob: (jobId: string) =>
-    request<void>(`/cron/jobs/${encodeURIComponent(jobId)}`, {
+  deleteCronJob: (jobId: string, agentId?: string) =>
+    request<void>(cronPath(`/jobs/${encodeURIComponent(jobId)}`, agentId), {
       method: "DELETE",
     }),
 
-  pauseCronJob: (jobId: string) =>
-    request<void>(`/cron/jobs/${encodeURIComponent(jobId)}/pause`, {
+  pauseCronJob: (jobId: string, agentId?: string) =>
+    request<void>(cronPath(`/jobs/${encodeURIComponent(jobId)}/pause`, agentId), {
       method: "POST",
     }),
 
-  resumeCronJob: (jobId: string) =>
-    request<void>(`/cron/jobs/${encodeURIComponent(jobId)}/resume`, {
+  resumeCronJob: (jobId: string, agentId?: string) =>
+    request<void>(cronPath(`/jobs/${encodeURIComponent(jobId)}/resume`, agentId), {
       method: "POST",
     }),
 
-  runCronJob: (jobId: string) =>
-    request<void>(`/cron/jobs/${encodeURIComponent(jobId)}/run`, {
+  runCronJob: (jobId: string, agentId?: string) =>
+    request<void>(cronPath(`/jobs/${encodeURIComponent(jobId)}/run`, agentId), {
       method: "POST",
     }),
 
-  triggerCronJob: (jobId: string) =>
-    request<void>(`/cron/jobs/${encodeURIComponent(jobId)}/run`, {
+  triggerCronJob: (jobId: string, agentId?: string) =>
+    request<void>(cronPath(`/jobs/${encodeURIComponent(jobId)}/run`, agentId), {
       method: "POST",
     }),
 
-  getCronJobState: (jobId: string) =>
-    request<unknown>(`/cron/jobs/${encodeURIComponent(jobId)}/state`),
+  getCronJobState: (jobId: string, agentId?: string) =>
+    request<unknown>(cronPath(`/jobs/${encodeURIComponent(jobId)}/state`, agentId)),
+
+  listCronTargets: (agentId?: string) =>
+    request<CronTarget[]>(cronPath("/targets", agentId)),
+
+  listJobRecords: (
+    jobId: string,
+    params?: { limit?: number; offset?: number },
+    agentId?: string,
+  ) => {
+    const query = new URLSearchParams();
+    if (params?.limit != null) query.set("limit", String(params.limit));
+    if (params?.offset != null) query.set("offset", String(params.offset));
+    const qs = query.toString();
+    return request<ExecutionRecord[]>(
+      cronPath(`/jobs/${encodeURIComponent(jobId)}/records${qs ? `?${qs}` : ""}`, agentId),
+    );
+  },
+
+  getRecordOutput: (recordId: string, agentId?: string) =>
+    request<string>(cronPath(`/records/${encodeURIComponent(recordId)}/output`, agentId)),
+
+  deleteRecord: (recordId: string, agentId?: string) =>
+    request<{ deleted: boolean }>(cronPath(`/records/${encodeURIComponent(recordId)}`, agentId), {
+      method: "DELETE",
+    }),
+
+  deleteJobRecords: (jobId: string, agentId?: string) =>
+    request<{ deleted: number }>(cronPath(`/jobs/${encodeURIComponent(jobId)}/records`, agentId), {
+      method: "DELETE",
+    }),
 };
