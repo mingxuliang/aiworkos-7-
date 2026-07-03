@@ -1,0 +1,16 @@
+# AIWork 容器内日志按天滚动配置
+# 由 supervisord 托管的 logrotate 守护进程在每天 00:00:05 触发执行
+# 日志目录 /app/logs 通过 docker-compose 挂载到宿主机 ./logs
+
+/app/logs/*.log {
+    daily
+    rotate 30
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y-%m-%d
+    create 0644 root root
+}

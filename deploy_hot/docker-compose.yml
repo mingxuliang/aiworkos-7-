@@ -1,0 +1,49 @@
+# AIWork-OS 热部署 compose 配置
+#
+# 与原 docker-compose.yml 的核心差异：
+#   - 通过 bind mount 将宿主机 src/ 挂载到容器内 /app/src
+#   - 通过 bind mount 将宿主机 console-dist/ 挂载到容器内 /app/console-static
+#   - 容器名使用 aiwork-hot 以避免与原版冲突（如需替换原版，可改为 aiwork）
+#
+# 工作目录策略：与原 docker-compose.yml 完全一致
+#   - ~/.aiwork              -> /app/working
+#   - ~/.aiwork.secret       -> /app/working.secret
+#   - 共享命名卷 aiwork-backups -> /app/working.backups
+# 这样热部署与原版部署可以无缝切换，复用同一份用户数据/密钥/备份。
+version: '3.8'
+
+volumes:
+  # 与原 docker-compose.yml 共享同一命名卷，保证备份数据延续
+  aiwork-backups:
+    name: aiwork-backups
+
+services:
+  aiwork:
+    # 镜像 tag 通过 AIWORK_HOT_IMAGE 注入；缺省 aiwork-hot:latest
+    image: ${AIWORK_HOT_IMAGE:-aiwork-hot:latest}
+    container_name: aiwork-hot
+    restart: always
+    ports:
+      - "${AIWORK_HOT_PORT:-8088}:8088"
+    env_file:
+      - ../.env
+    environment:
+      # 指向容器内的挂载点（必须与 volumes 配置一致）
+      - AIWORK_CONSOLE_STATIC_DIR=/app/console-static
+    volumes:
+      # 工作目录与原版部署保持一致，便于在原版/热部署之间无缝切换
+      - ~/.aiwork:/app/working
+      - ~/.aiwork.secret:/app/working.secret
+      - ~/.aiwork.backups:/app/working.backups
+
+      # 容器日志挂载
+      - ../logs:/app/logs
+
+      # 🔥 热更新核心：源码与前端产物挂载（只读）
+      # 后端：宿主机 src/ → 容器 /app/src（覆盖镜像内 src，editable 模式生效）
+      - ../src:/app/src:ro
+      # .env 配置文件挂载，使 load_dotenv 可以在 /app/.env 找到它
+      # 修改 .env 后只需 deploy_backend.sh 重启 app 进程即可生效
+      - ../.env:/app/.env:ro
+      # 前端：宿主机 console-dist/ → 容器 /app/console-static
+      - ../console-dist:/app/console-static:ro
