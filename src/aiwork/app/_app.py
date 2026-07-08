@@ -37,6 +37,7 @@ from ..utils.logging import (
 )
 from ..utils.system_info import summarize_python_environment
 from .auth_jwt.middleware import JWTAuthMiddleware
+from .security_headers import SecurityHeadersMiddleware
 from .routers import router as api_router, create_agent_scoped_router
 from .routers.agent_scoped import AgentContextMiddleware
 from .routers.approval import router as approval_router
@@ -869,6 +870,9 @@ else:
         should_group_untemplated=True,
         excluded_handlers=["/metrics", "/health"],
     ).instrument(app).expose(app, endpoint="/metrics")
+
+# Outermost: security headers on every response (API + static).
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Add agent context middleware for agent-scoped routes
 app.add_middleware(AgentContextMiddleware)

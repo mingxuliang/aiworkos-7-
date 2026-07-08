@@ -2,6 +2,7 @@ declare const VITE_API_BASE_URL: string;
 declare const TOKEN: string;
 
 const AUTH_TOKEN_KEY = "qwenpaw_auth_token";
+const AUTH_TOKEN_SESSION_KEY = "qwenpaw_auth_token_session";
 export const AUTH_USER_KEY = "qwenpaw.auth.user_key";
 
 /**
@@ -17,28 +18,41 @@ export function getApiUrl(path: string): string {
 }
 
 /**
- * Get the API token - checks localStorage first (auth login),
- * then falls back to the build-time TOKEN constant.
+ * Get the API token - checks sessionStorage (non-remembered login) first,
+ * then localStorage (remember-me), then build-time TOKEN constant.
  * @returns API token string or empty string
  */
 export function getApiToken(): string {
+  const sessionToken = sessionStorage.getItem(AUTH_TOKEN_SESSION_KEY);
+  if (sessionToken) return sessionToken;
+
   const stored = localStorage.getItem(AUTH_TOKEN_KEY);
   if (stored) return stored;
   return typeof TOKEN !== "undefined" ? TOKEN : "";
 }
 
 /**
- * Store the auth token in localStorage after login.
+ * Store the auth token after login.
+ * @param remember - when true, persist across browser restarts (localStorage);
+ *                   when false, session-only (sessionStorage).
  */
-export function setAuthToken(token: string): void {
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
+export function setAuthToken(token: string, remember = true): void {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  sessionStorage.removeItem(AUTH_TOKEN_SESSION_KEY);
+
+  if (remember) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  } else {
+    sessionStorage.setItem(AUTH_TOKEN_SESSION_KEY, token);
+  }
 }
 
 /**
- * Remove the auth token from localStorage (logout / 401).
+ * Remove the auth token from all storages (logout / 401).
  */
 export function clearAuthToken(): void {
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  sessionStorage.removeItem(AUTH_TOKEN_SESSION_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
   if (typeof window !== "undefined") {
     window.currentUserId = undefined;

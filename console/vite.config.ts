@@ -26,29 +26,6 @@ export default defineConfig(({ mode }) => {
   // does not enable CORSMiddleware unless QWENPAW_CORS_ORIGINS is set).
   const devApiProxyTarget =
     env.VITE_DEV_API_PROXY_TARGET || "http://127.0.0.1:8088";
-  const filesApiProxyTarget =
-    env.VITE_FILES_API_PROXY_TARGET || "http://101.36.143.21:8088";
-
-  type ProxyLike = {
-    on: (
-      event: "error",
-      cb: (err: unknown, req: unknown, res: unknown) => void,
-    ) => void;
-  };
-  const proxyErrorHandler = (target: string) => (proxy: ProxyLike) => {
-    proxy.on("error", (err: unknown, _req: unknown, res: unknown) => {
-      const r = res as ServerResponse | undefined;
-      if (r && typeof r.writeHead === "function" && !r.headersSent) {
-        const msg = err instanceof Error ? err.message : String(err);
-        r.writeHead(502, { "Content-Type": "application/json" });
-        r.end(
-          JSON.stringify({
-            detail: `Development proxy cannot reach backend at ${target}. (${msg})`,
-          }),
-        );
-      }
-    });
-  };
 
   return {
     define: {
@@ -76,20 +53,40 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "0.0.0.0",
       port: 5173,
+      headers: {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "SAMEORIGIN",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+      },
       ...(mode === "development" && !apiBaseUrl
         ? {
             proxy: {
-              // 文件素材库 API → 测试环境（须写在 /api 之前，优先匹配）
-              "/api/files": {
-                target: filesApiProxyTarget,
-                changeOrigin: true,
-                configure: proxyErrorHandler(filesApiProxyTarget),
-              },
-              // 其余 API → 本地后端
+              // 本地后端（认证、聊天、Agent 等所有内部 API）
               "/api": {
                 target: devApiProxyTarget,
                 changeOrigin: true,
-                configure: proxyErrorHandler(devApiProxyTarget),
+                configure(proxy) {
+                  proxy.on("error", (err, _req, res) => {
+                    const r = res as ServerResponse | undefined;
+                    if (
+                      r &&
+                      typeof r.writeHead === "function" &&
+                      !r.headersSent
+                    ) {
+                      const msg =
+                        err instanceof Error ? err.message : String(err);
+                      r.writeHead(502, {
+                        "Content-Type": "application/json",
+                      });
+                      r.end(
+                        JSON.stringify({
+                          detail: `Development proxy cannot reach backend at ${devApiProxyTarget}. Start the QwenPaw server or set VITE_DEV_API_PROXY_TARGET in .env.development. (${msg})`,
+                        }),
+                      );
+                    }
+                  });
+                },
               },
             },
           }
@@ -165,11 +162,13 @@ export default defineConfig(({ mode }) => {
               return "react-vendor";
             }
             // Ant Design + AgentScope design system (merged to avoid circular deps)
+            // Exclude x-markdown: it depends on react-markdown, must be in markdown-vendor
             if (
-              id.includes("node_modules/antd/") ||
-              id.includes("node_modules/antd-style/") ||
-              id.includes("node_modules/@ant-design/") ||
-              id.includes("node_modules/@agentscope-ai/")
+              (id.includes("node_modules/antd/") ||
+               id.includes("node_modules/antd-style/") ||
+               id.includes("node_modules/@ant-design/") ||
+               id.includes("node_modules/@agentscope-ai/")) &&
+              !id.includes("node_modules/@ant-design/x-markdown/")
             ) {
               return "ui-vendor";
             }
@@ -180,9 +179,11 @@ export default defineConfig(({ mode }) => {
             ) {
               return "i18n-vendor";
             }
-            // Markdown rendering
+            // Markdown rendering (includes @ant-design/x-markdown because it
+            // depends on react-markdown and must stay in the same chunk)
             if (
               id.includes("node_modules/react-markdown/") ||
+              id.includes("node_modules/@ant-design/x-markdown/") ||
               id.includes("node_modules/remark-gfm/") ||
               id.includes("node_modules/rehype") ||
               id.includes("node_modules/remark") ||

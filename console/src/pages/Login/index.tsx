@@ -68,12 +68,10 @@ export default function LoginPage() {
 
   const [mounted,    setMounted]    = useState(false);
   const [loading,    setLoading]    = useState(false);
-  const [isRegister, setIsRegister] = useState(false);
-  const [authMode,   setAuthMode]   = useState<"legacy" | "jwt">("legacy");
   const [account,    setAccount]    = useState("");
   const [password,   setPassword]   = useState("");
   const [showPwd,    setShowPwd]    = useState(false);
-  const [remember,   setRemember]   = useState(true);
+  const [remember,   setRemember]   = useState(false);
   const [acFocus,    setAcFocus]    = useState(false);
   const [pwFocus,    setPwFocus]    = useState(false);
 
@@ -86,12 +84,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 60);
-    authApi.getStatus()
-      .then((res) => {
-        if (res.mode === "jwt") setAuthMode("jwt");
-        if (res.enabled && !res.has_users) setIsRegister(true);
-      })
-      .catch(() => {});
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -100,27 +92,16 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isRegister) {
-        const res = await authApi.register(account, password);
-        if (res.token) {
-          setAuthToken(res.token);
-          syncAuthenticatedUserKeyFromToken(res.token);
-          navigate(redirect, { replace: true });
-        } else {
-          message.error("注册成功但未返回令牌，请重试");
-        }
+      const res = await authApi.login(account, password);
+      if (res.token) {
+        setAuthToken(res.token, remember);
+        syncAuthenticatedUserKeyFromToken(res.token);
+        navigate(redirect, { replace: true });
       } else {
-        const res = await authApi.login(account, password);
-        if (res.token) {
-          setAuthToken(res.token);
-          syncAuthenticatedUserKeyFromToken(res.token);
-          navigate(redirect, { replace: true });
-        } else {
-          message.error("登录成功但未返回令牌，请检查服务端认证配置");
-        }
+        message.error("登录成功但未返回令牌，请检查服务端认证配置");
       }
     } catch {
-      message.error(isRegister ? "注册失败，请重试" : "账号或密码错误，请重试");
+      message.error("账号或密码错误，请重试");
     } finally {
       setLoading(false);
     }
@@ -338,10 +319,10 @@ export default function LoginPage() {
               {/* Welcome */}
               <div style={{ marginBottom: 24 }}>
                 <h2 style={{ margin: "0 0 6px", fontSize: 26, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>
-                  {isRegister ? "创建管理员账号" : "欢迎回来"}
+                  欢迎回来
                 </h2>
                 <p style={{ margin: 0, color: "rgba(147,197,253,.4)", fontSize: 13 }}>
-                  {isRegister ? "首次使用，请先设置管理员账号" : "请登录您的 AI Work OS 账号"}
+                  请登录您的 AI Work OS 账号
                 </p>
               </div>
 
@@ -401,7 +382,6 @@ export default function LoginPage() {
                     </div>
                     <span style={{ fontSize: 12, color: "rgba(147,197,253,.42)" }}>记住我</span>
                   </label>
-                  <a href="#" style={{ fontSize: 12, color: "rgba(96,165,250,.5)", textDecoration: "none" }}>忘记密码?</a>
                 </div>
 
                 <button type="submit" disabled={loading} className="lw-btn"
@@ -420,44 +400,40 @@ export default function LoginPage() {
                   {loading ? (
                     <>
                       <i className="ri-loader-4-line lw-spin" style={{ fontSize: 16 }} />
-                      <span>{isRegister ? "注册中..." : "登录中..."}</span>
+                      <span>登录中...</span>
                     </>
                   ) : (
                     <span style={{ position: "relative", zIndex: 1 }}>
-                      {isRegister ? "注 册" : "登 录"}
+                      登 录
                     </span>
                   )}
                 </button>
               </form>
 
               <div style={{ marginTop: 18, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
-                {authMode === "jwt" ? (
-                  <>
-                    <span style={{ fontSize: 12, color: "rgba(147,197,253,.26)" }}>
-                      {isRegister ? "已有账号？" : "还没有账号？"}
-                    </span>
-                    <a
-                      href="#"
-                      onClick={(e) => { e.preventDefault(); setIsRegister((v) => !v); }}
-                      style={{ fontSize: 12, color: "rgba(96,165,250,.72)", textDecoration: "none", fontWeight: 500 }}
-                    >
-                      {isRegister ? "去登录" : "注册新账号"}
-                    </a>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ fontSize: 12, color: "rgba(147,197,253,.26)" }}>还没有账号？</span>
-                    <a href="#" style={{ fontSize: 12, color: "rgba(96,165,250,.52)", textDecoration: "none", fontWeight: 500 }}>联系管理员开通</a>
-                  </>
-                )}
+                <span style={{ fontSize: 12, color: "rgba(147,197,253,.26)" }}>还没有账号？请联系管理员开通</span>
               </div>
 
               <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(96,165,250,.08)" }}>
                 <p style={{ margin: 0, textAlign: "center", fontSize: 11, color: "rgba(147,197,253,.2)", lineHeight: 1.6 }}>
                   登录即表示同意&nbsp;
-                  <a href="#" style={{ color: "rgba(96,165,250,.45)", textDecoration: "none" }}>用户协议</a>
+                  <a
+                    href="/terms.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "rgba(96,165,250,.45)", textDecoration: "none" }}
+                  >
+                    用户协议
+                  </a>
                   &nbsp;与&nbsp;
-                  <a href="#" style={{ color: "rgba(96,165,250,.45)", textDecoration: "none" }}>隐私政策</a>
+                  <a
+                    href="/privacy.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "rgba(96,165,250,.45)", textDecoration: "none" }}
+                  >
+                    隐私政策
+                  </a>
                 </p>
               </div>
             </div>

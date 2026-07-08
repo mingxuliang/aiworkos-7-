@@ -2,6 +2,7 @@ import { Layout, Menu, Button, Tooltip, type MenuProps } from "antd";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useIsAdmin } from "../hooks/useCurrentUserRoles";
 import {
   SparkWifiLine,
   SparkUserGroupLine,
@@ -16,7 +17,6 @@ import {
   SparkMcpMcpLine,
   SparkScanLine,
   SparkToolLine,
-  SparkDataLine,
   SparkMicLine,
   SparkAgentLine,
   SparkSearchUserLine,
@@ -34,6 +34,19 @@ import { useTheme } from "../contexts/ThemeContext";
 import { KEY_TO_PATH, DEFAULT_OPEN_KEYS, HIDDEN_NAV_KEYS } from "./constants";
 import { Bot } from "lucide-react";
 
+const ADMIN_ONLY_NAV_KEYS = new Set([
+  "acp",
+  "agent-config",
+  "agent-stats",
+  "users",
+  "org-builder",
+  "environments",
+  "security",
+  "voice-transcription",
+  "backups",
+  "debug",
+]);
+
 // ── Layout ────────────────────────────────────────────────────────────────
 
 const { Sider } = Layout;
@@ -47,8 +60,8 @@ interface SidebarProps {
 function filterMenuItems(
   items: MenuProps["items"],
   hidden: Set<string>,
-): MenuProps["items"] {
-  if (!items) return items;
+): NonNullable<MenuProps["items"]> {
+  if (!items) return [];
   return items
     .filter((item) => item && "key" in item && !hidden.has(String(item.key)))
     .map((item) => {
@@ -57,7 +70,7 @@ function filterMenuItems(
         ...item,
         children: filterMenuItems(item.children, hidden),
       };
-    });
+    }) as NonNullable<MenuProps["items"]>;
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────
@@ -68,6 +81,11 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
   const { isDark } = useTheme();
   const { pluginRoutes } = usePlugins();
   const [collapsed, setCollapsed] = useState(false);
+  const isAdmin = useIsAdmin();
+  const hiddenNavKeys = new Set([
+    ...HIDDEN_NAV_KEYS,
+    ...(!isAdmin ? ADMIN_ONLY_NAV_KEYS : []),
+  ]);
 
   // ── Collapsed nav items (all leaf pages) ──────────────────────────────
 
@@ -187,12 +205,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       label: t("nav.security"),
     },
     {
-      key: "token-usage",
-      icon: <SparkDataLine size={18} />,
-      path: "/token-usage",
-      label: t("nav.tokenUsage"),
-    },
-    {
       key: "backups",
       icon: <SparkSaveLine size={18} />,
       path: "/backups",
@@ -229,7 +241,7 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       path: route.path,
       label: route.label,
     })),
-  ].filter((item) => !HIDDEN_NAV_KEYS.has(item.key));
+  ].filter((item) => !hiddenNavKeys.has(item.key));
 
   // ── Menu items — agent-scoped (Chat + Control + Workspace) ──────────────
 
@@ -338,7 +350,7 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       ],
     },
   ],
-    HIDDEN_NAV_KEYS,
+    hiddenNavKeys,
   );
 
   // ── Menu items — global settings ──────────────────────────────────────
@@ -385,11 +397,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
           icon: <SparkBrowseLine size={16} />,
         },
         {
-          key: "token-usage",
-          label: collapsed ? null : t("nav.tokenUsage"),
-          icon: <SparkDataLine size={16} />,
-        },
-        {
           key: "backups",
           label: collapsed ? null : t("nav.backups"),
           icon: <SparkSaveLine size={16} />,
@@ -407,7 +414,7 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       ],
     },
   ],
-    HIDDEN_NAV_KEYS,
+    hiddenNavKeys,
   );
 
   // Append plugin menu items as a group (only when there are plugins)
