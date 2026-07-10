@@ -107,7 +107,7 @@ export function apiFileToMaterial(
     createdAt: created,
     updatedAt: created,
     tags: ['已上传'],
-    downloadUrl: item.download_url,
+    downloadUrl: `/api/files/${item.id}/download`,
   };
 }
 

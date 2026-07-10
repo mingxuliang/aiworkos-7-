@@ -38,12 +38,6 @@ export async function registerHostModulesDynamic(): Promise<void> {
     },
   );
 
-  console.log(
-    `[patchable] Discovered ${
-      Object.keys(modules).length
-    } module(s) for registration`,
-  );
-
   // Register modules
   let registeredCount = 0;
   for (const [path, importFn] of Object.entries(modules)) {
@@ -67,7 +61,6 @@ export async function registerHostModulesDynamic(): Promise<void> {
     }
   }
 
-  console.log(`[patchable] Registered ${registeredCount} module(s)`);
 }
 
 /**
@@ -112,5 +105,4 @@ export function registerHostModulesEager(): void {
     }
   }
 
-  console.log(`[patchable] Registered ${registeredCount} module(s)`);
 }

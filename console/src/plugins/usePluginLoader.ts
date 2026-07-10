@@ -95,7 +95,6 @@ export async function loadAllPlugins(): Promise<{
   const results = await Promise.allSettled(
     frontendPlugins.map(async (p) => {
       await executePluginScript(resolveUrl(p.id, p.frontend_entry!));
-      console.info(`[PluginLoader] ✓ ${p.id}`);
     }),
   );
 
@@ -107,10 +106,5 @@ export async function loadAllPlugins(): Promise<{
     }
   });
 
-  console.info(
-    `[PluginLoader] ${frontendPlugins.length - failed.length}/${
-      frontendPlugins.length
-    } plugin(s) loaded`,
-  );
   return { loaded: frontendPlugins.length - failed.length, failed };
 }

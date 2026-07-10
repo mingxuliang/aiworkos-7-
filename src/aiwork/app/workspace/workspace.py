@@ -288,6 +288,32 @@ class Workspace:
             )
             return mm
 
+    async def release_user_memory_manager(self, user_id: str) -> None:
+        """Close and evict a per-user memory manager from the cache.
+
+        Acquires the lock, pops the manager, and calls ``close()``
+        outside the lock to avoid blocking other cache access.
+        Safe to call even if no manager exists for the given user.
+        """
+        async with self._user_memory_manager_lock:
+            entry = self._user_memory_managers.pop(user_id, None)
+            if entry is None:
+                return
+            mm, _ = entry
+        # Close outside the lock
+        try:
+            await mm.close()
+            logger.info(
+                "Released per-user memory manager: agent=%s, user=%s",
+                self.agent_id, user_id,
+            )
+        except Exception:
+            logger.exception(
+                "Error closing per-user memory manager: "
+                "agent=%s, user=%s",
+                self.agent_id, user_id,
+            )
+
     def get_user_session(self, user_id: str):
         """Get a per-user SafeJSONSession for isolated session storage.
 
@@ -379,7 +405,7 @@ class Workspace:
                 process=make_process_from_runner(runner),
                 config=temp_config,
                 on_last_dispatch=on_last_dispatch,
-                workspace_dir=self.workspace_dir,
+                workspace_dir=self.workspace_dir / "users" / user_id / "channel_state",
             )
             cm.set_user_id(user_id)
             cm.set_workspace(self)

@@ -75,11 +75,9 @@ export function ApprovalCard({
   }, [createdAt, timeoutSeconds]);
 
   const handleApprove = async () => {
-    console.log("[ApprovalCard] Approve button clicked:", requestId);
     setLoading("approve");
     try {
       await onApprove(requestId);
-      console.log("[ApprovalCard] onApprove completed");
     } catch (err) {
       console.error("[ApprovalCard] onApprove failed:", err);
     } finally {
@@ -204,7 +202,6 @@ export function ApprovalCard({
           <Button
             type="default"
             onClick={() => {
-              console.log("[ApprovalCard] Cancel task button clicked");
               onCancel();
             }}
             disabled={loading !== null}

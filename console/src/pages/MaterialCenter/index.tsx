@@ -8,7 +8,6 @@ import LlmOutputsPanel from "./components/LlmOutputsPanel";
 import UploadModal from "./components/UploadModal";
 import FilePreviewModal from "./components/FilePreviewModal";
 import { useMaterialCenter } from "./useMaterialCenter";
-import { formatFileSize } from "./materialAdapter";
 import { llmOutputsApi, type LlmOutputItem } from "@/api/modules/llmOutputs";
 import { chatApi } from "@/api/modules/chat";
 import { buildAuthHeaders } from "@/api/authHeaders";
@@ -160,10 +159,12 @@ export default function MaterialCenterPage() {
       video: 'video/mp4', image: 'image/jpeg', audio: 'audio/mpeg',
     };
     const mime = mimeMap[file.type] ?? 'application/octet-stream';
-    // 使用相对路径让请求走 Vite 代理（/api/files → 远程文件库）
-    const apiPath = file.downloadUrl ?? `/api/files/${file.id}/download`;
-    const proxyPath = apiPath.startsWith('http') ? apiPath : apiPath;
-    const downloadRes = await fetch(proxyPath, { headers: buildAuthHeaders() });
+    const fileId = Number(file.id);
+    const downloadUrl = Number.isFinite(fileId)
+      ? `/api/files/${fileId}/download`
+      : file.downloadUrl;
+    if (!downloadUrl) throw new Error('无效的文件下载地址');
+    const downloadRes = await fetch(downloadUrl, { headers: buildAuthHeaders() });
     if (!downloadRes.ok) throw new Error(`下载失败 (${downloadRes.status})`);
     const blob = await downloadRes.blob();
     const fileObj = new File([blob], file.name, { type: mime });
@@ -330,7 +331,6 @@ export default function MaterialCenterPage() {
           businessCategories={businessCategories}
           onAddBusiness={handleAddBusiness}
           onDeleteBusiness={handleDeleteBusiness}
-          totalFiles={sidebarCategories.find((c) => c.id === "all")?.count ?? 0}
           totalBytes={totalBytes}
           llmOutputCount={llmOutputCount}
           llmOutputTypeCounts={llmOutputTypeCounts}
@@ -503,15 +503,6 @@ export default function MaterialCenterPage() {
             )}
           </div>
 
-          <div
-            style={{
-              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "8px 20px", background: SYS.bgCard, borderTop: `1px solid ${SYS.borderBase}`,
-            }}
-          >
-            <span style={{ fontSize: 11, color: SYS.textMuted }}>共 {sorted.length} 个文件</span>
-            <span style={{ fontSize: 11, color: SYS.textMuted }}>总大小 {formatFileSize(totalBytes)}</span>
-          </div>
         </main>
       </div>
 

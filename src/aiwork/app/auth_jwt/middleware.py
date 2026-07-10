@@ -24,6 +24,7 @@ _PUBLIC_PATHS: frozenset[str] = frozenset(
         "/api/auth/jwt/login",
         "/api/auth/jwt/status",
         "/api/auth/jwt/register",
+        "/api/auth/status",
         "/api/version",
         "/api/settings/language",
         "/api/plugins",
@@ -38,6 +39,7 @@ _PUBLIC_PREFIXES: tuple[str, ...] = (
     "/aiwork-symbol.svg",
     "/api/plugins/",
     "/api/presale-templates/public/",
+    "/api/rag/image-proxy/",
 )
 
 

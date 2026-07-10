@@ -13,11 +13,15 @@ const RETRY_DELAY_MS = 1000;
  * Derive the module-registry key from an import path, e.g.
  *   "../pages/Settings/Debug/index.tsx"  →  "Settings/Debug/index"
  *   "../../pages/Settings/Debug"         →  "Settings/Debug/index"
+ *   "../../pages/MaterialCenter"         →  "MaterialCenter/index"
  */
 function pathToModuleKey(importPath: string): string {
   const key = importPath.replace(/^.*\/pages\//, "").replace(/\.[^.]+$/, "");
-  // Bare-directory imports are registered as "<Dir>/index" in registerHostModules
-  return key.includes("/") && !/\/index$/.test(key) ? `${key}/index` : key;
+  // All lazyImportWithRetry paths are directory imports; normalise to <key>/index.
+  // This covers both single-level paths (e.g. "MaterialCenter") and nested ones
+  // (e.g. "Control/Channels") without the original `key.includes("/")` guard
+  // that incorrectly left top-level directory names bare.
+  return key.endsWith("/index") ? key : `${key}/index`;
 }
 
 function retryImport<T extends ComponentType<unknown>>(

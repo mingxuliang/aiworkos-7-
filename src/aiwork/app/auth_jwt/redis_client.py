@@ -100,16 +100,20 @@ async def validate_session(jti: str) -> Optional[dict]:
     """Check if a session exists and is valid.
 
     Returns:
-        Session data dict if found, None otherwise.
+        Session data dict if found, None if missing or Redis unavailable.
     """
-    client = await get_redis()
-    key = f"{_SESSION_PREFIX}{jti}"
-    data = await client.get(key)
-    if data is None:
-        return None
     try:
-        return json.loads(data)
-    except (json.JSONDecodeError, TypeError):
+        client = await get_redis()
+        key = f"{_SESSION_PREFIX}{jti}"
+        data = await client.get(key)
+        if data is None:
+            return None
+        try:
+            return json.loads(data)
+        except (json.JSONDecodeError, TypeError):
+            return None
+    except Exception as exc:
+        logger.warning("Redis unavailable in validate_session: %s", exc)
         return None
 
 
@@ -137,12 +141,16 @@ async def delete_session(jti: str) -> bool:
     """Delete a session (logout).
 
     Returns:
-        True if the session was found and deleted.
+        True if the session was found and deleted, False on Redis error.
     """
-    client = await get_redis()
-    key = f"{_SESSION_PREFIX}{jti}"
-    deleted = await client.delete(key)
-    return deleted > 0
+    try:
+        client = await get_redis()
+        key = f"{_SESSION_PREFIX}{jti}"
+        deleted = await client.delete(key)
+        return deleted > 0
+    except Exception as exc:
+        logger.warning("Redis unavailable in delete_session: %s", exc)
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -157,14 +165,24 @@ async def add_to_blacklist(jti: str, ttl_seconds: int) -> None:
         jti: JWT ID to blacklist.
         ttl_seconds: Time remaining until the token expires.
     """
-    client = await get_redis()
-    key = f"{_BLACKLIST_PREFIX}{jti}"
-    await client.setex(key, ttl_seconds, "1")
-    logger.debug("Token blacklisted: jti=%s ttl=%ds", jti[:8], ttl_seconds)
+    try:
+        client = await get_redis()
+        key = f"{_BLACKLIST_PREFIX}{jti}"
+        await client.setex(key, ttl_seconds, "1")
+        logger.debug("Token blacklisted: jti=%s ttl=%ds", jti[:8], ttl_seconds)
+    except Exception as exc:
+        logger.warning("Redis unavailable in add_to_blacklist: %s", exc)
 
 
 async def is_blacklisted(jti: str) -> bool:
-    """Check if a token JTI has been blacklisted."""
-    client = await get_redis()
-    key = f"{_BLACKLIST_PREFIX}{jti}"
-    return await client.exists(key) > 0
+    """Check if a token JTI has been blacklisted.
+
+    Returns False when Redis is unavailable (fail-open: don't block users).
+    """
+    try:
+        client = await get_redis()
+        key = f"{_BLACKLIST_PREFIX}{jti}"
+        return await client.exists(key) > 0
+    except Exception as exc:
+        logger.warning("Redis unavailable in is_blacklisted: %s", exc)
+        return False

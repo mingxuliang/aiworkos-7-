@@ -43,3 +43,8 @@ export interface ListUsersParams {
   username?: string;
   role?: string;
 }
+
+export interface UserUpdateBody {
+  department_id?: number | null;
+  role_ids?: number[];
+}

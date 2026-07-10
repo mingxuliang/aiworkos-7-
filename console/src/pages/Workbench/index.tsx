@@ -6,12 +6,12 @@ import { useWorkbench } from "./useWorkbench";
 import AgentStatusGrid from "./components/AgentStatusGrid";
 import ActivityFeed from "./components/ActivityFeed";
 import AITeamSection from "./components/AITeamSection";
-import WorkbenchNewsCarousel from "./components/WorkbenchNewsCarousel";
+import WorkbenchStatCards from "./components/WorkbenchStatCards";
 
 export default function WorkbenchPage() {
   const { isDark } = useTheme();
   const { t } = useTranslation();
-  const { agents, recentChats, loading } = useWorkbench();
+  const { agents, todayStats, recentChats, loading } = useWorkbench();
   const [searchVal, setSearchVal] = useState("");
 
   const filteredAgents = searchVal
@@ -124,8 +124,8 @@ export default function WorkbenchPage() {
             overflowX: "hidden",
           }}
         >
-          {/* News carousel (replaces stat cards) */}
-          <WorkbenchNewsCarousel />
+          {/* Stat cards: agent count, sessions, LLM calls */}
+          <WorkbenchStatCards agents={filteredAgents} todayStats={todayStats} />
 
           {/* Middle row: Agent status grid + Activity feed */}
           <div

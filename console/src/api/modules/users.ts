@@ -10,6 +10,7 @@ import type {
   JwtUserOut,
   PaginatedJwtUsers,
   UserCreateBody,
+  UserUpdateBody,
   UserImportResult,
   ListUsersParams,
 } from "../types/user";
@@ -30,6 +31,12 @@ export const usersApi = {
   createUser: (body: UserCreateBody) =>
     request<JwtUserOut>("/auth/jwt/users/create", {
       method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  updateUser: (userId: number, body: UserUpdateBody) =>
+    request<JwtUserOut>(`/auth/jwt/users/${userId}`, {
+      method: "PUT",
       body: JSON.stringify(body),
     }),
 

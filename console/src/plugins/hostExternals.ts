@@ -172,20 +172,12 @@ export function installHostExternals(): void {
   if (!window.QwenPaw.registerRoutes) {
     window.QwenPaw.registerRoutes = (pluginId, routes) => {
       pluginSystem.addRoutes(pluginId, routes);
-      console.info(
-        `[plugin:${pluginId}] registerRoutes → ${routes.length} route(s)`,
-      );
     };
   }
 
   if (!window.QwenPaw.registerToolRender) {
     window.QwenPaw.registerToolRender = (pluginId, renderers) => {
       pluginSystem.addToolRenderers(pluginId, renderers);
-      console.info(
-        `[plugin:${pluginId}] registerToolRender → ${Object.keys(
-          renderers,
-        ).join(", ")}`,
-      );
     };
   }
 }

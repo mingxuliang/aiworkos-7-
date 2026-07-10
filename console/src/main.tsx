@@ -1,3 +1,5 @@
+import "./suppressConsole"; // must be first — suppresses library debug noise before any module loads
+import "remixicon/fonts/remixicon.css";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./i18n";

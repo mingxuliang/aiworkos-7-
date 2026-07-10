@@ -24,13 +24,14 @@ import {
   ReloadOutlined,
   SearchOutlined,
   DeleteOutlined,
-  KeyOutlined,
-  UserSwitchOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { usersApi } from "../../../api/modules/users";
 import { jwtRolesApi } from "../../../api/modules/jwtRoles";
-import type { JwtUserOut, JwtRoleOut } from "../../../api/types/user";
+import { departmentApi } from "../../../api/modules/department";
+import type { JwtUserOut, JwtRoleOut, UserUpdateBody } from "../../../api/types/user";
+import type { DepartmentListItem } from "../../../api/types/department";
 import styles from "./index.module.less";
 
 const ROLE_TAG_COLORS: Record<string, string> = {
@@ -61,6 +62,7 @@ export default function UsersPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [roles, setRoles] = useState<JwtRoleOut[]>([]);
+  const [departments, setDepartments] = useState<DepartmentListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [rolesLoading, setRolesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,15 +79,10 @@ export default function UsersPage() {
   const [createLoading, setCreateLoading] = useState(false);
   const [createForm] = Form.useForm();
 
-  const [resetOpen, setResetOpen] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetUser, setResetUser] = useState<JwtUserOut | null>(null);
-  const [resetForm] = Form.useForm();
-
-  const [rolesOpen, setRolesOpen] = useState(false);
-  const [rolesSaving, setRolesSaving] = useState(false);
-  const [rolesUser, setRolesUser] = useState<JwtUserOut | null>(null);
-  const [rolesForm] = Form.useForm();
+  const [editOpen, setEditOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editUser, setEditUser] = useState<JwtUserOut | null>(null);
+  const [editForm] = Form.useForm();
 
   const [importOpen, setImportOpen] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
@@ -140,13 +137,23 @@ export default function UsersPage() {
     }
   }, []);
 
+  const fetchDepartments = useCallback(async () => {
+    try {
+      const res = await departmentApi.getList();
+      setDepartments(res.departments);
+    } catch {
+      /* departments optional */
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers(page, search, roleFilter);
   }, [page, roleFilter]);
 
   useEffect(() => {
     fetchRoles();
-  }, [fetchRoles]);
+    fetchDepartments();
+  }, [fetchRoles, fetchDepartments]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -173,6 +180,7 @@ export default function UsersPage() {
         username: vals.username,
         password: vals.password,
         role_names: vals.role_names ?? ["user"],
+        department_id: vals.department_id ?? undefined,
       });
       antdMessage.success("用户创建成功");
       setCreateOpen(false);
@@ -220,51 +228,35 @@ export default function UsersPage() {
     });
   };
 
-  const openResetModal = (user: JwtUserOut) => {
-    setResetUser(user);
-    resetForm.resetFields();
-    setResetOpen(true);
+  const openEditModal = (user: JwtUserOut) => {
+    setEditUser(user);
+    const deptId = departments.find((d) => d.department_name === user.department_name)?.id ?? undefined;
+    const roleIds = roles.filter((r) => user.roles.includes(r.name)).map((r) => r.id);
+    editForm.setFieldsValue({ department_id: deptId, role_ids: roleIds });
+    setEditOpen(true);
   };
 
-  const handleResetPassword = async () => {
+  const handleEditUser = async () => {
     try {
-      const vals = await resetForm.validateFields();
-      if (!resetUser) return;
-      setResetLoading(true);
-      await usersApi.resetPassword(resetUser.id, vals.new_password);
-      antdMessage.success(`用户 ${resetUser.username} 密码已重置`);
-      setResetOpen(false);
-    } catch (err) {
-      if (err && typeof err === "object" && "errorFields" in err) return;
-      antdMessage.error(err instanceof Error ? err.message : "重置失败");
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const openRolesModal = (user: JwtUserOut) => {
-    setRolesUser(user);
-    const roleIds = roles
-      .filter((r) => user.roles.includes(r.name))
-      .map((r) => r.id);
-    rolesForm.setFieldsValue({ role_ids: roleIds });
-    setRolesOpen(true);
-  };
-
-  const handleAssignRoles = async () => {
-    try {
-      const vals = await rolesForm.validateFields();
-      if (!rolesUser) return;
-      setRolesSaving(true);
-      await usersApi.assignRoles(rolesUser.id, vals.role_ids ?? []);
-      antdMessage.success("角色已更新");
-      setRolesOpen(false);
+      const vals = await editForm.validateFields();
+      if (!editUser) return;
+      setEditLoading(true);
+      const body: UserUpdateBody = {
+        department_id: vals.department_id ?? null,
+        role_ids: vals.role_ids,
+      };
+      await usersApi.updateUser(editUser.id, body);
+      if (vals.new_password) {
+        await usersApi.resetPassword(editUser.id, vals.new_password);
+      }
+      antdMessage.success("用户信息已更新");
+      setEditOpen(false);
       fetchUsers(page, search, roleFilter);
     } catch (err) {
       if (err && typeof err === "object" && "errorFields" in err) return;
-      antdMessage.error(err instanceof Error ? err.message : "角色更新失败");
+      antdMessage.error(err instanceof Error ? err.message : "更新失败");
     } finally {
-      setRolesSaving(false);
+      setEditLoading(false);
     }
   };
 
@@ -331,6 +323,19 @@ export default function UsersPage() {
         ),
     },
     {
+      title: "部门",
+      key: "department_name",
+      width: 140,
+      render: (_, r) =>
+        r.department_name ? (
+          <span style={{ fontSize: 13, color: isDark ? "#cbd5e1" : "#334155" }}>
+            {r.department_name}
+          </span>
+        ) : (
+          <span style={{ color: "#94a3b8", fontSize: 12 }}>—</span>
+        ),
+    },
+    {
       title: "状态",
       key: "is_active",
       width: 80,
@@ -366,20 +371,12 @@ export default function UsersPage() {
       fixed: "right",
       render: (_, r) => (
         <Space size={4}>
-          <Tooltip title="修改角色">
+          <Tooltip title="编辑信息">
             <Button
               size="small"
               type="text"
-              icon={<UserSwitchOutlined />}
-              onClick={() => openRolesModal(r)}
-            />
-          </Tooltip>
-          <Tooltip title="重置密码">
-            <Button
-              size="small"
-              type="text"
-              icon={<KeyOutlined />}
-              onClick={() => openResetModal(r)}
+              icon={<EditOutlined />}
+              onClick={() => openEditModal(r)}
             />
           </Tooltip>
           <Popconfirm
@@ -564,7 +561,7 @@ export default function UsersPage() {
             columns={columns}
             dataSource={users}
             rowKey="id"
-            scroll={{ x: 700 }}
+            scroll={{ x: 860 }}
             size="middle"
             locale={{ emptyText: <Empty description="暂无用户" /> }}
             rowSelection={{
@@ -640,65 +637,58 @@ export default function UsersPage() {
               }))}
             />
           </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        open={resetOpen}
-        title={`重置密码 · @${resetUser?.username ?? ""}`}
-        onOk={handleResetPassword}
-        onCancel={() => setResetOpen(false)}
-        confirmLoading={resetLoading}
-        okText="确认重置"
-        cancelText="取消"
-        destroyOnHidden
-        width={400}
-      >
-        <Form form={resetForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item
-            name="new_password"
-            label="新密码"
-            rules={[
-              { required: true, message: "请填写新密码" },
-              { min: 6, message: "密码至少 6 位" },
-            ]}
-          >
-            <Input.Password placeholder="至少 6 位" autoComplete="new-password" />
-          </Form.Item>
-          <Form.Item
-            name="confirm_password"
-            label="确认密码"
-            dependencies={["new_password"]}
-            rules={[
-              { required: true, message: "请再次输入密码" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("new_password") === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error("两次密码不一致"));
-                },
-              }),
-            ]}
-          >
-            <Input.Password placeholder="再次输入新密码" autoComplete="new-password" />
+          <Form.Item name="department_id" label="部门">
+            <Select
+              placeholder="选择所属部门（可选）"
+              allowClear
+              options={[
+                ...departments.map((d) => ({
+                  value: d.id,
+                  label: d.department_name,
+                })),
+              ]}
+              notFoundContent={
+                <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                  暂无部门，请先在组织架构中创建
+                </span>
+              }
+            />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        open={rolesOpen}
-        title={`修改角色 · @${rolesUser?.username ?? ""}`}
-        onOk={handleAssignRoles}
-        onCancel={() => setRolesOpen(false)}
-        confirmLoading={rolesSaving}
+        open={editOpen}
+        title={
+          <span>
+            编辑用户 · <span style={{ color: "#3b82f6" }}>@{editUser?.username ?? ""}</span>
+          </span>
+        }
+        onOk={handleEditUser}
+        onCancel={() => setEditOpen(false)}
+        confirmLoading={editLoading}
         okText="保存"
         cancelText="取消"
         destroyOnHidden
         width={440}
       >
-        <Form form={rolesForm} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="role_ids" label="分配角色">
+        <Form form={editForm} layout="vertical" style={{ marginTop: 16 }}>
+          <Form.Item name="department_id" label="所属部门">
+            <Select
+              placeholder="选择所属部门（可选）"
+              allowClear
+              options={departments.map((d) => ({
+                value: d.id,
+                label: d.department_name,
+              }))}
+              notFoundContent={
+                <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                  暂无部门，请先在组织架构中创建
+                </span>
+              }
+            />
+          </Form.Item>
+          <Form.Item name="role_ids" label="角色">
             <Select
               mode="multiple"
               placeholder="选择角色"
@@ -717,6 +707,30 @@ export default function UsersPage() {
                 ),
               }))}
             />
+          </Form.Item>
+          <Form.Item
+            name="new_password"
+            label="重置密码"
+            extra="不填则不修改密码"
+            rules={[{ min: 6, message: "密码至少 6 位" }]}
+          >
+            <Input.Password placeholder="留空则不修改" autoComplete="new-password" />
+          </Form.Item>
+          <Form.Item
+            name="confirm_password"
+            label="确认新密码"
+            dependencies={["new_password"]}
+            rules={[
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  const pwd = getFieldValue("new_password");
+                  if (!pwd || pwd === value) return Promise.resolve();
+                  return Promise.reject(new Error("两次密码不一致"));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="再次输入新密码" autoComplete="new-password" />
           </Form.Item>
         </Form>
       </Modal>

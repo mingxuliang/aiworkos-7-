@@ -57,7 +57,11 @@ function isPptxFile(name: string): boolean {
 }
 
 function getDownloadUrl(file: MaterialFile): string {
-  const apiPath = file.downloadUrl ?? `/api/files/${file.id}/download`;
+  const fileId = Number(file.id);
+  const apiPath = Number.isFinite(fileId)
+    ? `/api/files/${fileId}/download`
+    : file.downloadUrl;
+  if (!apiPath) throw new Error('无效的文件下载地址');
   const url = apiPath.startsWith('http') ? apiPath : getApiUrl(apiPath.replace(/^\/api/, ''));
   const token = getApiToken();
   if (!token) return url;
@@ -75,9 +79,8 @@ function getDownloadUrl(file: MaterialFile): string {
 }
 
 async function fetchPreviewBlob(file: MaterialFile): Promise<Blob> {
-  if (!file.downloadUrl) {
-    const fileId = Number(file.id);
-    if (!Number.isFinite(fileId)) throw new Error('无效的文件 ID');
+  const fileId = Number(file.id);
+  if (Number.isFinite(fileId)) {
     return filesApi.fetchFileBlob(fileId);
   }
 

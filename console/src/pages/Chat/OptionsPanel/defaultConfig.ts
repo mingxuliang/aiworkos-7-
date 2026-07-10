@@ -13,7 +13,7 @@ const defaultConfig = {
   },
   sender: {
     attachments: true,
-    maxLength: 10000,
+    maxLength: 20000,
     disclaimer: "Works for you, grows with you",
   },
   welcome: {

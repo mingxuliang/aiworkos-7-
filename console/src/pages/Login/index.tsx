@@ -414,28 +414,6 @@ export default function LoginPage() {
                 <span style={{ fontSize: 12, color: "rgba(147,197,253,.26)" }}>还没有账号？请联系管理员开通</span>
               </div>
 
-              <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(96,165,250,.08)" }}>
-                <p style={{ margin: 0, textAlign: "center", fontSize: 11, color: "rgba(147,197,253,.2)", lineHeight: 1.6 }}>
-                  登录即表示同意&nbsp;
-                  <a
-                    href="/terms.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "rgba(96,165,250,.45)", textDecoration: "none" }}
-                  >
-                    用户协议
-                  </a>
-                  &nbsp;与&nbsp;
-                  <a
-                    href="/privacy.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "rgba(96,165,250,.45)", textDecoration: "none" }}
-                  >
-                    隐私政策
-                  </a>
-                </p>
-              </div>
             </div>
           </div>
         </div>

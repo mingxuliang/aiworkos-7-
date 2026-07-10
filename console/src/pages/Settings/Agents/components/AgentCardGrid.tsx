@@ -164,10 +164,12 @@ function SortableAgentCard({
         </div>
 
         <div className={`cbc-meta ${styles.agentCardLines}`}>
-          <div className={styles.agentCardLine}>{agent.description || "—"}</div>
-          <div className={styles.agentCardLine}>
-            {t("agent.workspace")}:{" "}
-            <span>{agent.workspace_dir?.trim() || "—"}</span>
+          <div
+            className={styles.agentCardLine}
+            style={{ minHeight: "2.8em" }}
+            title={agent.description || undefined}
+          >
+            {agent.description || "—"}
           </div>
           <div className={styles.agentCardLine}>
             {t("agent.modelColumn")}:{" "}

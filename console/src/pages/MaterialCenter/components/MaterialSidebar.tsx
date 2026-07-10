@@ -9,7 +9,6 @@ interface Props {
   businessCategories: BusinessCategory[];
   onAddBusiness: (name: string) => void | Promise<void>;
   onDeleteBusiness: (id: string) => void | Promise<void>;
-  totalFiles: number;
   totalBytes: number;
   llmOutputCount?: number;
   llmOutputTypeCounts?: Partial<Record<'doc' | 'video' | 'image' | 'audio', number>>;
@@ -33,7 +32,6 @@ const MaterialSidebar = ({
   materialCategories,
   activeCategory,
   onSelect,
-  totalFiles,
   totalBytes,
   llmOutputCount,
   llmOutputTypeCounts,
@@ -125,7 +123,6 @@ const MaterialSidebar = ({
       {/* Header */}
       <div style={{ padding: '16px 16px 12px', borderBottom: `1px solid ${SYS.borderBase}` }}>
         <h2 style={{ fontSize: 13, fontWeight: 600, color: SYS.textMain, margin: 0 }}>素材分类</h2>
-        <p style={{ fontSize: 11, color: SYS.textMuted, marginTop: 2, marginBottom: 0 }}>共 {totalFiles} 个文件</p>
       </div>
 
       <nav className="migrated-scroll" style={{ flex: 1, padding: '8px 8px', display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -245,7 +242,6 @@ const MaterialSidebar = ({
           <span style={{ fontSize: 11, color: SYS.textSub, fontWeight: 500 }}>已用空间</span>
           <span style={{ fontSize: 11, color: SYS.primary, fontWeight: 600 }}>{formatFileSize(totalBytes)}</span>
         </div>
-        <p style={{ fontSize: 10, color: SYS.textMuted, marginTop: 4, marginBottom: 0 }}>文件存储于 MinIO 对象存储</p>
       </div>
     </aside>
   );

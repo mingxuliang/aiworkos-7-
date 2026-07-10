@@ -77,14 +77,21 @@ class RagMinioClient:
         )
         self._executor = ThreadPoolExecutor(max_workers=4)
 
-        # Base public URL for images (without bucket prefix — added per-object)
-        raw_endpoint = EnvVarLoader.get_str("AIWORK_MINIO_ENDPOINT", "").strip()
-        if raw_endpoint.startswith("https://"):
-            self._minio_public_base = raw_endpoint
-        elif raw_endpoint.startswith("http://"):
-            self._minio_public_base = raw_endpoint
+        # Base public URL for images (without bucket prefix — added per-object).
+        # AIWORK_RAG_IMAGE_PUBLIC_BASE overrides the direct MinIO URL so that
+        # images can be served via an HTTPS proxy when the frontend is on HTTPS.
+        # Example: AIWORK_RAG_IMAGE_PUBLIC_BASE=https://your-domain/api/rag/image-proxy
+        custom_base = EnvVarLoader.get_str("AIWORK_RAG_IMAGE_PUBLIC_BASE", "").strip()
+        if custom_base:
+            self._minio_public_base = custom_base.rstrip("/")
         else:
-            self._minio_public_base = f"http://{raw_endpoint}"
+            raw_endpoint = EnvVarLoader.get_str("AIWORK_MINIO_ENDPOINT", "").strip()
+            if raw_endpoint.startswith("https://"):
+                self._minio_public_base = raw_endpoint
+            elif raw_endpoint.startswith("http://"):
+                self._minio_public_base = raw_endpoint
+            else:
+                self._minio_public_base = f"http://{raw_endpoint}"
 
     # ------------------------------------------------------------------
     # Properties

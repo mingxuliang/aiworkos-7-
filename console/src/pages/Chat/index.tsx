@@ -50,8 +50,10 @@ import WhisperSpeechButton, {
   WhisperSpeechButtonRef,
 } from "./components/WhisperSpeechButton";
 import SenderTypingWaveform from "./components/SenderTypingWaveform";
+import SenderCharWarning from "./components/SenderCharWarning";
 import ExecutionEnvironmentSelector from "./components/ExecutionEnvironmentSelector";
 import ChatSenderPrefixActions from "./components/ChatSenderPrefixActions";
+import RunModeSelector, { type RunMode } from "./components/RunModeSelector";
 import { useExecutionEnvironment } from "../../hooks/useExecutionEnvironment";
 import { useAuthenticatedUserId } from "../../hooks/useAuthenticatedUserId";
 import { usePendingChatFilesStore } from "../../stores/pendingChatFilesStore";
@@ -546,6 +548,9 @@ export default function ChatPage() {
     Map<string, ApprovalMessageData>
   >(new Map());
   const [planEnabled, setPlanEnabled] = useState(false);
+  const [runMode, setRunMode] = useState<RunMode>("ask");
+  // Keep a ref in sync so customFetch (useCallback) can read the latest value without re-creating.
+  useEffect(() => { runModeRef.current = runMode; }, [runMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -709,6 +714,7 @@ export default function ChatPage() {
   const navigateRef = useRef(navigate);
   const chatRef = useRef<IAgentScopeRuntimeWebUIRef>(null);
   const pendingClearHistoryRef = useRef(false);
+  const runModeRef = useRef<RunMode>("ask");
   const whisperSpeechRef = useRef<WhisperSpeechButtonRef>(null);
   const [whisperEnabled, setWhisperEnabled] = useState(false);
 
@@ -735,8 +741,24 @@ export default function ChatPage() {
     }
   }, []);
 
+  const MAX_SENDER_LENGTH = defaultConfig.sender.maxLength;
+
+  /** Stable char-limit warning shown inside sender when ≥ 90% full. */
+  const senderCharWarning = useMemo(
+    () => <SenderCharWarning maxLength={MAX_SENDER_LENGTH} />,
+    [MAX_SENDER_LENGTH],
+  );
+
   /** Stable tree for AgentScope sender.beforeUI — TypingWaveform from ai助手. */
-  const senderTypingWaveform = useMemo(() => <SenderTypingWaveform />, []);
+  const senderTypingWaveform = useMemo(
+    () => (
+      <>
+        <SenderTypingWaveform />
+        {senderCharWarning}
+      </>
+    ),
+    [senderCharWarning],
+  );
 
   const executionEnvironmentSelector = useMemo(
     () => (
@@ -752,13 +774,24 @@ export default function ChatPage() {
   const pendingFilesUI = useMemo(
     () =>
       pendingFiles.length > 0 ? (
-        <PendingFilesBar
-          files={pendingFiles}
-          onRemove={removePendingFile}
-          onClear={clearPendingFiles}
-        />
+        <>
+          <PendingFilesBar
+            files={pendingFiles}
+            onRemove={removePendingFile}
+            onClear={clearPendingFiles}
+          />
+          {senderCharWarning}
+        </>
       ) : undefined,
-    [pendingFiles, removePendingFile, clearPendingFiles],
+    [pendingFiles, removePendingFile, clearPendingFiles, senderCharWarning],
+  );
+
+  const runModeSelectorEl = useMemo(
+    () =>
+      planEnabled ? (
+        <RunModeSelector mode={runMode} onChange={setRunMode} />
+      ) : undefined,
+    [planEnabled, runMode],
   );
 
   const senderPrefixActions = useMemo(
@@ -773,12 +806,14 @@ export default function ChatPage() {
           ) : undefined
         }
         environmentSelector={executionEnvironmentSelector}
+        runModeSelector={runModeSelectorEl}
       />
     ),
     [
       whisperEnabled,
       handleWhisperTranscription,
       executionEnvironmentSelector,
+      runModeSelectorEl,
     ],
   );
 
@@ -971,15 +1006,38 @@ export default function ChatPage() {
       const session: SessionInfo = input[input.length - 1]?.session || {};
       const lastInput = input.slice(-1);
       const lastMsg = lastInput[0];
+
+      // Plan mode: prepend "/plan " to the user's text so the backend runner activates plan mode.
+      const planPrefixedMsg =
+        runModeRef.current === "plan" &&
+        lastMsg?.role === "user" &&
+        Array.isArray(lastMsg.content)
+          ? {
+              ...lastMsg,
+              content: (lastMsg.content as Array<Record<string, unknown>>).map(
+                (part) => {
+                  if (
+                    part.type === "text" &&
+                    typeof part.text === "string" &&
+                    !part.text.trimStart().startsWith("/plan ")
+                  ) {
+                    return { ...part, text: `/plan ${part.text}` };
+                  }
+                  return part;
+                },
+              ),
+            }
+          : lastMsg;
+
       const rewrittenInput =
-        lastMsg?.content && Array.isArray(lastMsg.content)
+        planPrefixedMsg?.content && Array.isArray(planPrefixedMsg.content)
           ? [
               {
-                ...lastMsg,
-                content: lastMsg.content.map(normalizeContentUrls),
+                ...planPrefixedMsg,
+                content: planPrefixedMsg.content.map(normalizeContentUrls),
               },
             ]
-          : lastInput;
+          : [planPrefixedMsg];
 
       const requestBody = {
         input: rewrittenInput,
@@ -1099,6 +1157,19 @@ export default function ChatPage() {
 
     const handleBeforeSubmit = async () => {
       if (isComposingRef.current) return false;
+
+      // Block submission if input exceeds the character limit.
+      const senderEl = document.querySelector('[class*="sender"]');
+      const ta = senderEl?.querySelector("textarea") as HTMLTextAreaElement | null;
+      if (ta && ta.value.length >= MAX_SENDER_LENGTH) {
+        message.warning(
+          t("chat.inputExceedsLimit", {
+            max: MAX_SENDER_LENGTH.toLocaleString(),
+            defaultValue: `输入内容已达 ${MAX_SENDER_LENGTH.toLocaleString()} 字上限，请删减后再发送`,
+          }),
+        );
+        return false;
+      }
 
       // If pending files from Material Center exist, intercept, inject them, and re-submit.
       const pending = usePendingChatFilesStore.getState().files;
@@ -1262,6 +1333,7 @@ export default function ChatPage() {
     toolRenderConfig,
     scheduleHistoryClear,
     planEnabled,
+    runMode,
     senderTypingWaveform,
     pendingFilesUI,
     senderPrefixActions,

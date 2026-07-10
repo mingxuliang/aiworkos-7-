@@ -691,6 +691,18 @@ class Mem0MemoryConfig(BaseModel):
         description="pgvector password. When empty, reads MEM0_PGVECTOR_PASSWORD env var.",
     )
 
+    # --- Connection pool (defensive — shared pool is used by default) ---
+    mem0_pgvector_minconn: int = Field(
+        default=1,
+        description="Minimum pgvector pool connections. "
+        "Defensive only — the shared pool is used by default.",
+    )
+    mem0_pgvector_maxconn: int = Field(
+        default=1,
+        description="Maximum pgvector pool connections. "
+        "Defensive only — the shared pool is used by default.",
+    )
+
     # --- Collection ---
     mem0_collection_name: str = Field(
         default="",

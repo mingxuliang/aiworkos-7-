@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
+import { compression } from "vite-plugin-compression2";
 import path from "path";
 import type { ServerResponse } from "http";
 import { rssProxyPlugin } from "./vite-plugin-rss-proxy";
@@ -33,7 +34,17 @@ export default defineConfig(({ mode }) => {
       TOKEN: JSON.stringify(env.TOKEN || ""),
       MOBILE: false,
     },
-    plugins: [react(), cssStubPlugin, ...(mode === "development" ? [rssProxyPlugin()] : [])],
+    plugins: [
+      react(),
+      cssStubPlugin,
+      ...(mode === "development" ? [rssProxyPlugin()] : []),
+      ...(mode === "production"
+        ? [
+            compression({ algorithms: ["gzip"], exclude: [/\.(br)$/, /\.(gz)$/] }),
+            compression({ algorithms: ["brotliCompress"], exclude: [/\.(br)$/, /\.(gz)$/] }),
+          ]
+        : []),
+    ],
     css: {
       modules: {
         localsConvention: "camelCase",
@@ -161,24 +172,38 @@ export default defineConfig(({ mode }) => {
             ) {
               return "react-vendor";
             }
-            // Ant Design + AgentScope design system (merged to avoid circular deps)
-            // Exclude x-markdown: it depends on react-markdown, must be in markdown-vendor
-            if (
-              (id.includes("node_modules/antd/") ||
-               id.includes("node_modules/antd-style/") ||
-               id.includes("node_modules/@ant-design/") ||
-               id.includes("node_modules/@agentscope-ai/")) &&
-              !id.includes("node_modules/@ant-design/x-markdown/")
-            ) {
-              return "ui-vendor";
+
+            // Mermaid — very large (~2 MB), isolate so other pages don't wait for it
+            if (id.includes("node_modules/mermaid/")) {
+              return "mermaid-vendor";
             }
-            // i18n
+
+            // Charts / data-viz — heavy, only needed in stats/charts pages
             if (
-              id.includes("node_modules/i18next/") ||
-              id.includes("node_modules/react-i18next/")
+              id.includes("node_modules/recharts/") ||
+              id.includes("node_modules/@ant-design/plots/") ||
+              id.includes("node_modules/d3") ||
+              id.includes("node_modules/@visx/")
             ) {
-              return "i18n-vendor";
+              return "charts-vendor";
             }
+
+            // Document preview — only needed when user opens a doc
+            if (
+              id.includes("node_modules/docx-preview/") ||
+              id.includes("node_modules/@aiden0z/pptx-renderer/")
+            ) {
+              return "docview-vendor";
+            }
+
+            // Animation & 3D (motion, ogl) — non-critical, load after main UI
+            if (
+              id.includes("node_modules/motion/") ||
+              id.includes("node_modules/ogl/")
+            ) {
+              return "fx-vendor";
+            }
+
             // Markdown rendering (includes @ant-design/x-markdown because it
             // depends on react-markdown and must stay in the same chunk)
             if (
@@ -194,16 +219,57 @@ export default defineConfig(({ mode }) => {
             ) {
               return "markdown-vendor";
             }
+
+            // AgentScope chat runtime — large (~2.3 MB), split from UI design system
+            if (id.includes("node_modules/@agentscope-ai/chat/")) {
+              return "agentscope-chat";
+            }
+
+            // AgentScope icons — separate to allow independent caching
+            if (id.includes("node_modules/@agentscope-ai/icons/")) {
+              return "agentscope-icons";
+            }
+
+            // AgentScope design + remaining @agentscope-ai packages
+            if (id.includes("node_modules/@agentscope-ai/")) {
+              return "agentscope-design";
+            }
+
+            // Ant Design core — the foundation, separated from AgentScope
+            if (
+              id.includes("node_modules/antd/") ||
+              id.includes("node_modules/antd-style/") ||
+              id.includes("node_modules/@ant-design/icons/") ||
+              id.includes("node_modules/rc-")
+            ) {
+              return "antd-vendor";
+            }
+
+            // Remaining @ant-design packages (x, x-markdown handled above)
+            if (id.includes("node_modules/@ant-design/")) {
+              return "antd-extra";
+            }
+
+            // i18n
+            if (
+              id.includes("node_modules/i18next/") ||
+              id.includes("node_modules/react-i18next/")
+            ) {
+              return "i18n-vendor";
+            }
+
             // Drag and drop
             if (id.includes("node_modules/@dnd-kit/")) {
               return "dnd-vendor";
             }
+
             // Utilities (dayjs, zustand, ahooks, etc.)
             if (
               id.includes("node_modules/dayjs/") ||
               id.includes("node_modules/zustand/") ||
               id.includes("node_modules/ahooks/") ||
-              id.includes("node_modules/@vvo/tzdb/")
+              id.includes("node_modules/@vvo/tzdb/") ||
+              id.includes("node_modules/lucide-react/")
             ) {
               return "utils-vendor";
             }

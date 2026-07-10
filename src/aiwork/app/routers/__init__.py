@@ -56,6 +56,22 @@ from ..auth_jwt import get_router
 
 router.include_router(get_router())
 
+# Unified /auth/status alias (public endpoint for the login page).
+# The JWT router is at /auth/jwt/status; expose a shorter path so the
+# frontend can call /api/auth/status regardless of auth mode.
+from fastapi import APIRouter as _APIRouter
+
+_auth_alias_router = _APIRouter(prefix="/auth", tags=["auth"])
+
+
+@_auth_alias_router.get("/status")
+async def auth_status_alias():
+    """Unified auth status — always JWT mode."""
+    return {"mode": "jwt", "enabled": True}
+
+
+router.include_router(_auth_alias_router)
+
 from .department import router as department_router
 
 router.include_router(department_router)

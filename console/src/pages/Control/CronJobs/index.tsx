@@ -16,6 +16,7 @@ import {
   JobDrawer,
   useCronJobs,
   DEFAULT_FORM_VALUES,
+  type CronJobWithAgent,
 } from "./components";
 import { ExecutionRecordsDrawer } from "./components/ExecutionRecordsDrawer";
 import {
@@ -28,6 +29,7 @@ import { CopawWorkbenchShell } from "@/components/CopawWorkbenchShell";
 import styles from "./index.module.less";
 
 type CronJob = CronJobSpecOutput;
+type CronJobWA = CronJobWithAgent;
 
 function CronJobsPage() {
   const { t } = useTranslation();
@@ -163,10 +165,11 @@ function CronJobsPage() {
   };
 
   const handleToggleEnabled = async (job: CronJob) => {
-    await toggleEnabled(job);
+    await toggleEnabled(job as CronJobWA);
   };
 
   const handleExecuteNow = async (job: CronJob) => {
+    const jobWA = job as CronJobWA;
     Modal.confirm({
       title: t("cronJobs.executeNowTitle"),
       content: t("cronJobs.executeNowContent", { name: job.name }),
@@ -174,7 +177,8 @@ function CronJobsPage() {
       okType: "primary",
       cancelText: t("cronJobs.cancelText"),
       onOk: async () => {
-        await executeNow(job.id);
+        // Pass the agent the job was loaded from to avoid cross-agent 404.
+        await executeNow(job.id, jobWA._agentId);
       },
     });
   };

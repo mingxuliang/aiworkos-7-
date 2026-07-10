@@ -116,6 +116,32 @@ export const authApi = {
     return res.json();
   },
 
+  verifyToken: async (token: string): Promise<boolean> => {
+    if (!token) return false;
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+
+    const jwtRes = await fetch(getApiUrl("/auth/jwt/verify"), {
+      method: "POST",
+      headers,
+    });
+    if (jwtRes.ok) {
+      const data = (await jwtRes.json().catch(() => ({}))) as {
+        valid?: boolean;
+      };
+      return data.valid !== false;
+    }
+
+    const legacyRes = await fetch(getApiUrl("/auth/verify-token"), {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ token }),
+    });
+    return legacyRes.ok;
+  },
+
   updateProfile: async (
     currentPassword: string,
     newUsername?: string,

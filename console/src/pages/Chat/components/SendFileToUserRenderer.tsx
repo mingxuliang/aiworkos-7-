@@ -8,8 +8,6 @@ import { CodeBlock, IconButton } from "@agentscope-ai/design";
 import { copyText, toDisplayUrl } from "../utils";
 import { Space } from "antd";
 
-// Module-level log to confirm this file is loaded by Vite
-console.log("[send_file_to_user] Module loaded");
 
 // ---------------------------------------------------------------------------
 // Types
@@ -249,13 +247,11 @@ const FileDownloadCard: React.FC<{ file: FileInfo; loading?: boolean }> = ({ fil
   // which may not properly attach handlers during streaming re-renders.
   useEffect(() => {
     const el = cardRef.current;
-    console.log("[send_file_to_user] useEffect attach, el=", !!el, "url=", !!file.url);
     if (!el || !file.url) return;
 
     const handler = (e: MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
-      console.log("[send_file_to_user] NATIVE click, url=", file.url?.slice(0, 80));
 
       let safeUrl: string;
       try {
@@ -274,7 +270,6 @@ const FileDownloadCard: React.FC<{ file: FileInfo; loading?: boolean }> = ({ fil
 
       const newWindow = window.open(safeUrl, "_blank", "noopener,noreferrer");
       if (!newWindow) {
-        console.log("[send_file_to_user] window.open blocked, using anchor fallback");
         const a = document.createElement("a");
         a.href = safeUrl;
         a.target = "_blank";
@@ -288,14 +283,12 @@ const FileDownloadCard: React.FC<{ file: FileInfo; loading?: boolean }> = ({ fil
 
     el.addEventListener("click", handler);
     return () => {
-      console.log("[send_file_to_user] useEffect detach");
       el.removeEventListener("click", handler);
     };
   }, [file.url, file.name]);
 
   const handleDownload = useCallback(() => {
     // React synthetic handler as fallback — but native handler should handle it
-    console.log("[send_file_to_user] REACT click");
   }, []);
 
   return (
@@ -457,20 +450,6 @@ const SendFileToUserRenderer: React.FC<{ data: Record<string, unknown> }> = ({
 
   const hasFiles = fileCards.length > 0;
 
-  // Debug: log data shape to help diagnose streaming vs history differences
-  if (import.meta.env.DEV) {
-    console.log(
-      "[send_file_to_user] RENDER",
-      `type=${data.type as string}, status=${data.status as string}, contentLen=${content?.length || 0}, fileCount=${files.length}`,
-      {
-        toolOutput: content?.[1]?.data?.output,
-        contentTypes: content?.map((c) => c?.type),
-        fullContent: content,
-        files,
-        fileCards,
-      },
-    );
-  }
 
   // When no files are found, fall back to the default ToolCall rendering
   if (!hasFiles) {

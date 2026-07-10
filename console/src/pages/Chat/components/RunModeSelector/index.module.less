@@ -1,0 +1,149 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px 0 8px;
+  height: 26px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  outline: none;
+  user-select: none;
+
+  &:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .modeIcon {
+    font-size: 13px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .label {
+    font-weight: 500;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+
+  .arrow {
+    font-size: 13px;
+    line-height: 1;
+    opacity: 0.6;
+    margin-left: 1px;
+  }
+}
+
+.planActive {
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  background: #eff6ff;
+
+  &:hover:not(:disabled) {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+  }
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+  min-width: 190px;
+}
+
+.menuIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  flex-shrink: 0;
+
+  i {
+    font-size: 13px;
+    color: #64748b;
+  }
+}
+
+.menuText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+}
+
+.menuLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.menuDesc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.checkIcon {
+  font-size: 13px;
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+:global(.dark) {
+  .trigger {
+    border-color: #334155;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.04);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: #475569;
+      color: #cbd5e1;
+    }
+  }
+
+  .planActive {
+    border-color: #1d4ed8;
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.1);
+
+    &:hover:not(:disabled) {
+      background: rgba(59, 130, 246, 0.16);
+      border-color: #3b82f6;
+      color: #93c5fd;
+    }
+  }
+
+  .menuIcon {
+    background: #1e293b;
+
+    i {
+      color: #94a3b8;
+    }
+  }
+
+  .menuLabel {
+    color: #e2e8f0;
+  }
+}

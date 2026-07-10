@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import dayjs from "dayjs";
 import { agentsApi } from "../../api/modules/agents";
-import { agentStatusApi, type AgentStatus } from "../../api/modules/agentStatus";
 import { agentStatsApi } from "../../api/modules/agentStats";
 import { chatApi } from "../../api/modules/chat";
 import type { AgentSummary } from "../../api/types/agents";
 import type { ChatSpec } from "../../api/types/chat";
 import type { AgentStatsSummary } from "../../api/types/agentStats";
+
+export interface AgentStatus {
+  status: "idle" | "running" | "disabled";
+  running_task_count: number;
+  last_run_at: string | null;
+  last_finish_at: string | null;
+}
 
 export interface AgentWithStatus extends AgentSummary {
   runtimeStatus: AgentStatus | null;
@@ -39,26 +45,8 @@ export function useWorkbench(): WorkbenchData {
   const [recentChats, setRecentChats] = useState<ChatSpec[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const statusTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const chatsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const statsTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // ── Fetch agent statuses only ──────────────────────────────────────────
-  const refreshStatuses = async (agentList: AgentSummary[]) => {
-    if (!agentList.length) return;
-    const results = await Promise.allSettled(
-      agentList.map((a) => agentStatusApi.getStatus(a.id)),
-    );
-    setAgents(
-      agentList.map((a, i) => ({
-        ...a,
-        runtimeStatus:
-          results[i].status === "fulfilled"
-            ? (results[i] as PromiseFulfilledResult<AgentStatus>).value
-            : null,
-      })),
-    );
-  };
 
   // ── Fetch chats ────────────────────────────────────────────────────────
   const refreshChats = async () => {
@@ -97,22 +85,7 @@ export function useWorkbench(): WorkbenchData {
         const agentList =
           agentRes.status === "fulfilled" ? agentRes.value.agents : [];
 
-        // Fetch statuses in parallel with initial load
-        const withStatus = await (async () => {
-          if (!agentList.length) return [];
-          const results = await Promise.allSettled(
-            agentList.map((a) => agentStatusApi.getStatus(a.id)),
-          );
-          return agentList.map((a, i) => ({
-            ...a,
-            runtimeStatus:
-              results[i].status === "fulfilled"
-                ? (results[i] as PromiseFulfilledResult<AgentStatus>).value
-                : null,
-          }));
-        })();
-
-        setAgents(withStatus);
+        setAgents(agentList.map((a) => ({ ...a, runtimeStatus: null })));
         if (statsRes.status === "fulfilled") setTodayStats(statsRes.value);
         if (chatsRes.status === "fulfilled") {
           setRecentChats(buildRecentChats(chatsRes.value));
@@ -121,22 +94,6 @@ export function useWorkbench(): WorkbenchData {
         setLoading(false);
       }
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── Polling: agent status every 8s ────────────────────────────────────
-  useEffect(() => {
-    statusTimerRef.current = setInterval(() => {
-      setAgents((prev) => {
-        if (!prev.length) return prev;
-        const base = prev.map(({ runtimeStatus: _r, ...rest }) => rest);
-        refreshStatuses(base).catch(() => {});
-        return prev; // keep old while fetch is in flight
-      });
-    }, 8_000);
-    return () => {
-      if (statusTimerRef.current) clearInterval(statusTimerRef.current);
-    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

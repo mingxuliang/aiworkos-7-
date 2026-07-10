@@ -9,6 +9,7 @@ and reachable at startup.
 from __future__ import annotations
 
 import logging
+from urllib.parse import quote
 
 from fastapi import (
     APIRouter,
@@ -20,7 +21,7 @@ from fastapi import (
     Request,
     UploadFile,
 )
-from fastapi.responses import RedirectResponse
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth_jwt.database import get_db
@@ -77,9 +78,14 @@ def _get_current_user(request: Request) -> dict:
     user = getattr(request.state, "user", None)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    raw_uid = getattr(request.state, "user_id", "")
+    try:
+        user_id = int(raw_uid)
+    except (TypeError, ValueError):
+        user_id = raw_uid
     return {
         "username": user,
-        "user_id": getattr(request.state, "user_id", ""),
+        "user_id": user_id,
         "roles": getattr(request.state, "roles", []),
     }
 
@@ -426,7 +432,11 @@ async def download_file_endpoint(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ):
-    """Download a file — 302 redirect to MinIO presigned URL."""
+    """Download a file by streaming MinIO bytes through the backend.
+
+    Keeping the browser on the same HTTPS origin avoids mixed-content blocks
+    when MinIO is only reachable through an internal HTTP endpoint.
+    """
     info = _get_current_user(request)
     minio = _require_minio()
     is_admin = "admin" in info["roles"]
@@ -435,8 +445,28 @@ async def download_file_endpoint(
     if record is None:
         raise HTTPException(status_code=404, detail="File not found")
 
-    url = await minio.presigned_get_url(record.object_key)
-    return RedirectResponse(url=url, status_code=302)
+    try:
+        data = await minio.get_object(record.object_key)
+    except Exception:
+        logger.warning(
+            "Failed to fetch MinIO object for file download: %s",
+            record.object_key,
+            exc_info=True,
+        )
+        raise HTTPException(status_code=404, detail="File object not found")
+
+    safe_filename = record.original_name.replace('"', "'")
+    content_disposition = (
+        f"attachment; filename*=UTF-8''{quote(safe_filename, safe='')}"
+    )
+    return Response(
+        content=data,
+        media_type=record.mime_type or "application/octet-stream",
+        headers={
+            "Content-Disposition": content_disposition,
+            "Content-Length": str(len(data)),
+        },
+    )
 
 
 @router.delete("/{file_id}")

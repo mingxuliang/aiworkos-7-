@@ -27,15 +27,6 @@ export const commandsApi = {
     sessionId: string,
     reason?: string,
   ): Promise<ApprovalCommandResponse> => {
-    console.log(
-      `[commandsApi] Sending ${action} for request:`,
-      requestId,
-      "session:",
-      sessionId,
-      "reason:",
-      reason,
-    );
-
     // Use dedicated approval API endpoint (bypasses chat/session system)
     return request<ApprovalCommandResponse>(`/approval/${action}`, {
       method: "POST",

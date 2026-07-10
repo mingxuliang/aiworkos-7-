@@ -270,6 +270,28 @@ class TokenUsageManager:
             },
         )
 
+    async def get_records(
+        self,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        model_name: Optional[str] = None,
+        provider_id: Optional[str] = None,
+    ) -> list[TokenUsageRecord]:
+        """Get per-date/provider/model token usage records."""
+        if end_date is None:
+            end_date = date.today()
+        if start_date is None:
+            start_date = end_date - timedelta(days=30)
+
+        merged = await self._buffer.get_merged_data()
+        return await self._query(
+            merged,
+            start_date,
+            end_date,
+            model_name,
+            provider_id,
+        )
+
     @classmethod
     def get_instance(cls) -> "TokenUsageManager":
         """Return the process-wide singleton ``TokenUsageManager``."""
